@@ -1,0 +1,44 @@
+# Eclipse
+bin
+eclipse
+.classpath
+.metadata
+.project
+.settings
+*.launch
+
+# Idea
+out
+.idea
+*.ipr
+*.iws
+*.iml
+
+# Gradle
+build
+run
+NeoForge/runs
+.gradle
+*local.properties
+
+# NodeJs
+node_modules
+npm-debug.log
+
+# VSCode
+.vscode
+
+# Ghost Reference Index
+.ghost-reference-index
+
+# Client Runtime Interface Toolkit
+.client_test
+
+# Other
+.DS_Store
+generated
+*.clip
+*.stackdump
+*.log
+*.log.gz
+*.bak

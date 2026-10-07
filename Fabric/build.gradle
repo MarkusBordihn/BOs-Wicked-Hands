@@ -1,0 +1,141 @@
+plugins {
+  id 'net.fabricmc.fabric-loom' version "${fabric_loom}"
+  id 'net.darkhax.curseforgegradle' version '1.2.30'
+  id 'nu.studer.credentials' version '3.0'
+  id "com.modrinth.minotaur" version "2.+"
+}
+
+base {
+  archivesName = "${mod_id}-fabric-${minecraft_version}"
+}
+
+loom {
+  runs {
+    client {
+      client()
+      setConfigName("Fabric Client")
+      property("fabric.logging.markers", "REGISTRIES")
+      property("fabric.log.level", "debug")
+      property("mixin.debug.verbose", "false")
+      property("mixin.debug.export", "false")
+      ideConfigGenerated(true)
+      runDir("run")
+    }
+    server {
+      server()
+      setConfigName("Fabric Server")
+      property("fabric.logging.markers", "REGISTRIES")
+      property("fabric.log.level", "debug")
+      property("mixin.debug.verbose", "false")
+      property("mixin.debug.export", "false")
+      ideConfigGenerated(true)
+      runDir("run")
+    }
+    gameTest {
+      server()
+      name "Game Test"
+      vmArg "-Dfabric-api.gametest"
+    }
+    if (clientToolkitAvailable) {
+      clientTest {
+        client()
+        setConfigName("Fabric Client Test")
+        runDir("run/clienttest")
+      }
+    }
+  }
+}
+
+dependencies {
+  minecraft "com.mojang:minecraft:${minecraft_version}"
+
+  implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+  implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+  // Include Common code
+  implementation project(":Common")
+
+  // Additional helpful Mods for development (runtime dependency)
+  if (project.hasProperty('fabric_jei_mod') && project.fabric_jei_mod) {
+    compileOnlyApi("curse.maven:jei-238222:${project.fabric_jei_mod}")
+    runtimeOnly("curse.maven:jei-238222:${project.fabric_jei_mod}")
+  }
+
+  // Client Runtime Interface Toolkit (runtime dependency, only for client tests)
+  if (clientToolkitAvailable && isClientTestRun) {
+    localRuntime clientToolkitCoordinate('fabric')
+  }
+}
+
+processResources {
+  from project(":Common").sourceSets.main.resources
+  def javaVersion = project.extensions
+      .getByType(org.gradle.api.plugins.JavaPluginExtension)
+      .toolchain
+      .languageVersion
+      .get()
+      .asInt()
+  def replaceProperties = [
+      version                       : project.version,
+      fabric_loader_version_range   : ">=${project.fabric_loader_version}",
+      fabric_minecraft_version_range: "~${project.minecraft_version}",
+      java_version_range            : ">=${javaVersion}"
+  ]
+  inputs.properties replaceProperties
+
+  filesMatching("fabric.mod.json") {
+    expand replaceProperties
+  }
+}
+
+tasks.withType(JavaCompile).configureEach {
+  source(project(":Common").sourceSets.main.allSource)
+}
+
+tasks.withType(Test).configureEach {
+  failOnNoDiscoveredTests = false
+}
+
+test {
+  useJUnitPlatform()
+  exclude '**/*'
+}
+
+// CurseForge Publishing
+if (project.hasProperty('curseforge_project_id') && project.curseforge_project_id) {
+  tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    group = 'publishing'
+    description = 'Uploads to CurseForge'
+    apiToken = "${credentials.forKey('curseforge_api_token')}"
+
+    def mainFile = upload(project.curseforge_project_id, jar)
+    mainFile.changelogType = 'markdown'
+    mainFile.changelog = rootProject.file("CHANGELOG.md").text
+    mainFile.releaseType = "${project.curseforge_release_type}"
+    mainFile.addEnvironment("Client", "Server")
+    mainFile.addModLoader('Fabric')
+    mainFile.addModLoader('Quilt')
+    mainFile.addRequirement('fabric-api')
+    mainFile.addOptional('tooltipfix')
+    mainFile.addGameVersion("${project.minecraft_version}")
+  }
+}
+
+// Modrinth Publishing
+if (project.hasProperty('modrinth_project_id') && project.modrinth_project_id) {
+  modrinth {
+    token = "${credentials.forKey('modrinth_api_token')}"
+    projectId = "${project.modrinth_project_id}"
+    versionNumber = "${version}"
+    versionType = "${project.modrinth_release_type}"
+    versionName = "${project.mod_name} ${project.version}"
+    changelog = rootProject.file("CHANGELOG.md").text
+    uploadFile = jar
+    gameVersions = ["${minecraft_version}"]
+    loaders = ["fabric", "quilt"]
+    dependencies {
+      required.project "fabric-api"
+      optional.project "tooltipfix"
+    }
+  }
+}

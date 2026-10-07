@@ -1,0 +1,29 @@
+modLoader = "javafml"
+loaderVersion = "[5,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/MarkusBordihn/BOs-Wicked-Hands/issues"
+
+[[mods]]
+modId = "wicked_hands"
+version = "${file.jarVersion}"
+displayName = "Wicked Hands"
+displayURL = "https://www.curseforge.com/minecraft/mc-mods/wicked-hands"
+logoFile = "logo.png"
+credits = ""
+authors = "Markus Bordihn"
+description = '''Wicked Hands adds severed hands that can be found from different mobs and revived through a ritual.
+Once revived, they become small companions that can follow you, warn you about nearby danger, help in combat, or sit on your shoulder.'''
+
+[[dependencies.wicked_hands]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neoforge_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.wicked_hands]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"

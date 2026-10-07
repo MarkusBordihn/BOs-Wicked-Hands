@@ -1,0 +1,148 @@
+plugins {
+  id 'net.neoforged.moddev' version '2.0.141'
+  id 'net.darkhax.curseforgegradle' version '1.2.30'
+  id 'nu.studer.credentials' version '3.0'
+  id "com.modrinth.minotaur" version "2.+"
+}
+
+base {
+  archivesName = "${mod_id}-neoforge-${minecraft_version}"
+}
+
+neoForge {
+  version = project.neoforge_version
+
+  runs {
+    configureEach {
+      systemProperty 'forge.logging.markers', 'REGISTRIES'
+      logLevel = org.slf4j.event.Level.DEBUG
+    }
+
+    client {
+      client()
+      gameDirectory = project.file('run/client')
+      systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    client2 {
+      client()
+      gameDirectory = project.file('run/client2')
+      programArguments.addAll '--username', 'guest_player'
+    }
+
+    server {
+      server()
+      gameDirectory = project.file('run/server')
+      systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+      programArgument '--nogui'
+    }
+
+    gameTestServer {
+      type = 'gameTestServer'
+      systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    if (clientToolkitAvailable) {
+      clientTest {
+        client()
+        gameDirectory = project.file('runs/clientTest')
+      }
+    }
+  }
+
+  mods {
+    "${project.mod_id}" {
+      sourceSet sourceSets.main
+    }
+  }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+dependencies {
+  compileOnly project(":Common")
+
+  // Additional helpful Mods for development (runtime dependency)
+  if (project.hasProperty('neoforge_jei_mod') && project.neoforge_jei_mod) {
+    compileOnly "curse.maven:jei-238222:${project.neoforge_jei_mod}"
+    runtimeOnly "curse.maven:jei-238222:${project.neoforge_jei_mod}"
+  }
+
+  // Client Runtime Interface Toolkit (runtime dependency, only for client tests)
+  if (clientToolkitAvailable && isClientTestRun) {
+    runtimeOnly clientToolkitCoordinate('neoforge')
+  }
+}
+
+// NeoGradle compiles the game, but we don't want to add our common code to the game's code
+Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") && !it.name.contains("Test") } as Spec<Task>
+
+tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
+  source(project(":Common").sourceSets.main.allSource)
+}
+
+tasks.withType(Javadoc).matching(notNeoTask).configureEach {
+  source(project(":Common").sourceSets.main.allJava)
+}
+
+tasks.named("sourcesJar", Jar) {
+  from(project(":Common").sourceSets.main.allSource)
+}
+
+tasks.withType(ProcessResources).matching(notNeoTask).configureEach {
+  from project(":Common").sourceSets.main.resources
+  def minecraftVersionParts = project.minecraft_version.tokenize('.')
+  def replaceProperties = [
+      file                   : [jarVersion: '${file.jarVersion}'],
+      neoforge_version_range : "[${project.neoforge_version},)",
+      minecraft_version_range: "[${project.minecraft_version},${minecraftVersionParts[0]}.${(minecraftVersionParts[1] as int) + 1})"
+  ]
+  inputs.properties replaceProperties
+
+  filesMatching("META-INF/neoforge.mods.toml") {
+    expand replaceProperties
+  }
+}
+
+// CurseForge Publishing
+if (project.hasProperty('curseforge_project_id') && project.curseforge_project_id) {
+  tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    group = 'publishing'
+    description = 'Uploads to CurseForge'
+    apiToken = "${credentials.forKey('curseforge_api_token')}"
+
+    def mainFile = upload(project.curseforge_project_id, jar)
+    mainFile.changelogType = 'markdown'
+    mainFile.changelog = rootProject.file("CHANGELOG.md").text
+    mainFile.releaseType = "${project.curseforge_release_type}"
+    mainFile.addEnvironment("Client", "Server")
+    mainFile.addModLoader('NeoForge')
+    mainFile.addGameVersion("${project.minecraft_version}")
+  }
+}
+
+// Modrinth Publishing
+if (project.hasProperty('modrinth_project_id') && project.modrinth_project_id) {
+  modrinth {
+    token = "${credentials.forKey('modrinth_api_token')}"
+    projectId = "${project.modrinth_project_id}"
+    versionNumber = "${project.version}"
+    versionType = "${project.modrinth_release_type}"
+    versionName = "${project.mod_name} ${project.version}"
+    changelog = rootProject.file("CHANGELOG.md").text
+    uploadFile = jar
+    gameVersions = ["${project.minecraft_version}"]
+    loaders = ["neoforge"]
+  }
+}
+
+test {
+  useJUnitPlatform()
+}
+
+// Merge resources and compiled classes so NeoForge dev runs see a valid mod root.
+sourceSets.each {
+  def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+  it.output.resourcesDir = dir
+  it.java.destinationDirectory = dir
+}

@@ -1,0 +1,38 @@
+plugins {
+  id 'net.neoforged.moddev' version '2.0.141'
+}
+
+base {
+  archivesName = "${mod_name}-common-${minecraft_version}"
+}
+
+neoForge {
+  neoFormVersion = project.neo_form_version
+
+  // Add Minecraft classes to test configuration
+  addModdingDependenciesTo(sourceSets.test)
+}
+
+dependencies {
+  compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.7'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+  testImplementation 'org.mockito:mockito-core:5.20.0'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+  useJUnitPlatform()
+}
+
+processResources {
+  inputs.property "version", project.version
+
+  filesMatching(['pack.mcmeta']) {
+    expand "version": project.version
+  }
+}
+
+tasks.register('prepareWorkspace') {
+  description = 'Prepares the workspace (compatibility task for moddev)'
+  group = 'neoforge'
+}

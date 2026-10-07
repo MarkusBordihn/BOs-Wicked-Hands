@@ -1,0 +1,107 @@
+plugins {
+  id 'idea'
+  id "org.jetbrains.gradle.plugin.idea-ext" version "1.3"
+}
+
+def ghostRefScript = file(findProperty('ghostRefIndex') ?: '')
+if (ghostRefScript.exists()) apply from: ghostRefScript
+
+tasks.register('allGameTests') {
+  group = 'verification'
+  description = 'Runs Fabric, Forge and NeoForge game tests.'
+  dependsOn ':Fabric:runGameTest', ':Forge:runGameTestServer', ':NeoForge:runGameTestServer'
+}
+
+tasks.register('fullCheck') {
+  group = 'verification'
+  description = 'Runs the standard checks and Fabric, Forge and NeoForge game tests.'
+  dependsOn ':Common:check', ':Fabric:check', ':Forge:check', ':NeoForge:check', 'allGameTests'
+}
+
+tasks.register('publishModrinth') {
+  group = 'publishing'
+  description = 'Publishes Forge, NeoForge and Fabric to Modrinth.'
+  dependsOn ':Forge:modrinth', ':NeoForge:modrinth', ':Fabric:modrinth'
+  mustRunAfter 'fullCheck'
+}
+
+tasks.register('publishDelay') {
+  description = 'Pauses between Modrinth and CurseForge uploads so logs do not interfere.'
+  mustRunAfter 'publishModrinth'
+  doLast {
+    println 'Waiting 5 seconds before CurseForge upload...'
+    sleep(5000)
+  }
+}
+
+tasks.register('publishCurseForge') {
+  group = 'publishing'
+  description = 'Publishes Forge, NeoForge and Fabric to CurseForge.'
+  dependsOn ':Forge:curseforge', ':NeoForge:curseforge', ':Fabric:curseforge'
+  mustRunAfter 'publishDelay'
+}
+
+tasks.register('publishMods') {
+  group = 'publishing'
+  description = 'Builds, runs full checks, then publishes to Modrinth and (after a 5s pause) CurseForge.'
+  dependsOn 'fullCheck', 'publishModrinth', 'publishDelay', 'publishCurseForge'
+}
+
+subprojects {
+
+  apply plugin: 'java'
+
+  java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+  java.withSourcesJar()
+  java.withJavadocJar()
+
+  repositories {
+    mavenCentral()
+    maven {
+      url "https://www.cursemaven.com"
+      content {
+        includeGroup "curse.maven"
+      }
+    }
+  }
+
+  dependencies {
+    configurations.configureEach {
+      resolutionStrategy.force 'org.ow2.asm:asm:9.8'
+      resolutionStrategy.force 'org.ow2.asm:asm-commons:9.8'
+    }
+  }
+
+  tasks.register('wrapper', Wrapper) {
+    gradleVersion = '9.8.0'
+    distributionType = Wrapper.DistributionType.BIN
+  }
+
+  tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+  }
+
+  tasks.withType(GenerateModuleMetadata).configureEach {
+    enabled = false
+  }
+
+  tasks.withType(Javadoc).configureEach {
+    enabled = false
+  }
+
+  tasks.register("prepareKotlinBuildScriptModel") {}
+
+  idea {
+    module {
+      downloadSources = true
+      downloadJavadoc = true
+    }
+  }
+
+  // The toolkit opens a control socket in the client, so it only joins the runtime of client tests.
+  ext.isClientTestRun = gradle.startParameter.taskNames.any {
+    return it.toLowerCase().contains('clienttest')
+  }
+}
+
+apply from: 'gradle/tasks/clientTest.gradle'
