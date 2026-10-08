@@ -55,6 +55,26 @@ dependencies {
   // Include Common code
   implementation project(":Common")
 
+  // Provided by the installed mod at runtime; testCompileOnly because Common joins every compile.
+  def easyNpcApi = easyNpcApiArtifact()
+  if (easyNpcApi != null) {
+    compileOnly easyNpcApi
+    testCompileOnly easyNpcApi
+  }
+
+  // No transitives (they describe the upstream dev env); compile scope for EasyModelNPCRenderer.
+  def easyNpcFabric = easyNpcArtifact('fabric')
+  if (easyNpcFabric != null) {
+    compileOnly(easyNpcFabric) { transitive = false }
+    runtimeOnly(easyNpcFabric) { transitive = false }
+  }
+
+  def easyModelEntitiesFabric = easyModelEntitiesArtifact('fabric')
+  if (easyModelEntitiesFabric != null) {
+    compileOnly(easyModelEntitiesFabric) { transitive = false }
+    runtimeOnly(easyModelEntitiesFabric) { transitive = false }
+  }
+
   // Additional helpful Mods for development (runtime dependency)
   if (project.hasProperty('fabric_jei_mod') && project.fabric_jei_mod) {
     compileOnlyApi("curse.maven:jei-238222:${project.fabric_jei_mod}")
@@ -116,7 +136,8 @@ if (project.hasProperty('curseforge_project_id') && project.curseforge_project_i
     mainFile.addModLoader('Fabric')
     mainFile.addModLoader('Quilt')
     mainFile.addRequirement('fabric-api')
-    mainFile.addOptional('tooltipfix')
+    mainFile.addRequirement('easy-npc-core')
+    mainFile.addRequirement('easy-model-entities')
     mainFile.addGameVersion("${project.minecraft_version}")
   }
 }
@@ -135,7 +156,8 @@ if (project.hasProperty('modrinth_project_id') && project.modrinth_project_id) {
     loaders = ["fabric", "quilt"]
     dependencies {
       required.project "fabric-api"
-      optional.project "tooltipfix"
+      required.project "easy-npc-core"
+      required.project "easy-model-entities"
     }
   }
 }

@@ -16,8 +16,27 @@ Once revived, they become small companions that can follow you, warn you about n
 in combat, or sit on your shoulder.
 Different hand types come with different abilities based on the mob they came from.
 
+## 🎃 Spooky Jam
+
+This mod was created as part of the [Spooky Jam][spooky-jam].
+
+## 📦 Requirements
+
+Both dependencies are **required** and must be installed alongside this mod on client and server:
+
+* **[Easy NPC: Core][easy-npc-core]** — entity base and companion behavior of the hands
+* **[Easy Model Entities][easy-model-entities]** — the animated models of the hands
+
+Launchers like the CurseForge App or the Modrinth App install both dependencies automatically.
+
 [curseforge]: https://www.curseforge.com/minecraft/mc-mods/wicked-hands
 
 [modrinth]: https://modrinth.com/project/wicked-hands
 
 [issues]: https://github.com/MarkusBordihn/BOs-Wicked-Hands/issues
+
+[spooky-jam]: https://spooky-jam.com/
+
+[easy-npc-core]: https://www.curseforge.com/minecraft/mc-mods/easy-npc-core
+
+[easy-model-entities]: https://www.curseforge.com/minecraft/mc-mods/easy-model-entities

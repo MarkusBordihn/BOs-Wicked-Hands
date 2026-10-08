@@ -57,12 +57,68 @@ subprojects {
 
   repositories {
     mavenCentral()
+    mavenLocal {
+      content {
+        includeGroup "de.markusbordihn.easynpc"
+        includeGroup "de.markusbordihn.easymodelentities"
+      }
+    }
     maven {
       url "https://www.cursemaven.com"
       content {
         includeGroup "curse.maven"
       }
     }
+    maven {
+      url = uri("https://api.modrinth.com/maven")
+      content {
+        includeGroup "maven.modrinth"
+      }
+    }
+  }
+
+  // Integration mods resolve from Maven Local first and fall back to the Modrinth release.
+  ext.EASY_NPC_MODRINTH_PROJECT = 'easy-npc-core'
+  ext.EASY_MODEL_ENTITIES_MODRINTH_PROJECT = 'easy-model-entities'
+
+  ext.mavenLocalArtifact = { String group, String artifact, Object version ->
+    if (!version) {
+      return null
+    }
+
+    def jar = file("${System.getProperty('user.home')}/.m2/repository/"
+        + "${group.replace('.', '/')}/${artifact}/${version}/${artifact}-${version}.jar")
+    return jar.exists() ? "${group}:${artifact}:${version}" : null
+  }
+
+  // Modrinth publishes one version per loader, so both filters are required to stay deterministic.
+  ext.modrinthArtifact = { String modrinthProject, Object version, String loader ->
+    return version
+        ? "maven.modrinth:${modrinthProject}:${version}-${loader},${project.minecraft_version}"
+        : null
+  }
+
+  // No loader independent artifact exists, so the API falls back to the Fabric jar.
+  ext.easyNpcApiArtifact = { ->
+    mavenLocalArtifact('de.markusbordihn.easynpc',
+        "easy_npc-common-${project.minecraft_version}", project.findProperty('easy_npc_version'))
+        ?: modrinthArtifact(EASY_NPC_MODRINTH_PROJECT,
+            project.findProperty('easy_npc_version'), 'fabric')
+  }
+
+  ext.easyNpcArtifact = { String loader ->
+    mavenLocalArtifact('de.markusbordihn.easynpc',
+        "easy_npc-${loader}-${project.minecraft_version}", project.findProperty('easy_npc_version'))
+        ?: modrinthArtifact(EASY_NPC_MODRINTH_PROJECT,
+            project.findProperty('easy_npc_version'), loader)
+  }
+
+  ext.easyModelEntitiesArtifact = { String loader ->
+    mavenLocalArtifact('de.markusbordihn.easymodelentities',
+        "easy_model_entities-${loader}-${project.minecraft_version}",
+        project.findProperty('easy_model_entities_version'))
+        ?: modrinthArtifact(EASY_MODEL_ENTITIES_MODRINTH_PROJECT,
+            project.findProperty('easy_model_entities_version'), loader)
   }
 
   dependencies {

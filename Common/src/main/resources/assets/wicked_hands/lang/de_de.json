@@ -1,0 +1,8 @@
+{
+  "entity.wicked_hands.rotten_hand": "Verrottete Hand",
+  "itemGroup.wicked_hands": "Wicked Hands",
+  "item.wicked_hands.lifeless_rotten_hand": "Leblose verrottete Hand",
+  "item.wicked_hands.lifeless_rotten_hand.tooltip": "Eine tote Zombiehand. Vielleicht wacht sie wieder auf.",
+  "item.wicked_hands.lifeless_rotten_hand.revival_hint": "Die Hand zuckt. Vielleicht wecken Knochenmehl und verrottetes Fleisch sie auf.",
+  "item.wicked_hands.rotten_hand_spawn_egg": "Spawn-Ei (Verrottete Hand)"
+}

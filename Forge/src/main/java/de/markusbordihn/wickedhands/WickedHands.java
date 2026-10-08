@@ -19,9 +19,16 @@
 
 package de.markusbordihn.wickedhands;
 
+import de.markusbordihn.wickedhands.client.renderer.ModEntityRenderers;
+import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.gametest.ModGameTests;
+import de.markusbordihn.wickedhands.item.ModItems;
+import de.markusbordihn.wickedhands.loot.ModLootTables;
+import de.markusbordihn.wickedhands.tabs.ModTabs;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,6 +41,17 @@ public class WickedHands {
   public WickedHands(FMLJavaModLoadingContext context) {
     log.info("Initializing {} (Forge) ...", Constants.MOD_NAME);
 
-    ModGameTests.register(context.getModBusGroup());
+    BusGroup modBusGroup = context.getModBusGroup();
+    ModItems.ITEMS.register(modBusGroup);
+    ModEntityTypes.ENTITY_TYPES.register(modBusGroup);
+    ModTabs.CREATIVE_TABS.register(modBusGroup);
+    ModEntityTypes.registerEvents();
+    ModTabs.registerEvents();
+    ModLootTables.registerEvents();
+    ModGameTests.register(modBusGroup);
+
+    if (FMLEnvironment.dist.isClient()) {
+      ModEntityRenderers.register();
+    }
   }
 }

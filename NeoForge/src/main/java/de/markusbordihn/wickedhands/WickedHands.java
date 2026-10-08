@@ -19,7 +19,10 @@
 
 package de.markusbordihn.wickedhands;
 
+import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.gametest.ModGameTests;
+import de.markusbordihn.wickedhands.item.ModItems;
+import de.markusbordihn.wickedhands.tabs.ModTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
@@ -34,6 +37,9 @@ public class WickedHands {
   public WickedHands(IEventBus modEventBus) {
     log.info("Initializing {} (NeoForge) ...", Constants.MOD_NAME);
 
+    ModItems.ITEMS.register(modEventBus);
+    ModEntityTypes.ENTITY_TYPES.register(modEventBus);
+    ModTabs.CREATIVE_TABS.register(modEventBus);
     ModGameTests.register(modEventBus);
   }
 }

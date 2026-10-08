@@ -22,13 +22,16 @@
       "de.markusbordihn.wickedhands.WickedHandsClient"
     ],
     "fabric-gametest": [
-      "de.markusbordihn.wickedhands.gametest.SmokeTest"
+      "de.markusbordihn.wickedhands.gametest.SmokeTest",
+      "de.markusbordihn.wickedhands.gametest.RottenHandTest"
     ]
   },
   "depends": {
     "fabricloader": "${fabric_loader_version_range}",
     "fabric-api": "*",
     "minecraft": "${fabric_minecraft_version_range}",
-    "java": "${java_version_range}"
+    "java": "${java_version_range}",
+    "easy_npc": ">=7.14.0",
+    "easy_model_entities": ">=2.4.0"
   }
 }

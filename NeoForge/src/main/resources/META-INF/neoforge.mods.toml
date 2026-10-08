@@ -27,3 +27,17 @@ type = "required"
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
+
+[[dependencies.wicked_hands]]
+modId = "easy_npc"
+type = "required"
+versionRange = "[7.14.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.wicked_hands]]
+modId = "easy_model_entities"
+type = "required"
+versionRange = "[2.4.0,)"
+ordering = "AFTER"
+side = "BOTH"

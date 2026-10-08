@@ -19,6 +19,10 @@
 
 package de.markusbordihn.wickedhands;
 
+import de.markusbordihn.wickedhands.entity.ModEntityTypes;
+import de.markusbordihn.wickedhands.item.ModItems;
+import de.markusbordihn.wickedhands.loot.ModLootTables;
+import de.markusbordihn.wickedhands.tabs.ModTabs;
 import net.fabricmc.api.ModInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,5 +34,9 @@ public class WickedHands implements ModInitializer {
   @Override
   public void onInitialize() {
     log.info("Initializing {} (Fabric) ...", Constants.MOD_NAME);
+    ModEntityTypes.register();
+    ModItems.register();
+    ModTabs.register();
+    ModLootTables.register();
   }
 }

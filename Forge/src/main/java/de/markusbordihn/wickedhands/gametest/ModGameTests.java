@@ -33,9 +33,24 @@ public final class ModGameTests {
       DeferredRegister.create(Registries.TEST_FUNCTION, Constants.MOD_ID);
 
   private static final SmokeTest SMOKE_TESTS = new SmokeTest();
+  private static final RottenHandGameTests ROTTEN_HAND_TESTS = new RottenHandGameTests();
 
   static {
     register("smoke_mod_registered", SMOKE_TESTS::testModRegistered);
+    register(
+        "rotten_hand_spawns_naturally_at_night",
+        ROTTEN_HAND_TESTS::testRottenHandSpawnsNaturallyAtNight);
+    register(
+        "rotten_hand_drops_lifeless_rotten_hand",
+        ROTTEN_HAND_TESTS::testRottenHandDropsLifelessRottenHand);
+    register(
+        "summoned_rotten_hand_drops_lifeless_rotten_hand",
+        ROTTEN_HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
+    register("rotten_hand_attacks_animals", ROTTEN_HAND_TESTS::testRottenHandAttacksAnimals);
+    register(
+        "rotten_hand_despawns_when_far_away", ROTTEN_HAND_TESTS::testRottenHandDespawnsWhenFarAway);
+    register(
+        "zombie_drops_lifeless_rotten_hand", ROTTEN_HAND_TESTS::testZombieDropsLifelessRottenHand);
   }
 
   private ModGameTests() {}

@@ -19,7 +19,10 @@
 
 package de.markusbordihn.wickedhands;
 
+import de.markusbordihn.easynpc.client.renderer.entity.easymodelentities.EasyModelNPCRenderer;
+import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import net.fabricmc.api.ClientModInitializer;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,5 +33,6 @@ public class WickedHandsClient implements ClientModInitializer {
   @Override
   public void onInitializeClient() {
     log.info("Initializing {} (Fabric-Client) ...", Constants.MOD_NAME);
+    EntityRenderers.register(ModEntityTypes.ROTTEN_HAND, EasyModelNPCRenderer::new);
   }
 }

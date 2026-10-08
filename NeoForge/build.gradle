@@ -62,6 +62,24 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
   compileOnly project(":Common")
 
+  def easyNpcApi = easyNpcApiArtifact()
+  if (easyNpcApi != null) {
+    compileOnly easyNpcApi
+  }
+
+  // No transitives (they describe the upstream dev env); compile scope for EasyModelNPCRenderer.
+  def easyNpcNeoForge = easyNpcArtifact('neoforge')
+  if (easyNpcNeoForge != null) {
+    compileOnly(easyNpcNeoForge) { transitive = false }
+    runtimeOnly(easyNpcNeoForge) { transitive = false }
+  }
+
+  def easyModelEntitiesNeoForge = easyModelEntitiesArtifact('neoforge')
+  if (easyModelEntitiesNeoForge != null) {
+    compileOnly(easyModelEntitiesNeoForge) { transitive = false }
+    runtimeOnly(easyModelEntitiesNeoForge) { transitive = false }
+  }
+
   // Additional helpful Mods for development (runtime dependency)
   if (project.hasProperty('neoforge_jei_mod') && project.neoforge_jei_mod) {
     compileOnly "curse.maven:jei-238222:${project.neoforge_jei_mod}"
@@ -118,6 +136,8 @@ if (project.hasProperty('curseforge_project_id') && project.curseforge_project_i
     mainFile.addEnvironment("Client", "Server")
     mainFile.addModLoader('NeoForge')
     mainFile.addGameVersion("${project.minecraft_version}")
+    mainFile.addRequirement('easy-npc-core')
+    mainFile.addRequirement('easy-model-entities')
   }
 }
 
@@ -133,6 +153,10 @@ if (project.hasProperty('modrinth_project_id') && project.modrinth_project_id) {
     uploadFile = jar
     gameVersions = ["${project.minecraft_version}"]
     loaders = ["neoforge"]
+    dependencies {
+      required.project "easy-npc-core"
+      required.project "easy-model-entities"
+    }
   }
 }
 

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "wicked_hands:lifeless_rotten_hand"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "wicked_hands:entities/rotten_hand"
+}

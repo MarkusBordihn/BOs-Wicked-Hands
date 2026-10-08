@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "wicked_hands:zombie_drops_lifeless_rotten_hand",
+  "environment": "minecraft:default",
+  "structure": "wicked_hands:gametest.1x1x1",
+  "max_ticks": 100
+}

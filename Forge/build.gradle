@@ -102,6 +102,26 @@ dependencies {
   // Include Common code
   compileOnly project(":Common")
 
+  // Provided by the installed mod at runtime; testCompileOnly because Common joins every compile.
+  def easyNpcApi = easyNpcApiArtifact()
+  if (easyNpcApi != null) {
+    compileOnly easyNpcApi
+    testCompileOnly easyNpcApi
+  }
+
+  // No transitives (they describe the upstream dev env); compile scope for EasyModelNPCRenderer.
+  def easyNpcForge = easyNpcArtifact('forge')
+  if (easyNpcForge != null) {
+    compileOnly(easyNpcForge) { transitive = false }
+    runtimeOnly(easyNpcForge) { transitive = false }
+  }
+
+  def easyModelEntitiesForge = easyModelEntitiesArtifact('forge')
+  if (easyModelEntitiesForge != null) {
+    compileOnly(easyModelEntitiesForge) { transitive = false }
+    runtimeOnly(easyModelEntitiesForge) { transitive = false }
+  }
+
   // Hack fix for now, force jopt-simple to be exactly 5.0.4 because Mojang ships that version, but some transitive dependencies request 6.0+
   implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
 
@@ -191,6 +211,8 @@ if (project.hasProperty('curseforge_project_id') && project.curseforge_project_i
     mainFile.addEnvironment("Client", "Server")
     mainFile.addModLoader('Forge')
     mainFile.addGameVersion(project.minecraft_version)
+    mainFile.addRequirement('easy-npc-core')
+    mainFile.addRequirement('easy-model-entities')
   }
 }
 
@@ -206,5 +228,9 @@ if (project.hasProperty('modrinth_project_id') && project.modrinth_project_id) {
     uploadFile = jar
     gameVersions = ["${project.minecraft_version}"]
     loaders = ["forge"]
+    dependencies {
+      required.project "easy-npc-core"
+      required.project "easy-model-entities"
+    }
   }
 }
