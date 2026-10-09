@@ -19,29 +19,30 @@
 
 package de.markusbordihn.wickedhands.entity;
 
-import de.markusbordihn.easynpc.data.attribute.CombatAttributes;
-import de.markusbordihn.easynpc.data.attribute.EntityAttributes;
-import de.markusbordihn.easynpc.data.display.DisplayAttributeDataSet;
-import de.markusbordihn.easynpc.data.display.DisplayAttributeEntry;
-import de.markusbordihn.easynpc.data.display.DisplayAttributeType;
-import de.markusbordihn.easynpc.data.display.NameVisibilityType;
+import de.markusbordihn.easynpc.data.attribute.EnvironmentalAttributeType;
 import de.markusbordihn.easynpc.data.objective.ObjectiveDataEntry;
 import de.markusbordihn.easynpc.data.objective.ObjectiveType;
-import de.markusbordihn.easynpc.data.render.RenderDataEntry;
-import de.markusbordihn.easynpc.data.render.RenderType;
-import de.markusbordihn.easynpc.data.synched.SynchedDataIndex;
 import de.markusbordihn.easynpc.entity.easynpc.npc.easymodelentities.EasyModelNPC;
+import de.markusbordihn.easynpc.handler.AttributeHandler;
 import de.markusbordihn.easynpc.handler.ObjectiveHandler;
 import de.markusbordihn.wickedhands.Constants;
+import de.markusbordihn.wickedhands.advancement.HandAdvancements;
+import de.markusbordihn.wickedhands.client.effect.AwakeningEffects;
+import de.markusbordihn.wickedhands.data.CompanionMode;
+import de.markusbordihn.wickedhands.data.HandLifecycle;
+import de.markusbordihn.wickedhands.data.HandState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -53,12 +54,14 @@ import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
-public class RottenHandEntity extends EasyModelNPC {
+public class RottenHandEntity extends AbstractRottenHandEntity {
 
   public static final String ID = "rotten_hand";
   public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
@@ -66,15 +69,19 @@ public class RottenHandEntity extends EasyModelNPC {
   public static final int SPAWN_GROUP_SIZE = 1;
   public static final SpawnPlacementType SPAWN_PLACEMENT_TYPE = SpawnPlacementTypes.ON_GROUND;
   public static final Heightmap.Types SPAWN_HEIGHTMAP = Heightmap.Types.MOTION_BLOCKING_NO_LEAVES;
-
   private static final String MODEL_ID = Constants.MOD_ID + ":entity/" + ID;
   private static final double MAX_HEALTH = 6.0D;
   private static final double MOVEMENT_SPEED = 0.25D;
   private static final double ATTACK_DAMAGE = 2.0D;
-  private static final int MELEE_ATTACK_PRIORITY = 1;
-  private static final int PLAYER_TARGET_PRIORITY = 1;
-  private static final int ANIMAL_TARGET_PRIORITY = 2;
-  private static final int RANDOM_STROLL_PRIORITY = 5;
+  private static final double FOLLOW_SPEED_MODIFIER = 1.2D;
+  private static final byte AWAKENED_EVENT = 100;
+  private static final String HAND_STATE_TAG = "WickedHandState";
+  private static final String TRANSLATION_KEY_PREFIX = "entity." + Constants.MOD_ID + "." + ID;
+  private static final String FOLLOW_TRANSLATION_KEY = TRANSLATION_KEY_PREFIX + ".follow";
+  private static final String STAY_TRANSLATION_KEY = TRANSLATION_KEY_PREFIX + ".stay";
+
+  private final AwakeningEffects awakeningEffects = new AwakeningEffects(this);
+  private HandState handState = HandState.EMPTY;
 
   public RottenHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level);
@@ -106,6 +113,108 @@ public class RottenHandEntity extends EasyModelNPC {
         && Mob.checkMobSpawnRules(entityType, level, spawnReason, blockPos, random);
   }
 
+  public HandState getHandState() {
+    return this.handState;
+  }
+
+  @Override
+  protected String getModelId() {
+    return MODEL_ID;
+  }
+
+  @Override
+  public InteractionResult mobInteract(Player player, InteractionHand hand) {
+    if (player.isSecondaryUseActive() && this.isNPCOwnedBy(player)) {
+      if (!this.level().isClientSide()) {
+        this.toggleCompanionMode(player);
+      }
+      return InteractionResult.SUCCESS;
+    }
+
+    return super.mobInteract(player, hand);
+  }
+
+  void awakenAsCompanion(ServerLevel serverLevel) {
+    this.handState = HandState.EMPTY.withLifecycle(HandLifecycle.COMPANION);
+    this.applyCompanionObjectives();
+    serverLevel.broadcastEntityEvent(this, AWAKENED_EVENT);
+    if (this.getOwner() instanceof ServerPlayer owner) {
+      HandAdvancements.awardRottenHandCompanion(owner);
+    }
+  }
+
+  @Override
+  public void handleEntityEvent(byte eventId) {
+    if (eventId == AWAKENED_EVENT) {
+      this.awakeningEffects.start();
+      return;
+    }
+
+    super.handleEntityEvent(eventId);
+  }
+
+  @Override
+  public void baseTick() {
+    super.baseTick();
+    if (this.level().isClientSide()) {
+      this.awakeningEffects.tick();
+    }
+  }
+
+  @Override
+  public void onClientRemoval() {
+    super.onClientRemoval();
+    this.awakeningEffects.stop();
+  }
+
+  private void toggleCompanionMode(Player player) {
+    if (this.handState.lifecycle() != HandLifecycle.COMPANION) {
+      return;
+    }
+
+    CompanionMode companionMode =
+        this.handState.companionMode() == CompanionMode.FOLLOW
+            ? CompanionMode.STAY
+            : CompanionMode.FOLLOW;
+    this.handState = this.handState.withCompanionMode(companionMode);
+    this.applyCompanionMode(companionMode);
+    player.sendOverlayMessage(
+        Component.translatable(
+            companionMode == CompanionMode.STAY ? STAY_TRANSLATION_KEY : FOLLOW_TRANSLATION_KEY));
+  }
+
+  private void applyCompanionObjectives() {
+    AttributeHandler.setEnvironmentalAttribute(this, EnvironmentalAttributeType.CAN_FLOAT, true);
+    ObjectiveHandler.addOrUpdateCustomObjective(
+        this, new ObjectiveDataEntry(ObjectiveType.MELEE_ATTACK));
+    ObjectiveHandler.addOrUpdateCustomObjective(
+        this, new ObjectiveDataEntry(ObjectiveType.OWNER_HURT_BY_TARGET));
+    ObjectiveHandler.addOrUpdateCustomObjective(
+        this, new ObjectiveDataEntry(ObjectiveType.LOOK_AT_OWNER));
+    this.applyCompanionMode(this.handState.companionMode());
+  }
+
+  private void applyCompanionMode(CompanionMode companionMode) {
+    if (companionMode == CompanionMode.STAY) {
+      this.removeObjectiveIfPresent(ObjectiveType.FOLLOW_OWNER);
+      this.setNPCHomePosition(this.blockPosition());
+      ObjectiveHandler.addOrUpdateCustomObjective(
+          this, new ObjectiveDataEntry(ObjectiveType.MOVE_BACK_TO_HOME));
+    } else {
+      this.removeObjectiveIfPresent(ObjectiveType.MOVE_BACK_TO_HOME);
+      ObjectiveHandler.addOrUpdateCustomObjective(
+          this,
+          new ObjectiveDataEntry(ObjectiveType.FOLLOW_OWNER)
+              .setSpeedModifier(FOLLOW_SPEED_MODIFIER));
+    }
+  }
+
+  private void removeObjectiveIfPresent(ObjectiveType objectiveType) {
+    if (this.hasObjective(objectiveType)) {
+      this.removeCustomObjective(objectiveType);
+    }
+  }
+
   @Override
   public SpawnGroupData finalizeSpawn(
       ServerLevelAccessor serverLevelAccessor,
@@ -114,62 +223,37 @@ public class RottenHandEntity extends EasyModelNPC {
       SpawnGroupData spawnGroupData) {
     SpawnGroupData result =
         super.finalizeSpawn(serverLevelAccessor, difficulty, entitySpawnReason, spawnGroupData);
+    AttributeHandler.setEnvironmentalAttribute(this, EnvironmentalAttributeType.CAN_FLOAT, true);
     ObjectiveHandler.addOrUpdateCustomObjective(
-        this, new ObjectiveDataEntry(ObjectiveType.MELEE_ATTACK, MELEE_ATTACK_PRIORITY));
+        this, new ObjectiveDataEntry(ObjectiveType.MELEE_ATTACK));
     ObjectiveHandler.addOrUpdateCustomObjective(
-        this, new ObjectiveDataEntry(ObjectiveType.ATTACK_PLAYER, PLAYER_TARGET_PRIORITY));
+        this, new ObjectiveDataEntry(ObjectiveType.ATTACK_PLAYER));
     ObjectiveHandler.addOrUpdateCustomObjective(
-        this, new ObjectiveDataEntry(ObjectiveType.ATTACK_ANIMAL, ANIMAL_TARGET_PRIORITY));
+        this, new ObjectiveDataEntry(ObjectiveType.ATTACK_ANIMAL));
     ObjectiveHandler.addOrUpdateCustomObjective(
-        this, new ObjectiveDataEntry(ObjectiveType.RANDOM_STROLL, RANDOM_STROLL_PRIORITY));
+        this, new ObjectiveDataEntry(ObjectiveType.RANDOM_STROLL));
     return result;
   }
 
   @Override
-  public void defineSynchedRenderData(SynchedEntityData.Builder builder) {
-    this.defineSynchedEntityData(
-        builder,
-        SynchedDataIndex.RENDER_DATA,
-        new RenderDataEntry(RenderType.EASY_MODEL_ENTITY, null, MODEL_ID));
+  public void addAdditionalSaveData(ValueOutput valueOutput) {
+    super.addAdditionalSaveData(valueOutput);
+    valueOutput.store(HAND_STATE_TAG, HandState.CODEC, this.handState);
   }
 
   @Override
-  public void defineSynchedDisplayAttributeData(SynchedEntityData.Builder builder) {
-    this.defineSynchedEntityData(
-        builder,
-        SynchedDataIndex.DISPLAY_ATTRIBUTE_SET,
-        DisplayAttributeDataSet.createDefault()
-            .withAttribute(
-                DisplayAttributeType.NAME_VISIBILITY,
-                new DisplayAttributeEntry(NameVisibilityType.NEVER.toString())));
-  }
-
-  @Override
-  public void defineSynchedAttributeData(SynchedEntityData.Builder builder) {
-    EntityAttributes entityAttributes = new EntityAttributes();
-    entityAttributes.setCombatAttributes(
-        new CombatAttributes()
-            .withIsInvulnerable(false)
-            .withIsAttackableByPlayers(true)
-            .withIsAttackableByMonsters(true));
-    this.defineSynchedEntityData(builder, SynchedDataIndex.ENTITY_ATTRIBUTES, entityAttributes);
-  }
-
-  @Override
-  public void readAdditionalAttributeData(ValueInput valueInput) {
-    if (!hasSavedEntityAttributes(valueInput)) {
-      return;
-    }
-
-    super.readAdditionalAttributeData(valueInput);
-  }
-
-  private static boolean hasSavedEntityAttributes(ValueInput valueInput) {
-    return valueInput.read(EntityAttributes.ENTITY_ATTRIBUTE_TAG, CompoundTag.CODEC).isPresent();
+  public void readAdditionalSaveData(ValueInput valueInput) {
+    super.readAdditionalSaveData(valueInput);
+    this.handState = valueInput.read(HAND_STATE_TAG, HandState.CODEC).orElse(HandState.EMPTY);
   }
 
   @Override
   public boolean removeWhenFarAway(double distanceToClosestPlayer) {
     return true;
+  }
+
+  @Override
+  public boolean requiresCustomPersistence() {
+    return super.requiresCustomPersistence() || this.handState.lifecycle() != HandLifecycle.WILD;
   }
 }

@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
-import com.google.gson.JsonObject;
 import de.markusbordihn.wickedhands.TestBootstrap;
 import de.markusbordihn.wickedhands.TestResources;
 import java.nio.file.Files;
@@ -73,9 +72,8 @@ class LifelessRottenHandItemTest {
     when(level.isClientSide()).thenReturn(false);
     Player player = mock(Player.class);
 
-    InteractionResult result = createItem().use(level, player, InteractionHand.MAIN_HAND);
-
-    assertEquals(InteractionResult.SUCCESS, result);
+    assertEquals(
+        InteractionResult.SUCCESS, createItem().use(level, player, InteractionHand.MAIN_HAND));
     verify(player).sendOverlayMessage(argThat(LifelessRottenHandItemTest::isRevivalHint));
   }
 
@@ -86,21 +84,20 @@ class LifelessRottenHandItemTest {
     when(level.isClientSide()).thenReturn(true);
     Player player = mock(Player.class);
 
-    InteractionResult result = createItem().use(level, player, InteractionHand.OFF_HAND);
-
-    assertEquals(InteractionResult.SUCCESS, result);
+    assertEquals(
+        InteractionResult.SUCCESS, createItem().use(level, player, InteractionHand.OFF_HAND));
     verify(player, never()).sendOverlayMessage(any());
   }
 
   @Test
   @DisplayName("Item definition, model and texture exist")
   void itemModelResourcesExist() {
-    JsonObject itemDefinition =
-        TestResources.readJson(TestResources.assetPath(ITEM_ID, "items/", ".json"));
-    String modelId = itemDefinition.getAsJsonObject("model").get("model").getAsString();
-    JsonObject itemModel =
-        TestResources.readJson(TestResources.assetPath(modelId, "models/", ".json"));
-    itemModel
+    String modelId =
+        TestResources.readJson(TestResources.assetPath(ITEM_ID, "items/", ".json"))
+            .getAsJsonObject("model")
+            .get("model")
+            .getAsString();
+    TestResources.readJson(TestResources.assetPath(modelId, "models/", ".json"))
         .getAsJsonObject("textures")
         .asMap()
         .values()
@@ -115,9 +112,11 @@ class LifelessRottenHandItemTest {
   @Test
   @DisplayName("Lifeless hands item tag contains the item")
   void lifelessHandsTagContainsItem() {
-    JsonObject tag = TestResources.readJson("data/wicked_hands/tags/item/lifeless_hands.json");
     assertTrue(
-        tag.getAsJsonArray("values").asList().stream()
+        TestResources.readJson("data/wicked_hands/tags/item/lifeless_hands.json")
+            .getAsJsonArray("values")
+            .asList()
+            .stream()
             .anyMatch(value -> value.getAsString().equals(ITEM_ID)));
   }
 }

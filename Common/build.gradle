@@ -23,6 +23,12 @@ dependencies {
     testCompileOnly easyNpcApi
     testRuntimeOnly easyNpcApi
   }
+  def easyModelEntitiesApi = easyModelEntitiesApiArtifact()
+  if (easyModelEntitiesApi != null) {
+    compileOnly(easyModelEntitiesApi) { transitive = false }
+    testCompileOnly(easyModelEntitiesApi) { transitive = false }
+    testRuntimeOnly(easyModelEntitiesApi) { transitive = false }
+  }
   testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
   testImplementation 'org.mockito:mockito-core:5.20.0'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

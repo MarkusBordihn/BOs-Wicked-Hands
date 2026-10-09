@@ -33,8 +33,7 @@ public final class ModItems {
   private ModItems() {}
 
   public static void register() {
-    Registry.register(
-        BuiltInRegistries.ITEM, LifelessRottenHandItem.ITEM_ID, LIFELESS_ROTTEN_HAND);
+    Registry.register(BuiltInRegistries.ITEM, LifelessRottenHandItem.ITEM_ID, LIFELESS_ROTTEN_HAND);
     Registry.register(BuiltInRegistries.ITEM, RottenHandSpawnEgg.ITEM_ID, ROTTEN_HAND_SPAWN_EGG);
   }
 }

@@ -1,8 +1,18 @@
 {
+  "advancements.wicked_hands.root.title": "Wicked Hands",
+  "advancements.wicked_hands.root.description": "Hebe eine leblose verrottete Hand auf",
+  "advancements.wicked_hands.summon_rotten_hand.title": "Im Kerzenschein",
+  "advancements.wicked_hands.summon_rotten_hand.description": "Beginne das Wiederbelebungsritual für eine leblose verrottete Hand",
+  "advancements.wicked_hands.rotten_hand_companion.title": "Eine helfende Hand",
+  "advancements.wicked_hands.rotten_hand_companion.description": "Erwecke eine verrottete Hand als deinen Begleiter",
+  "entity.wicked_hands.lifeless_rotten_hand": "Leblose verrottete Hand",
+  "entity.wicked_hands.lifeless_rotten_hand.ritual_incomplete": "Die Hand braucht Seelensand oder Seelenerde darunter und 4 brennende Kerzen in der Nähe.",
   "entity.wicked_hands.rotten_hand": "Verrottete Hand",
+  "entity.wicked_hands.rotten_hand.follow": "Die Hand folgt dir.",
+  "entity.wicked_hands.rotten_hand.stay": "Die Hand bleibt hier.",
   "itemGroup.wicked_hands": "Wicked Hands",
   "item.wicked_hands.lifeless_rotten_hand": "Leblose verrottete Hand",
   "item.wicked_hands.lifeless_rotten_hand.tooltip": "Eine tote Zombiehand. Vielleicht wacht sie wieder auf.",
-  "item.wicked_hands.lifeless_rotten_hand.revival_hint": "Die Hand zuckt. Vielleicht wecken Knochenmehl und verrottetes Fleisch sie auf.",
+  "item.wicked_hands.lifeless_rotten_hand.revival_hint": "Die Hand zuckt. Lege sie auf Seelensand zwischen 4 brennende Kerzen und opfere verrottetes Fleisch.",
   "item.wicked_hands.rotten_hand_spawn_egg": "Spawn-Ei (Verrottete Hand)"
 }

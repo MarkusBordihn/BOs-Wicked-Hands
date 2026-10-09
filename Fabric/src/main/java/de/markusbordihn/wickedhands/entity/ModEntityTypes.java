@@ -32,12 +32,18 @@ public final class ModEntityTypes {
 
   public static final EntityType<RottenHandEntity> ROTTEN_HAND =
       RottenHandEntity.createEntityType();
+  public static final EntityType<LifelessRottenHandEntity> LIFELESS_ROTTEN_HAND =
+      LifelessRottenHandEntity.createEntityType();
 
   private ModEntityTypes() {}
 
   public static void register() {
     Registry.register(BuiltInRegistries.ENTITY_TYPE, RottenHandEntity.ENTITY_ID, ROTTEN_HAND);
     FabricDefaultAttributeRegistry.register(ROTTEN_HAND, RottenHandEntity.createAttributes());
+    Registry.register(
+        BuiltInRegistries.ENTITY_TYPE, LifelessRottenHandEntity.ENTITY_ID, LIFELESS_ROTTEN_HAND);
+    FabricDefaultAttributeRegistry.register(
+        LIFELESS_ROTTEN_HAND, LifelessRottenHandEntity.createAttributes());
     SpawnPlacements.register(
         ROTTEN_HAND,
         RottenHandEntity.SPAWN_PLACEMENT_TYPE,

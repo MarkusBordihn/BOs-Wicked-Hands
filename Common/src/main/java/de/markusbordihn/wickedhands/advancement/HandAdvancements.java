@@ -17,23 +17,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package de.markusbordihn.wickedhands;
+package de.markusbordihn.wickedhands.advancement;
 
-import de.markusbordihn.easynpc.client.renderer.entity.easymodelentities.EasyModelNPCRenderer;
-import de.markusbordihn.wickedhands.entity.ModEntityTypes;
-import net.fabricmc.api.ClientModInitializer;
-import net.minecraft.client.renderer.entity.EntityRenderers;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.markusbordihn.wickedhands.Constants;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 
-public class WickedHandsClient implements ClientModInitializer {
+public final class HandAdvancements {
 
-  private static final Logger log = LogManager.getLogger(Constants.LOG_NAME);
+  public static final Identifier ROOT_ID =
+      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "root");
+  public static final Identifier SUMMON_ROTTEN_HAND_ID =
+      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "summon_rotten_hand");
+  public static final Identifier ROTTEN_HAND_COMPANION_ID =
+      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "rotten_hand_companion");
 
-  @Override
-  public void onInitializeClient() {
-    log.info("Initializing {} (Fabric-Client) ...", Constants.MOD_NAME);
-    EntityRenderers.register(ModEntityTypes.ROTTEN_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_ROTTEN_HAND, EasyModelNPCRenderer::new);
+  private static final String COMPANION_CRITERION = "companion";
+
+  private HandAdvancements() {}
+
+  public static void awardRottenHandCompanion(ServerPlayer serverPlayer) {
+    AdvancementHolder advancement =
+        serverPlayer.level().getServer().getAdvancements().get(ROTTEN_HAND_COMPANION_ID);
+    if (advancement == null) {
+      return;
+    }
+
+    serverPlayer.getAdvancements().award(advancement, COMPANION_CRITERION);
   }
 }

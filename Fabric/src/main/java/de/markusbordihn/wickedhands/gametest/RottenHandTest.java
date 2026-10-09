@@ -41,9 +41,19 @@ public class RottenHandTest {
     this.rottenHandGameTests.testSummonedRottenHandDropsLifelessRottenHand(helper);
   }
 
-  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 100)
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 200)
   public void testRottenHandAttacksAnimals(GameTestHelper helper) {
     this.rottenHandGameTests.testRottenHandAttacksAnimals(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 200)
+  public void testRottenHandSwimsToSurface(GameTestHelper helper) {
+    this.rottenHandGameTests.testRottenHandSwimsToSurface(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testRottenHandUsesActiveModelProfile(GameTestHelper helper) {
+    this.rottenHandGameTests.testRottenHandUsesActiveModelProfile(helper);
   }
 
   @GameTest(structure = "wicked_hands:gametest.1x1x1")
@@ -54,5 +64,25 @@ public class RottenHandTest {
   @GameTest(structure = "wicked_hands:gametest.1x1x1")
   public void testZombieDropsLifelessRottenHand(GameTestHelper helper) {
     this.rottenHandGameTests.testZombieDropsLifelessRottenHand(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testLifelessRottenHandIsPlacedOnSoulSand(GameTestHelper helper) {
+    this.rottenHandGameTests.testLifelessRottenHandIsPlacedOnSoulSand(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testRevivalRitualNeedsCandles(GameTestHelper helper) {
+    this.rottenHandGameTests.testRevivalRitualNeedsCandles(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 200)
+  public void testRevivalRitualCreatesCompanion(GameTestHelper helper) {
+    this.rottenHandGameTests.testRevivalRitualCreatesCompanion(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 200)
+  public void testRevivalRitualGrantsAdvancements(GameTestHelper helper) {
+    this.rottenHandGameTests.testRevivalRitualGrantsAdvancements(helper);
   }
 }

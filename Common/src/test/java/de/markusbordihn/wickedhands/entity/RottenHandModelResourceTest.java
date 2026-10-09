@@ -21,44 +21,141 @@ package de.markusbordihn.wickedhands.entity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.markusbordihn.easymodelentities.data.model.bake.ModelBakeResult;
+import de.markusbordihn.easymodelentities.data.profile.EasyModelEntityProfile;
+import de.markusbordihn.easymodelentities.data.renderprofile.EasyModelRenderProfile;
+import de.markusbordihn.easymodelentities.data.renderprofile.ModelAnimationMode;
+import de.markusbordihn.easymodelentities.model.bake.ModelBakeService;
+import de.markusbordihn.easymodelentities.profile.EasyModelProfileParser;
+import de.markusbordihn.easymodelentities.renderprofile.ModelRenderProfileParser;
+import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.TestResources;
+import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class RottenHandModelResourceTest {
 
-  private static final String PROFILE =
-      "data/wicked_hands/easy_model_entities/profiles/entity/rotten_hand.json";
-  private static final String RENDER_PROFILE =
-      "assets/wicked_hands/easy_model_entities/render_profiles/entity/rotten_hand.json";
   private static final List<String> REQUIRED_ANIMATIONS =
       List.of("idle", "walk", "attack", "attack_2");
 
-  private static JsonObject readModel() {
-    String modelId = TestResources.readJson(RENDER_PROFILE).get("model").getAsString();
-    return TestResources.readJson(TestResources.assetPath(modelId, "", ".bbmodel"));
+  private static Identifier profileId(String entityId) {
+    return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "entity/" + entityId);
   }
 
-  @Test
+  private static String profile(String entityId) {
+    return "data/wicked_hands/easy_model_entities/profiles/entity/" + entityId + ".json";
+  }
+
+  private static String renderProfile(String entityId) {
+    return "assets/wicked_hands/easy_model_entities/render_profiles/entity/" + entityId + ".json";
+  }
+
+  private static JsonObject readModel() {
+    return TestResources.readJson(
+        TestResources.assetPath(
+            TestResources.readJson(renderProfile(RottenHandEntity.ID)).get("model").getAsString(),
+            "",
+            ".bbmodel"));
+  }
+
+  private static EasyModelRenderProfile parseRenderProfile(String entityId) throws IOException {
+    try (Reader reader =
+        Files.newBufferedReader(TestResources.resourcePath(renderProfile(entityId)))) {
+      return ModelRenderProfileParser.parse(profileId(entityId), reader);
+    }
+  }
+
+  private static ResourceManager assetResourceManager() {
+    ResourceManager resourceManager = mock(ResourceManager.class);
+    when(resourceManager.getResource(any()))
+        .thenAnswer(invocation -> assetResource(invocation.getArgument(0)));
+    return resourceManager;
+  }
+
+  private static Optional<Resource> assetResource(Identifier resourceId) {
+    Path path = TestResources.assetPath(resourceId.toString(), "", "");
+    if (!Files.exists(path)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(new Resource(mock(PackResources.class), () -> Files.newInputStream(path)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @DisplayName("Easy Model Entities accepts the server profile")
+  void serverProfileIsActive(String entityId) throws IOException {
+    EasyModelEntityProfile profile;
+    try (Reader reader = Files.newBufferedReader(TestResources.resourcePath(profile(entityId)))) {
+      profile = EasyModelProfileParser.parse(profileId(entityId), reader);
+    }
+    assertTrue(profile.isActive(), profile.status() + " " + profile.validationIssues());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @DisplayName("Easy Model Entities accepts the render profile")
+  void renderProfileIsActive(String entityId) throws IOException {
+    EasyModelRenderProfile renderProfile = parseRenderProfile(entityId);
+    assertTrue(
+        renderProfile.isActive(), renderProfile.status() + " " + renderProfile.validationIssues());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @DisplayName("Model bakes for its body type without the fallback model")
+  void modelBakesWithoutFallback(String entityId) throws IOException {
+    ModelBakeResult bakeResult =
+        ModelBakeService.createDefault().bake(parseRenderProfile(entityId), assetResourceManager());
+    assertTrue(bakeResult.successful(), bakeResult.validationIssues().toString());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
   @DisplayName("Server profile and render profile describe the same model version")
-  void profilesMatch() {
-    JsonObject profile = TestResources.readJson(PROFILE);
-    JsonObject renderProfile = TestResources.readJson(RENDER_PROFILE);
+  void profilesMatch(String entityId) {
+    JsonObject profile = TestResources.readJson(profile(entityId));
+    JsonObject renderProfile = TestResources.readJson(renderProfile(entityId));
     assertEquals(profile.get("version"), renderProfile.get("version"));
     assertEquals(profile.get("preset_type"), renderProfile.get("preset_type"));
   }
 
   @Test
+  @DisplayName("Lifeless hand uses the rotten hand model without any animation")
+  void lifelessHandIsMotionless() throws IOException {
+    assertEquals(
+        ModelAnimationMode.NONE,
+        parseRenderProfile(LifelessRottenHandEntity.ID).animation().mode());
+    assertEquals(
+        TestResources.readJson(renderProfile(RottenHandEntity.ID)).get("model"),
+        TestResources.readJson(renderProfile(LifelessRottenHandEntity.ID)).get("model"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
   @DisplayName("Render profile points at an existing model and texture")
-  void renderProfileResourcesExist() {
-    JsonObject renderProfile = TestResources.readJson(RENDER_PROFILE);
+  void renderProfileResourcesExist(String entityId) {
+    JsonObject renderProfile = TestResources.readJson(renderProfile(entityId));
     String modelId = renderProfile.get("model").getAsString();
     String textureId = renderProfile.get("texture").getAsString();
     assertTrue(Files.exists(TestResources.assetPath(modelId, "", ".bbmodel")), modelId);

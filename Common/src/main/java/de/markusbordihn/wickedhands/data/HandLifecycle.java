@@ -17,23 +17,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package de.markusbordihn.wickedhands;
+package de.markusbordihn.wickedhands.data;
 
-import de.markusbordihn.easynpc.client.renderer.entity.easymodelentities.EasyModelNPCRenderer;
-import de.markusbordihn.wickedhands.entity.ModEntityTypes;
-import net.fabricmc.api.ClientModInitializer;
-import net.minecraft.client.renderer.entity.EntityRenderers;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.mojang.serialization.Codec;
+import java.util.Locale;
+import net.minecraft.util.StringRepresentable;
 
-public class WickedHandsClient implements ClientModInitializer {
+public enum HandLifecycle implements StringRepresentable {
+  WILD,
+  COMPANION;
 
-  private static final Logger log = LogManager.getLogger(Constants.LOG_NAME);
+  public static final Codec<HandLifecycle> CODEC =
+      StringRepresentable.fromEnum(HandLifecycle::values);
+
+  private final String serializedName = this.name().toLowerCase(Locale.ROOT);
 
   @Override
-  public void onInitializeClient() {
-    log.info("Initializing {} (Fabric-Client) ...", Constants.MOD_NAME);
-    EntityRenderers.register(ModEntityTypes.ROTTEN_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_ROTTEN_HAND, EasyModelNPCRenderer::new);
+  public String getSerializedName() {
+    return this.serializedName;
   }
 }

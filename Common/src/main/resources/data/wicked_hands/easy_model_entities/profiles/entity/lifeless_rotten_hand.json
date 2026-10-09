@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.2.0",
+  "model_type": "entity",
+  "preset_type": "amphibious_wandering",
+  "version": "lifeless-rotten-hand-v1",
+  "dimensions": {
+    "width": 0.75,
+    "height": 0.375,
+    "eye_height": 0.25
+  }
+}

@@ -20,19 +20,27 @@
 package de.markusbordihn.wickedhands.item;
 
 import de.markusbordihn.wickedhands.Constants;
+import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
+import de.markusbordihn.wickedhands.ritual.RevivalRitual;
 import java.util.List;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public class LifelessRottenHandItem extends Item {
 
@@ -55,18 +63,45 @@ public class LifelessRottenHandItem extends Item {
             .component(DataComponents.LORE, createTooltip()));
   }
 
+  private static ItemLore createTooltip() {
+    return new ItemLore(
+        List.of(
+            Component.translatable(TOOLTIP_TRANSLATION_KEY)
+                .withStyle(style -> style.withColor(ChatFormatting.GRAY).withItalic(false))));
+  }
+
+  @Override
+  public InteractionResult useOn(UseOnContext context) {
+    Level level = context.getLevel();
+    BlockPos ritualBasePosition = context.getClickedPos();
+    BlockState ritualBase = level.getBlockState(ritualBasePosition);
+    if (context.getClickedFace() != Direction.UP
+        || !RevivalRitual.isRitualBase(ritualBase)
+        || !level.isEmptyBlock(ritualBasePosition.above())) {
+      return InteractionResult.PASS;
+    }
+
+    if (level instanceof ServerLevel serverLevel) {
+      double surfaceHeight =
+          ritualBase.getCollisionShape(level, ritualBasePosition).max(Direction.Axis.Y);
+      if (!LifelessRottenHandEntity.place(
+          serverLevel,
+          Vec3.atBottomCenterOf(ritualBasePosition).add(0.0D, surfaceHeight, 0.0D),
+          context.getRotation() + 180.0F,
+          context.getPlayer())) {
+        return InteractionResult.FAIL;
+      }
+
+      context.getItemInHand().consume(1, context.getPlayer());
+    }
+    return InteractionResult.SUCCESS;
+  }
+
   @Override
   public InteractionResult use(Level level, Player player, InteractionHand hand) {
     if (!level.isClientSide()) {
       player.sendOverlayMessage(Component.translatable(REVIVAL_HINT_TRANSLATION_KEY));
     }
     return InteractionResult.SUCCESS;
-  }
-
-  private static ItemLore createTooltip() {
-    return new ItemLore(
-        List.of(
-            Component.translatable(TOOLTIP_TRANSLATION_KEY)
-                .withStyle(style -> style.withColor(ChatFormatting.GRAY).withItalic(false))));
   }
 }

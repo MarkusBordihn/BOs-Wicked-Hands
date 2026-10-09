@@ -1,0 +1,25 @@
+{
+  "parent": "wicked_hands:summon_rotten_hand",
+  "criteria": {
+    "companion": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.wicked_hands.rotten_hand_companion.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "id": "minecraft:lead"
+    },
+    "title": {
+      "translate": "advancements.wicked_hands.rotten_hand_companion.title"
+    }
+  },
+  "requirements": [
+    [
+      "companion"
+    ]
+  ]
+}

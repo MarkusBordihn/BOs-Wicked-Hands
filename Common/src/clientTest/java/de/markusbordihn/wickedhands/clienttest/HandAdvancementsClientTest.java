@@ -17,23 +17,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package de.markusbordihn.wickedhands;
+package de.markusbordihn.wickedhands.clienttest;
 
-import de.markusbordihn.easynpc.client.renderer.entity.easymodelentities.EasyModelNPCRenderer;
-import de.markusbordihn.wickedhands.entity.ModEntityTypes;
-import net.fabricmc.api.ClientModInitializer;
-import net.minecraft.client.renderer.entity.EntityRenderers;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.Until;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-public class WickedHandsClient implements ClientModInitializer {
+class HandAdvancementsClientTest extends ClientTestBase {
 
-  private static final Logger log = LogManager.getLogger(Constants.LOG_NAME);
+  private static final long CHAT_TICKS = 20;
+  private static final long RENDER_TICKS = 10;
 
-  @Override
-  public void onInitializeClient() {
-    log.info("Initializing {} (Fabric-Client) ...", Constants.MOD_NAME);
-    EntityRenderers.register(ModEntityTypes.ROTTEN_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_ROTTEN_HAND, EasyModelNPCRenderer::new);
+  @Test
+  @DisplayName("Advancement tab shows all hand advancements")
+  void advancementTabShowsHandAdvancements() {
+    renderProfile("shown");
+    command("advancement grant @s through wicked_hands:rotten_hand_companion");
+    client.await(Until.ticksElapsed(CHAT_TICKS));
+    client.saveScreenshot("advancement_chat");
+    client.pressBindingAndAwaitScreen("key.advancements");
+    client.await(Until.ticksElapsed(RENDER_TICKS));
+    client.saveScreenshot("advancement_tab");
+    command("advancement revoke @s from wicked_hands:root");
   }
 }

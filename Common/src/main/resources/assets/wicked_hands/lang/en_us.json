@@ -1,8 +1,18 @@
 {
+  "advancements.wicked_hands.root.title": "Wicked Hands",
+  "advancements.wicked_hands.root.description": "Pick up a Lifeless Rotten Hand",
+  "advancements.wicked_hands.summon_rotten_hand.title": "By Candlelight",
+  "advancements.wicked_hands.summon_rotten_hand.description": "Start the revival ritual for a Lifeless Rotten Hand",
+  "advancements.wicked_hands.rotten_hand_companion.title": "A Helping Hand",
+  "advancements.wicked_hands.rotten_hand_companion.description": "Wake a Rotten Hand as your companion",
+  "entity.wicked_hands.lifeless_rotten_hand": "Lifeless Rotten Hand",
+  "entity.wicked_hands.lifeless_rotten_hand.ritual_incomplete": "The hand needs Soul Sand or Soul Soil below and 4 burning candles nearby.",
   "entity.wicked_hands.rotten_hand": "Rotten Hand",
+  "entity.wicked_hands.rotten_hand.follow": "The hand follows you.",
+  "entity.wicked_hands.rotten_hand.stay": "The hand stays here.",
   "itemGroup.wicked_hands": "Wicked Hands",
   "item.wicked_hands.lifeless_rotten_hand": "Lifeless Rotten Hand",
   "item.wicked_hands.lifeless_rotten_hand.tooltip": "A dead zombie hand. Maybe it can wake up again.",
-  "item.wicked_hands.lifeless_rotten_hand.revival_hint": "The hand twitches. Maybe Bone Meal and Rotten Flesh can wake it up.",
+  "item.wicked_hands.lifeless_rotten_hand.revival_hint": "The hand twitches. Lay it on Soul Sand among 4 burning candles and offer Rotten Flesh.",
   "item.wicked_hands.rotten_hand_spawn_egg": "Rotten Hand Spawn Egg"
 }

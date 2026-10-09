@@ -45,6 +45,7 @@ public final class ModGameTests {
       DeferredRegister.create(BuiltInRegistries.TEST_FUNCTION, Constants.MOD_ID);
   private static final List<TestEntry> TEST_ENTRIES = new ArrayList<>();
   private static final int DEFAULT_MAX_TICKS = 100;
+  private static final int RITUAL_MAX_TICKS = 200;
   private static final Identifier STRUCTURE_1X1X1 =
       Identifier.fromNamespaceAndPath(Constants.MOD_ID, "gametest.1x1x1");
   private static final Identifier DEFAULT_ENVIRONMENT =
@@ -65,10 +66,26 @@ public final class ModGameTests {
         "summoned_rotten_hand_drops_lifeless_rotten_hand",
         ROTTEN_HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
     register("rotten_hand_attacks_animals", ROTTEN_HAND_TESTS::testRottenHandAttacksAnimals);
+    register("rotten_hand_swims_to_surface", ROTTEN_HAND_TESTS::testRottenHandSwimsToSurface);
+    register(
+        "rotten_hand_uses_active_model_profile",
+        ROTTEN_HAND_TESTS::testRottenHandUsesActiveModelProfile);
     register(
         "rotten_hand_despawns_when_far_away", ROTTEN_HAND_TESTS::testRottenHandDespawnsWhenFarAway);
     register(
         "zombie_drops_lifeless_rotten_hand", ROTTEN_HAND_TESTS::testZombieDropsLifelessRottenHand);
+    register(
+        "lifeless_rotten_hand_is_placed_on_soul_sand",
+        ROTTEN_HAND_TESTS::testLifelessRottenHandIsPlacedOnSoulSand);
+    register("revival_ritual_needs_candles", ROTTEN_HAND_TESTS::testRevivalRitualNeedsCandles);
+    register(
+        "revival_ritual_creates_companion",
+        ROTTEN_HAND_TESTS::testRevivalRitualCreatesCompanion,
+        RITUAL_MAX_TICKS);
+    register(
+        "revival_ritual_grants_advancements",
+        ROTTEN_HAND_TESTS::testRevivalRitualGrantsAdvancements,
+        RITUAL_MAX_TICKS);
   }
 
   private ModGameTests() {}
@@ -91,14 +108,19 @@ public final class ModGameTests {
           testEntry.testFunction().getId(),
           new FunctionGameTestInstance(
               testEntry.testFunction().getKey(),
-              new TestData<>(environment, STRUCTURE_1X1X1, DEFAULT_MAX_TICKS, 0, true)));
+              new TestData<>(environment, STRUCTURE_1X1X1, testEntry.maxTicks(), 0, true)));
     }
   }
 
   private static void register(String name, Consumer<GameTestHelper> testFunction) {
-    TEST_ENTRIES.add(new TestEntry(TEST_FUNCTIONS.register(name, () -> testFunction)));
+    register(name, testFunction, DEFAULT_MAX_TICKS);
+  }
+
+  private static void register(String name, Consumer<GameTestHelper> testFunction, int maxTicks) {
+    TEST_ENTRIES.add(new TestEntry(TEST_FUNCTIONS.register(name, () -> testFunction), maxTicks));
   }
 
   private record TestEntry(
-      DeferredHolder<Consumer<GameTestHelper>, Consumer<GameTestHelper>> testFunction) {}
+      DeferredHolder<Consumer<GameTestHelper>, Consumer<GameTestHelper>> testFunction,
+      int maxTicks) {}
 }

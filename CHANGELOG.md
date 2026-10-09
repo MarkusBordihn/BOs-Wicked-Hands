@@ -5,6 +5,19 @@
 This change log includes the summarized changes. For the full changelog, please go to
 the [GitHub History][history] instead.
 
+### 0.2.0 (alpha)
+
+- Changed the revival hint of the "Lifeless Rotten Hand" to describe the new ritual.
+- Added placing the pale, motionless "Lifeless Rotten Hand" on Soul Sand or Soul Soil.
+- Added a revival ritual: 4 burning candles and Rotten Flesh wake a placed hand as your companion.
+- Added soul flames, whispers and a heartbeat for every candle lit around a placed hand.
+- Added a soul vortex, a darkening storm and a lightning strike to the 7-second revival ritual.
+- Added a short Darkness effect for players near a starting revival ritual.
+- Added companion hands that follow their owner and attack whoever hurts the owner.
+- Added "Follow" and "Stay" for companion hands, toggled by the owner with Sneak + Right-Click.
+- Added swimming to the "Rotten Hand", companions follow their owner through water.
+- Added advancements for picking up a hand, starting the ritual and waking a companion.
+
 ### 0.1.0 (alpha)
 
 - Added Easy NPC and Easy Model Entities as required dependencies.

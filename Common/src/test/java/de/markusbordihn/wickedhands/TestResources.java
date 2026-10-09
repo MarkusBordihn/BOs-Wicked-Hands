@@ -38,8 +38,12 @@ public final class TestResources {
         "assets/" + namespaceAndPath[0] + "/" + folder + namespaceAndPath[1] + extension);
   }
 
+  public static Path resourcePath(String resourcePath) {
+    return RESOURCES.resolve(resourcePath);
+  }
+
   public static JsonObject readJson(String resourcePath) {
-    return readJson(RESOURCES.resolve(resourcePath));
+    return readJson(resourcePath(resourcePath));
   }
 
   public static JsonObject readJson(Path path) {

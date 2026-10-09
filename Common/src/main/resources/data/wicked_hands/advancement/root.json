@@ -1,0 +1,32 @@
+{
+  "criteria": {
+    "lifeless_rotten_hand": {
+      "conditions": {
+        "items": [
+          {
+            "items": "wicked_hands:lifeless_rotten_hand"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "background": "minecraft:block/soul_soil",
+    "description": {
+      "translate": "advancements.wicked_hands.root.description"
+    },
+    "icon": {
+      "id": "wicked_hands:lifeless_rotten_hand"
+    },
+    "title": {
+      "translate": "advancements.wicked_hands.root.title"
+    }
+  },
+  "requirements": [
+    [
+      "lifeless_rotten_hand"
+    ]
+  ]
+}

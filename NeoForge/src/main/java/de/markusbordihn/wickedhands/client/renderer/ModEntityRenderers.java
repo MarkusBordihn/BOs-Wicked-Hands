@@ -34,5 +34,7 @@ public final class ModEntityRenderers {
   @SubscribeEvent
   public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
     event.registerEntityRenderer(ModEntityTypes.ROTTEN_HAND.get(), EasyModelNPCRenderer::new);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_ROTTEN_HAND.get(), EasyModelNPCRenderer::new);
   }
 }

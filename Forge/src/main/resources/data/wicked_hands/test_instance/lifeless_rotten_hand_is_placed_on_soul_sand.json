@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "wicked_hands:lifeless_rotten_hand_is_placed_on_soul_sand",
+  "environment": "minecraft:default",
+  "structure": "wicked_hands:gametest.1x1x1",
+  "max_ticks": 100
+}

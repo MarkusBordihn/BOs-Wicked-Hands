@@ -34,6 +34,9 @@ public final class ModEntityTypes {
 
   public static final RegistryObject<EntityType<RottenHandEntity>> ROTTEN_HAND =
       ENTITY_TYPES.register(RottenHandEntity.ID, RottenHandEntity::createEntityType);
+  public static final RegistryObject<EntityType<LifelessRottenHandEntity>> LIFELESS_ROTTEN_HAND =
+      ENTITY_TYPES.register(
+          LifelessRottenHandEntity.ID, LifelessRottenHandEntity::createEntityType);
 
   private ModEntityTypes() {}
 
@@ -44,6 +47,7 @@ public final class ModEntityTypes {
 
   private static void registerEntityAttributes(EntityAttributeCreationEvent event) {
     event.put(ROTTEN_HAND.get(), RottenHandEntity.createAttributes().build());
+    event.put(LIFELESS_ROTTEN_HAND.get(), LifelessRottenHandEntity.createAttributes().build());
   }
 
   private static void registerSpawnPlacements(SpawnPlacementRegisterEvent event) {

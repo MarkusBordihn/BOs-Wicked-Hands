@@ -35,16 +35,17 @@ abstract class ClientTestBase {
   static final String LIFELESS_ROTTEN_HAND = "wicked_hands:lifeless_rotten_hand";
   static final int PLATFORM_Y = 100;
   static final int FLOOR_Y = PLATFORM_Y + 1;
+
+  @RegisterExtension
+  static final GameClientExtension client =
+      GameClientExtension.shared(ClientTestBase::configureLaunch);
+
   private static final String SUITE_NAME = "Wicked Hands";
   private static final int MAXIMUM_SESSION_LABEL_LENGTH = 64;
   private static final Duration WORLD_TIMEOUT = Duration.ofMinutes(3);
   private static final long NOON = 6000L;
   private static final String TEST_AREA =
       "-8 " + (PLATFORM_Y - 1) + " -8 8 " + (PLATFORM_Y + 6) + " 8";
-
-  @RegisterExtension
-  static final GameClientExtension client =
-      GameClientExtension.shared(ClientTestBase::configureLaunch);
 
   private static GameClientBuilder configureLaunch(GameClientBuilder builder) {
     return builder
@@ -53,7 +54,7 @@ abstract class ClientTestBase {
         .withGuiScale(2)
         .withConfiguration(
             "command_allowlist",
-            "fill,tp,gamerule,item,kill,summon,clear,gamemode,difficulty,effect");
+            "fill,tp,gamerule,item,kill,summon,clear,gamemode,difficulty,effect,advancement");
   }
 
   @BeforeAll

@@ -98,12 +98,21 @@ subprojects {
         : null
   }
 
-  // No loader independent artifact exists, so the API falls back to the Fabric jar.
+  // No loader independent artifacts exist on Modrinth, so the common APIs fall back to the Fabric
+  // jars.
   ext.easyNpcApiArtifact = { ->
     mavenLocalArtifact('de.markusbordihn.easynpc',
         "easy_npc-common-${project.minecraft_version}", project.findProperty('easy_npc_version'))
         ?: modrinthArtifact(EASY_NPC_MODRINTH_PROJECT,
             project.findProperty('easy_npc_version'), 'fabric')
+  }
+
+  ext.easyModelEntitiesApiArtifact = { ->
+    mavenLocalArtifact('de.markusbordihn.easymodelentities',
+        "easy_model_entities-common-${project.minecraft_version}",
+        project.findProperty('easy_model_entities_version'))
+        ?: modrinthArtifact(EASY_MODEL_ENTITIES_MODRINTH_PROJECT,
+            project.findProperty('easy_model_entities_version'), 'fabric')
   }
 
   ext.easyNpcArtifact = { String loader ->

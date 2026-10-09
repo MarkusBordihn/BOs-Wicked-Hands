@@ -47,10 +47,23 @@ public final class ModGameTests {
         "summoned_rotten_hand_drops_lifeless_rotten_hand",
         ROTTEN_HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
     register("rotten_hand_attacks_animals", ROTTEN_HAND_TESTS::testRottenHandAttacksAnimals);
+    register("rotten_hand_swims_to_surface", ROTTEN_HAND_TESTS::testRottenHandSwimsToSurface);
+    register(
+        "rotten_hand_uses_active_model_profile",
+        ROTTEN_HAND_TESTS::testRottenHandUsesActiveModelProfile);
     register(
         "rotten_hand_despawns_when_far_away", ROTTEN_HAND_TESTS::testRottenHandDespawnsWhenFarAway);
     register(
         "zombie_drops_lifeless_rotten_hand", ROTTEN_HAND_TESTS::testZombieDropsLifelessRottenHand);
+    register(
+        "lifeless_rotten_hand_is_placed_on_soul_sand",
+        ROTTEN_HAND_TESTS::testLifelessRottenHandIsPlacedOnSoulSand);
+    register("revival_ritual_needs_candles", ROTTEN_HAND_TESTS::testRevivalRitualNeedsCandles);
+    register(
+        "revival_ritual_creates_companion", ROTTEN_HAND_TESTS::testRevivalRitualCreatesCompanion);
+    register(
+        "revival_ritual_grants_advancements",
+        ROTTEN_HAND_TESTS::testRevivalRitualGrantsAdvancements);
   }
 
   private ModGameTests() {}

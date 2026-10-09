@@ -1,0 +1,14 @@
+{
+  "schema_version": "0.2.0",
+  "preset_type": "amphibious_wandering",
+  "version": "lifeless-rotten-hand-v1",
+  "model": "wicked_hands:easy_model_entities/models/rotten_hand",
+  "texture": "wicked_hands:textures/item/lifeless_rotten_hand.png",
+  "rendering": {
+    "scale": 1.0,
+    "shadow_radius": 0.3
+  },
+  "animation": {
+    "mode": "none"
+  }
+}

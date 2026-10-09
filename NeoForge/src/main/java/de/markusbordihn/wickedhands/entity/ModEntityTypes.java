@@ -37,12 +37,17 @@ public final class ModEntityTypes {
 
   public static final DeferredHolder<EntityType<?>, EntityType<RottenHandEntity>> ROTTEN_HAND =
       ENTITY_TYPES.register(RottenHandEntity.ID, RottenHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<LifelessRottenHandEntity>>
+      LIFELESS_ROTTEN_HAND =
+          ENTITY_TYPES.register(
+              LifelessRottenHandEntity.ID, LifelessRottenHandEntity::createEntityType);
 
   private ModEntityTypes() {}
 
   @SubscribeEvent
   public static void registerEntityAttributes(EntityAttributeCreationEvent event) {
     event.put(ROTTEN_HAND.get(), RottenHandEntity.createAttributes().build());
+    event.put(LIFELESS_ROTTEN_HAND.get(), LifelessRottenHandEntity.createAttributes().build());
   }
 
   @SubscribeEvent
