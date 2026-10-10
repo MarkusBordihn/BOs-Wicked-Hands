@@ -119,6 +119,7 @@ dependencies {
   def easyModelEntitiesForge = easyModelEntitiesArtifact('forge')
   if (easyModelEntitiesForge != null) {
     compileOnly(easyModelEntitiesForge) { transitive = false }
+    testCompileOnly(easyModelEntitiesForge) { transitive = false }
     runtimeOnly(easyModelEntitiesForge) { transitive = false }
   }
 

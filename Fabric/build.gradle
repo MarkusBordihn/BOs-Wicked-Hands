@@ -72,6 +72,7 @@ dependencies {
   def easyModelEntitiesFabric = easyModelEntitiesArtifact('fabric')
   if (easyModelEntitiesFabric != null) {
     compileOnly(easyModelEntitiesFabric) { transitive = false }
+    testCompileOnly(easyModelEntitiesFabric) { transitive = false }
     runtimeOnly(easyModelEntitiesFabric) { transitive = false }
   }
 
