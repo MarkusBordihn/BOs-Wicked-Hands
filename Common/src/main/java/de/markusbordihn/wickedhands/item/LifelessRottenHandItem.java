@@ -23,10 +23,12 @@ import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -36,6 +38,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
@@ -63,6 +66,15 @@ public class LifelessRottenHandItem extends Item {
             .component(DataComponents.LORE, createTooltip()));
   }
 
+  public static ItemStack createCompanionRemains(UUID companionUUID, Component customName) {
+    ItemStack remains = new ItemStack(BuiltInRegistries.ITEM.getValue(ITEM_ID));
+    remains.set(HandDataComponents.COMPANION_UUID, companionUUID);
+    if (customName != null) {
+      remains.set(DataComponents.CUSTOM_NAME, customName);
+    }
+    return remains;
+  }
+
   private static ItemLore createTooltip() {
     return new ItemLore(
         List.of(
@@ -84,15 +96,17 @@ public class LifelessRottenHandItem extends Item {
     if (level instanceof ServerLevel serverLevel) {
       double surfaceHeight =
           ritualBase.getCollisionShape(level, ritualBasePosition).max(Direction.Axis.Y);
+      ItemStack itemStack = context.getItemInHand();
       if (!LifelessRottenHandEntity.place(
           serverLevel,
           Vec3.atBottomCenterOf(ritualBasePosition).add(0.0D, surfaceHeight, 0.0D),
           context.getRotation() + 180.0F,
-          context.getPlayer())) {
+          context.getPlayer(),
+          itemStack)) {
         return InteractionResult.FAIL;
       }
 
-      context.getItemInHand().consume(1, context.getPlayer());
+      itemStack.consume(1, context.getPlayer());
     }
     return InteractionResult.SUCCESS;
   }

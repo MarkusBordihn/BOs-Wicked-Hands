@@ -85,4 +85,19 @@ public class RottenHandTest {
   public void testRevivalRitualGrantsAdvancements(GameTestHelper helper) {
     this.rottenHandGameTests.testRevivalRitualGrantsAdvancements(helper);
   }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 200)
+  public void testOnlyCompanionGrabsTarget(GameTestHelper helper) {
+    this.rottenHandGameTests.testOnlyCompanionGrabsTarget(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 200)
+  public void testFallenCompanionWithoutOwnerLeavesProtectedRemains(GameTestHelper helper) {
+    this.rottenHandGameTests.testFallenCompanionWithoutOwnerLeavesProtectedRemains(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = 400)
+  public void testFallenCompanionReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    this.rottenHandGameTests.testFallenCompanionReturnsAndRevivesWithSameIdentity(helper);
+  }
 }

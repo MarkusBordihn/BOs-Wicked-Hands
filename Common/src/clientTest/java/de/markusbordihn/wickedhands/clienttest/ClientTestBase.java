@@ -137,6 +137,7 @@ abstract class ClientTestBase {
     }
     command("gamemode creative");
     command("kill @e[type=" + ROTTEN_HAND + "]");
+    command("kill @e[type=" + LIFELESS_ROTTEN_HAND + "]");
     command("kill @e[type=item]");
     command("fill " + TEST_AREA + " minecraft:air");
     command("clear @s");

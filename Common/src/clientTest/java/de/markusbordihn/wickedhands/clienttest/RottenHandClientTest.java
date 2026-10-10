@@ -109,4 +109,20 @@ class RottenHandClientTest extends ClientTestBase {
     client.saveScreenshot("revival_hint");
     client.await(Until.itemCount(LIFELESS_ROTTEN_HAND, 1));
   }
+
+  @Test
+  @DisplayName("Lifeless rotten hand lies on its back on soul sand")
+  void lifelessRottenHandLiesOnItsBack() {
+    enterTestArea();
+    command("fill 0 " + PLATFORM_Y + " 3 0 " + PLATFORM_Y + " 3 minecraft:soul_sand");
+    command("item replace entity @s weapon.mainhand with " + LIFELESS_ROTTEN_HAND);
+    client.await(Until.itemCount(LIFELESS_ROTTEN_HAND, 1));
+    lookAtPoint(HAND_X, FLOOR_Y - 0.1D, HAND_Z);
+    client.useHeldItem();
+    client.awaitEntity(Parameters.of("type", LIFELESS_ROTTEN_HAND), entity -> true);
+    command("tp @s 2.5 " + FLOOR_Y + " 3.5");
+    lookAtRottenHand();
+    client.await(Until.ticksElapsed(RENDER_TICKS));
+    client.saveScreenshot("lifeless_rotten_hand_on_back");
+  }
 }

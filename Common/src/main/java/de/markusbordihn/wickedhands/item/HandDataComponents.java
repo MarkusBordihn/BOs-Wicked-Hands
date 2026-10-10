@@ -17,28 +17,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package de.markusbordihn.wickedhands;
+package de.markusbordihn.wickedhands.item;
 
-import de.markusbordihn.wickedhands.entity.ModEntityTypes;
-import de.markusbordihn.wickedhands.item.ModDataComponents;
-import de.markusbordihn.wickedhands.item.ModItems;
-import de.markusbordihn.wickedhands.loot.ModLootTables;
-import de.markusbordihn.wickedhands.tabs.ModTabs;
-import net.fabricmc.api.ModInitializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.markusbordihn.wickedhands.Constants;
+import java.util.UUID;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.resources.Identifier;
 
-public class WickedHands implements ModInitializer {
+public final class HandDataComponents {
 
-  private static final Logger log = LogManager.getLogger(Constants.LOG_NAME);
+  public static final String COMPANION_UUID_ID = "companion_uuid";
+  public static final Identifier COMPANION_UUID_COMPONENT_ID =
+      Identifier.fromNamespaceAndPath(Constants.MOD_ID, COMPANION_UUID_ID);
+  public static final DataComponentType<UUID> COMPANION_UUID =
+      DataComponentType.<UUID>builder()
+          .persistent(UUIDUtil.CODEC)
+          .networkSynchronized(UUIDUtil.STREAM_CODEC)
+          .build();
 
-  @Override
-  public void onInitialize() {
-    log.info("Initializing {} (Fabric) ...", Constants.MOD_NAME);
-    ModEntityTypes.register();
-    ModDataComponents.register();
-    ModItems.register();
-    ModTabs.register();
-    ModLootTables.register();
-  }
+  private HandDataComponents() {}
 }

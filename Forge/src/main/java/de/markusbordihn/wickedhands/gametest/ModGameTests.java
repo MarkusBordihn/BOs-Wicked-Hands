@@ -64,6 +64,13 @@ public final class ModGameTests {
     register(
         "revival_ritual_grants_advancements",
         ROTTEN_HAND_TESTS::testRevivalRitualGrantsAdvancements);
+    register("only_companion_grabs_target", ROTTEN_HAND_TESTS::testOnlyCompanionGrabsTarget);
+    register(
+        "fallen_companion_without_owner_leaves_protected_remains",
+        ROTTEN_HAND_TESTS::testFallenCompanionWithoutOwnerLeavesProtectedRemains);
+    register(
+        "fallen_companion_returns_and_revives_with_same_identity",
+        ROTTEN_HAND_TESTS::testFallenCompanionReturnsAndRevivesWithSameIdentity);
   }
 
   private ModGameTests() {}

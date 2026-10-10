@@ -46,6 +46,7 @@ public final class ModGameTests {
   private static final List<TestEntry> TEST_ENTRIES = new ArrayList<>();
   private static final int DEFAULT_MAX_TICKS = 100;
   private static final int RITUAL_MAX_TICKS = 200;
+  private static final int TWO_RITUALS_MAX_TICKS = 400;
   private static final Identifier STRUCTURE_1X1X1 =
       Identifier.fromNamespaceAndPath(Constants.MOD_ID, "gametest.1x1x1");
   private static final Identifier DEFAULT_ENVIRONMENT =
@@ -86,6 +87,18 @@ public final class ModGameTests {
         "revival_ritual_grants_advancements",
         ROTTEN_HAND_TESTS::testRevivalRitualGrantsAdvancements,
         RITUAL_MAX_TICKS);
+    register(
+        "only_companion_grabs_target",
+        ROTTEN_HAND_TESTS::testOnlyCompanionGrabsTarget,
+        RITUAL_MAX_TICKS);
+    register(
+        "fallen_companion_without_owner_leaves_protected_remains",
+        ROTTEN_HAND_TESTS::testFallenCompanionWithoutOwnerLeavesProtectedRemains,
+        RITUAL_MAX_TICKS);
+    register(
+        "fallen_companion_returns_and_revives_with_same_identity",
+        ROTTEN_HAND_TESTS::testFallenCompanionReturnsAndRevivesWithSameIdentity,
+        TWO_RITUALS_MAX_TICKS);
   }
 
   private ModGameTests() {}

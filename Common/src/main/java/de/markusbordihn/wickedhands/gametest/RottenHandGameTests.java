@@ -22,6 +22,9 @@ package de.markusbordihn.wickedhands.gametest;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.markusbordihn.easymodelentities.data.profile.EasyModelEntityProfile;
 import de.markusbordihn.easymodelentities.profile.EasyModelProfileManager;
+import de.markusbordihn.easynpc.api.handler.EasyNPCEntityHandler;
+import de.markusbordihn.easynpc.data.npc.NPCRemovalReason;
+import de.markusbordihn.easynpc.data.npc.SavedNPCEntityEntry;
 import de.markusbordihn.easynpc.data.objective.ObjectiveType;
 import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.advancement.HandAdvancements;
@@ -30,11 +33,13 @@ import de.markusbordihn.wickedhands.data.HandLifecycle;
 import de.markusbordihn.wickedhands.entity.AbstractRottenHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
 import de.markusbordihn.wickedhands.entity.RottenHandEntity;
+import de.markusbordihn.wickedhands.item.HandDataComponents;
 import de.markusbordihn.wickedhands.item.LifelessRottenHandItem;
 import de.markusbordihn.wickedhands.loot.ZombieLoot;
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -47,6 +52,7 @@ import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -54,6 +60,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -86,6 +94,7 @@ public class RottenHandGameTests {
   private static final int MINIMUM_EXPECTED_HAND_DROPS = 20;
   private static final int MAXIMUM_EXPECTED_HAND_DROPS = 100;
   private static final int WATER_DEPTH = 3;
+  private static final int DEATH_ANIMATION_TICKS = 20;
   private static final List<BlockPos> CANDLE_POSITIONS =
       List.of(
           TEST_POSITION.east(), TEST_POSITION.west(), TEST_POSITION.north(), TEST_POSITION.south());
@@ -120,13 +129,18 @@ public class RottenHandGameTests {
 
   private static LifelessRottenHandEntity placeLifelessRottenHand(
       GameTestHelper helper, Player player) {
+    return placeLifelessRottenHand(helper, player, new ItemStack(lifelessRottenHandItem()));
+  }
+
+  private static LifelessRottenHandEntity placeLifelessRottenHand(
+      GameTestHelper helper, Player player, ItemStack lifelessRottenHandStack) {
     helper.setBlock(TEST_POSITION.below(), Blocks.SOUL_SAND);
     helper.setBlock(TEST_POSITION, Blocks.AIR);
-    Item lifelessRottenHand = lifelessRottenHandItem();
-    player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(lifelessRottenHand));
+    player.setItemInHand(InteractionHand.MAIN_HAND, lifelessRottenHandStack);
     BlockPos ritualBasePosition = helper.absolutePos(TEST_POSITION.below());
     helper.assertTrue(
-        lifelessRottenHand
+        lifelessRottenHandStack
+            .getItem()
             .useOn(
                 new UseOnContext(
                     player,
@@ -140,6 +154,41 @@ public class RottenHandGameTests {
         Component.literal("Lifeless rotten hand could not be placed on soul sand"));
 
     return findEntityNearTestPosition(helper, LifelessRottenHandEntity.class);
+  }
+
+  private static LifelessRottenHandEntity startRevivalRitual(
+      GameTestHelper helper, Player player, ItemStack lifelessRottenHandStack) {
+    placeLitCandles(helper);
+    LifelessRottenHandEntity lifelessRottenHand =
+        placeLifelessRottenHand(helper, player, lifelessRottenHandStack);
+    player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.ROTTEN_FLESH));
+    lifelessRottenHand.mobInteract(player, InteractionHand.MAIN_HAND);
+    return lifelessRottenHand;
+  }
+
+  private static List<ItemEntity> findLifelessRottenHandItemEntities(GameTestHelper helper) {
+    return helper
+        .getLevel()
+        .getEntitiesOfClass(
+            ItemEntity.class,
+            new AABB(helper.absolutePos(TEST_POSITION)).inflate(3.0D),
+            itemEntity -> itemEntity.getItem().is(lifelessRottenHandItem()));
+  }
+
+  private static ItemStack findInInventory(Player player, Item item) {
+    Inventory inventory = player.getInventory();
+    for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+      if (inventory.getItem(slot).is(item)) {
+        return inventory.getItem(slot);
+      }
+    }
+    return ItemStack.EMPTY;
+  }
+
+  private static Optional<SavedNPCEntityEntry> findSavedNPCEntry(UUID entityUUID) {
+    return EasyNPCEntityHandler.getAll().stream()
+        .filter(savedEntry -> savedEntry.entityUUID().equals(entityUUID))
+        .findFirst();
   }
 
   private static <T extends Entity> T findEntityNearTestPosition(
@@ -369,6 +418,9 @@ public class RottenHandGameTests {
         lifelessRottenHand.requiresCustomPersistence()
             && !lifelessRottenHand.removeWhenFarAway(DESPAWN_DISTANCE),
         Component.literal("Placed rotten hand would despawn"));
+    helper.assertTrue(
+        lifelessRottenHand.getModelRootData().rotation().x() == (float) Math.PI,
+        Component.literal("Placed rotten hand does not lie on its back"));
     assertActiveModelProfile(helper, lifelessRottenHand, LIFELESS_ROTTEN_HAND_PROFILE_ID);
     helper.succeed();
   }
@@ -462,5 +514,146 @@ public class RottenHandGameTests {
               Component.literal("Reviving the hand did not grant the companion advancement"));
           helper.succeed();
         });
+  }
+
+  public void testOnlyCompanionGrabsTarget(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    startRevivalRitual(
+        helper,
+        helper.makeMockPlayer(GameType.SURVIVAL),
+        new ItemStack(lifelessRottenHandItem()));
+
+    helper.runAfterDelay(
+        RevivalRitual.DURATION_TICKS + 5,
+        () -> {
+          RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
+          Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION.east(2));
+          helper.assertTrue(
+              companion.doHurtTarget(level, pig) && pig.hasEffect(MobEffects.SLOWNESS),
+              Component.literal("Companion did not grab its target"));
+
+          pig.removeEffect(MobEffects.SLOWNESS);
+          pig.invulnerableTime = 0;
+          helper.assertTrue(
+              companion.doHurtTarget(level, pig) && !pig.hasEffect(MobEffects.SLOWNESS),
+              Component.literal("Companion grabbed again during the cooldown"));
+
+          RottenHandEntity wildRottenHand =
+              (RottenHandEntity)
+                  helper.spawn(
+                      rottenHandType(),
+                      Vec3.atBottomCenterOf(TEST_POSITION.west(2)),
+                      EntitySpawnReason.NATURAL);
+          pig.invulnerableTime = 0;
+          helper.assertTrue(
+              wildRottenHand.doHurtTarget(level, pig) && !pig.hasEffect(MobEffects.SLOWNESS),
+              Component.literal("Wild rotten hand grabbed its target"));
+          helper.succeed();
+        });
+  }
+
+  public void testFallenCompanionWithoutOwnerLeavesProtectedRemains(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    startRevivalRitual(
+        helper,
+        helper.makeMockPlayer(GameType.SURVIVAL),
+        new ItemStack(lifelessRottenHandItem()));
+
+    helper.runAfterDelay(
+        RevivalRitual.DURATION_TICKS + 5,
+        () -> {
+          RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
+          companion.hurtServer(level, level.damageSources().lava(), 100.0F);
+          List<ItemEntity> remains = findLifelessRottenHandItemEntities(helper);
+          helper.assertTrue(
+              remains.size() == 1,
+              Component.literal("Expected only the companion remains, found " + remains.size()));
+          ItemEntity companionRemains = remains.getFirst();
+          helper.assertTrue(
+              companion
+                  .getUUID()
+                  .equals(companionRemains.getItem().get(HandDataComponents.COMPANION_UUID)),
+              Component.literal("Remains are not linked to the fallen companion"));
+          helper.assertTrue(
+              companionRemains.isInvulnerable() && companionRemains.getAge() < 0,
+              Component.literal("Remains of an absent owner could burn or despawn"));
+          helper.succeed();
+        });
+  }
+
+  public void testFallenCompanionReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    startRevivalRitual(helper, owner, new ItemStack(lifelessRottenHandItem()));
+
+    helper.runAfterDelay(
+        RevivalRitual.DURATION_TICKS + 5,
+        () -> {
+          RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
+          UUID companionUUID = companion.getUUID();
+          Component companionName = Component.literal("Grabby");
+          companion.setCustomName(companionName);
+          companion.hurtServer(level, level.damageSources().magic(), 100.0F);
+
+          ItemStack returnedRemains = findInInventory(owner, lifelessRottenHandItem());
+          helper.assertTrue(
+              companionUUID.equals(returnedRemains.get(HandDataComponents.COMPANION_UUID))
+                  && companionName.equals(returnedRemains.getCustomName()),
+              Component.literal("Remains did not return to the owner with name and identity"));
+          helper.assertTrue(
+              findLifelessRottenHandItemEntities(helper).isEmpty(),
+              Component.literal("Fallen companion also dropped its loot table"));
+
+          helper.runAfterDelay(
+              DEATH_ANIMATION_TICKS + 5,
+              () -> {
+                helper.assertTrue(
+                    findSavedNPCEntry(companionUUID)
+                        .filter(
+                            savedEntry ->
+                                savedEntry.metadata().removalReason() == NPCRemovalReason.KILLED)
+                        .isPresent(),
+                    Component.literal("Easy NPC did not keep the fallen companion as killed"));
+                ItemStack remainsToPlace = returnedRemains.copy();
+                returnedRemains.setCount(0);
+                UUID lifelessRottenHandUUID =
+                    startRevivalRitual(helper, owner, remainsToPlace).getUUID();
+                helper.runAfterDelay(
+                    RevivalRitual.DURATION_TICKS + 5,
+                    () ->
+                        assertSameCompanionRevived(
+                            helper, owner, companionUUID, companionName, lifelessRottenHandUUID));
+              });
+        });
+  }
+
+  private static void assertSameCompanionRevived(
+      GameTestHelper helper,
+      Player owner,
+      UUID companionUUID,
+      Component companionName,
+      UUID lifelessRottenHandUUID) {
+    List<RottenHandEntity> revivedHands =
+        helper
+            .getLevel()
+            .getEntitiesOfClass(
+                RottenHandEntity.class, new AABB(helper.absolutePos(TEST_POSITION)).inflate(3.0D));
+    helper.assertTrue(
+        revivedHands.size() == 1,
+        Component.literal("Expected one revived hand, found " + revivedHands.size()));
+    RottenHandEntity revivedCompanion = revivedHands.getFirst();
+    helper.assertTrue(
+        companionUUID.equals(revivedCompanion.getUUID())
+            && companionName.equals(revivedCompanion.getCustomName()),
+        Component.literal("Revival did not bring back the same companion"));
+    helper.assertTrue(
+        revivedCompanion.getHandState().lifecycle() == HandLifecycle.COMPANION
+            && revivedCompanion.isNPCOwnedBy(owner)
+            && revivedCompanion.getHealth() == revivedCompanion.getMaxHealth(),
+        Component.literal("Revived companion is not a healthy companion of the owner"));
+    helper.assertTrue(
+        findSavedNPCEntry(lifelessRottenHandUUID).isEmpty(),
+        Component.literal("Easy NPC still lists the consumed lifeless hand"));
+    helper.succeed();
   }
 }

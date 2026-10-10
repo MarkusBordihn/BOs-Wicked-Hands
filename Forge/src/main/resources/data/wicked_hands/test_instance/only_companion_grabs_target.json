@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "wicked_hands:only_companion_grabs_target",
+  "environment": "minecraft:default",
+  "structure": "wicked_hands:gametest.1x1x1",
+  "max_ticks": 200
+}

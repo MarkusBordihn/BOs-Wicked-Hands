@@ -17,28 +17,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package de.markusbordihn.wickedhands;
+package de.markusbordihn.wickedhands.item;
 
-import de.markusbordihn.wickedhands.entity.ModEntityTypes;
-import de.markusbordihn.wickedhands.item.ModDataComponents;
-import de.markusbordihn.wickedhands.item.ModItems;
-import de.markusbordihn.wickedhands.loot.ModLootTables;
-import de.markusbordihn.wickedhands.tabs.ModTabs;
-import net.fabricmc.api.ModInitializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.markusbordihn.wickedhands.Constants;
+import java.util.UUID;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.Registries;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
 
-public class WickedHands implements ModInitializer {
+public final class ModDataComponents {
 
-  private static final Logger log = LogManager.getLogger(Constants.LOG_NAME);
+  public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENT_TYPES =
+      DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Constants.MOD_ID);
 
-  @Override
-  public void onInitialize() {
-    log.info("Initializing {} (Fabric) ...", Constants.MOD_NAME);
-    ModEntityTypes.register();
-    ModDataComponents.register();
-    ModItems.register();
-    ModTabs.register();
-    ModLootTables.register();
-  }
+  public static final RegistryObject<DataComponentType<UUID>> COMPANION_UUID =
+      DATA_COMPONENT_TYPES.register(
+          HandDataComponents.COMPANION_UUID_ID, () -> HandDataComponents.COMPANION_UUID);
+
+  private ModDataComponents() {}
 }

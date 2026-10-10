@@ -10,6 +10,8 @@
   "entity.wicked_hands.rotten_hand": "Verrottete Hand",
   "entity.wicked_hands.rotten_hand.follow": "Die Hand folgt dir.",
   "entity.wicked_hands.rotten_hand.stay": "Die Hand bleibt hier.",
+  "entity.wicked_hands.rotten_hand.remains_returned": "Deine Hand ist gefallen. Ihre Überreste sind zu dir zurückgekehrt.",
+  "entity.wicked_hands.rotten_hand.remains_dropped": "Deine Hand ist gefallen. Ihre Überreste liegen bei %s, %s, %s.",
   "itemGroup.wicked_hands": "Wicked Hands",
   "item.wicked_hands.lifeless_rotten_hand": "Leblose verrottete Hand",
   "item.wicked_hands.lifeless_rotten_hand.tooltip": "Eine tote Zombiehand. Vielleicht wacht sie wieder auf.",

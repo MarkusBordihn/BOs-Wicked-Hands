@@ -19,18 +19,30 @@
 
 package de.markusbordihn.wickedhands.entity;
 
+import de.markusbordihn.easynpc.api.handler.EasyNPCEntityHandler;
+import de.markusbordihn.easynpc.data.model.RootModelData;
+import de.markusbordihn.easynpc.data.npc.NPCRemovalReason;
+import de.markusbordihn.easynpc.data.rotation.CustomRotation;
+import de.markusbordihn.easynpc.data.scale.CustomScale;
+import de.markusbordihn.easynpc.data.synched.SynchedDataIndex;
+import de.markusbordihn.easynpc.entity.easynpc.EasyNPC;
 import de.markusbordihn.easynpc.entity.easynpc.npc.easymodelentities.EasyModelNPC;
 import de.markusbordihn.easynpc.handler.OwnerHandler;
 import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.client.effect.RevivalRitualEffects;
 import de.markusbordihn.wickedhands.data.RevivalState;
+import de.markusbordihn.wickedhands.item.HandDataComponents;
+import de.markusbordihn.wickedhands.item.LifelessRottenHandItem;
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
+import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -40,6 +52,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -74,6 +87,8 @@ public class LifelessRottenHandEntity extends AbstractRottenHandEntity {
   private static final double RITUAL_DARKNESS_RADIUS = 16.0D;
   private static final int RITUAL_DARKNESS_FADE_TICKS = 20;
   private static final String REVIVAL_STATE_TAG = "WickedRevivalState";
+  private static final RootModelData LYING_ON_BACK =
+      new RootModelData(new CustomRotation((float) Math.PI, 0.0F, 0.0F), CustomScale.DEFAULT);
   private static final String RITUAL_INCOMPLETE_TRANSLATION_KEY =
       "entity." + Constants.MOD_ID + "." + ID + ".ritual_incomplete";
 
@@ -96,7 +111,8 @@ public class LifelessRottenHandEntity extends AbstractRottenHandEntity {
         .build(ResourceKey.create(Registries.ENTITY_TYPE, ENTITY_ID));
   }
 
-  public static boolean place(ServerLevel serverLevel, Vec3 position, float yaw, Player player) {
+  public static boolean place(
+      ServerLevel serverLevel, Vec3 position, float yaw, Player player, ItemStack itemStack) {
     if (!(BuiltInRegistries.ENTITY_TYPE
             .getValue(ENTITY_ID)
             .create(serverLevel, EntitySpawnReason.SPAWN_ITEM_USE)
@@ -104,6 +120,10 @@ public class LifelessRottenHandEntity extends AbstractRottenHandEntity {
       return false;
     }
 
+    lifelessRottenHand.revivalState =
+        RevivalState.EMPTY.withCompanionUUID(
+            Optional.ofNullable(itemStack.get(HandDataComponents.COMPANION_UUID)));
+    lifelessRottenHand.setCustomName(itemStack.get(DataComponents.CUSTOM_NAME));
     lifelessRottenHand.snapTo(position.x(), position.y(), position.z(), yaw, 0.0F);
     lifelessRottenHand.setYHeadRot(yaw);
     lifelessRottenHand.setYBodyRot(yaw);
@@ -118,9 +138,22 @@ public class LifelessRottenHandEntity extends AbstractRottenHandEntity {
     return this.revivalState;
   }
 
+  private static boolean isKilledNPC(UUID entityUUID) {
+    return EasyNPCEntityHandler.getAll().stream()
+        .anyMatch(
+            savedEntry ->
+                savedEntry.entityUUID().equals(entityUUID)
+                    && savedEntry.metadata().removalReason() == NPCRemovalReason.KILLED);
+  }
+
   @Override
   protected String getModelId() {
     return MODEL_ID;
+  }
+
+  @Override
+  public void defineSynchedModelRootData(SynchedEntityData.Builder builder) {
+    this.defineSynchedEntityData(builder, SynchedDataIndex.MODEL_ROOT_DATA, LYING_ON_BACK);
   }
 
   @Override
@@ -149,7 +182,7 @@ public class LifelessRottenHandEntity extends AbstractRottenHandEntity {
     }
 
     catalyst.consume(1, player);
-    this.revivalState = RevivalState.EMPTY.withOwnerUUID(player.getUUID());
+    this.revivalState = this.revivalState.withOwnerUUID(player.getUUID());
     if (player instanceof ServerPlayer serverPlayer) {
       CriteriaTriggers.SUMMONED_ENTITY.trigger(serverPlayer, this);
     }
@@ -219,7 +252,7 @@ public class LifelessRottenHandEntity extends AbstractRottenHandEntity {
     serverLevel.broadcastEntityEvent(this, REVIVAL_COMPLETED_EVENT);
     this.strikeVisualLightning(serverLevel);
     this.awakenCompanion(serverLevel, ownerUUID);
-    this.discard();
+    EasyNPCEntityHandler.delete(this);
   }
 
   private void strikeVisualLightning(ServerLevel serverLevel) {
@@ -235,22 +268,70 @@ public class LifelessRottenHandEntity extends AbstractRottenHandEntity {
   }
 
   private void awakenCompanion(ServerLevel serverLevel, UUID ownerUUID) {
-    if (!(BuiltInRegistries.ENTITY_TYPE
-            .getValue(RottenHandEntity.ENTITY_ID)
-            .create(serverLevel, EntitySpawnReason.CONVERSION)
-        instanceof RottenHandEntity companion)) {
+    Optional<RottenHandEntity> restoredCompanion =
+        this.revivalState
+            .companionUUID()
+            .flatMap(companionUUID -> this.restoreKilledCompanion(serverLevel, companionUUID));
+    Optional<RottenHandEntity> awakenedCompanion =
+        restoredCompanion.isPresent() ? restoredCompanion : this.createCompanion(serverLevel);
+    if (awakenedCompanion.isEmpty()) {
       return;
     }
 
-    companion.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
-    companion.setYHeadRot(this.getYHeadRot());
-    companion.setYBodyRot(this.yBodyRot);
-    serverLevel.addFreshEntity(companion);
+    RottenHandEntity companion = awakenedCompanion.get();
+    this.moveToThisHand(companion);
     Player owner = serverLevel.getPlayerByUUID(ownerUUID);
     if (owner == null || !OwnerHandler.setOwner(companion, owner)) {
       companion.setNPCOwnerUUID(ownerUUID);
     }
     companion.awakenAsCompanion(serverLevel);
+  }
+
+  private Optional<RottenHandEntity> restoreKilledCompanion(
+      ServerLevel serverLevel, UUID companionUUID) {
+    if (!isKilledNPC(companionUUID)
+        || !EasyNPCEntityHandler.spawn(companionUUID, serverLevel, this.position())) {
+      return Optional.empty();
+    }
+
+    return EasyNPCEntityHandler.find(companionUUID, serverLevel)
+        .map(EasyNPC::getEntity)
+        .filter(RottenHandEntity.class::isInstance)
+        .map(RottenHandEntity.class::cast);
+  }
+
+  private Optional<RottenHandEntity> createCompanion(ServerLevel serverLevel) {
+    if (!(BuiltInRegistries.ENTITY_TYPE
+            .getValue(RottenHandEntity.ENTITY_ID)
+            .create(serverLevel, EntitySpawnReason.CONVERSION)
+        instanceof RottenHandEntity companion)) {
+      return Optional.empty();
+    }
+
+    this.moveToThisHand(companion);
+    companion.setCustomName(this.getCustomName());
+    serverLevel.addFreshEntity(companion);
+    return Optional.of(companion);
+  }
+
+  private void moveToThisHand(RottenHandEntity companion) {
+    companion.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
+    companion.setYHeadRot(this.getYHeadRot());
+    companion.setYBodyRot(this.yBodyRot);
+  }
+
+  @Override
+  protected void dropFromLootTable(
+      ServerLevel serverLevel, DamageSource damageSource, boolean causedByPlayer) {
+    if (this.revivalState.companionUUID().isEmpty()) {
+      super.dropFromLootTable(serverLevel, damageSource, causedByPlayer);
+      return;
+    }
+
+    this.spawnAtLocation(
+        serverLevel,
+        LifelessRottenHandItem.createCompanionRemains(
+            this.revivalState.companionUUID().get(), this.getCustomName()));
   }
 
   @Override

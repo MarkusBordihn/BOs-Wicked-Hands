@@ -5,6 +5,16 @@
 This change log includes the summarized changes. For the full changelog, please go to
 the [GitHub History][history] instead.
 
+### 0.3.0 (alpha)
+
+- Fixed revived hands staying listed as a saved NPC in Easy NPC after the ritual.
+- Changed fallen companion hands to leave only their remains instead of their usual loot.
+- Added a "grab" to companion hands, a hit holds the target in place and slows it for a moment.
+- Added the remains of a fallen companion returning to its owner's inventory.
+- Added protected remains at the place of death when the owner is offline or dead.
+- Added reviving the remains with the ritual, waking the same companion with its name.
+- Added the placed "Lifeless Rotten Hand" lying on its back.
+
 ### 0.2.0 (alpha)
 
 - Changed the revival hint of the "Lifeless Rotten Hand" to describe the new ritual.

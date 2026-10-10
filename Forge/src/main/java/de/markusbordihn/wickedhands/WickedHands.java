@@ -22,6 +22,7 @@ package de.markusbordihn.wickedhands;
 import de.markusbordihn.wickedhands.client.renderer.ModEntityRenderers;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.gametest.ModGameTests;
+import de.markusbordihn.wickedhands.item.ModDataComponents;
 import de.markusbordihn.wickedhands.item.ModItems;
 import de.markusbordihn.wickedhands.loot.ModLootTables;
 import de.markusbordihn.wickedhands.tabs.ModTabs;
@@ -42,6 +43,7 @@ public class WickedHands {
     log.info("Initializing {} (Forge) ...", Constants.MOD_NAME);
 
     BusGroup modBusGroup = context.getModBusGroup();
+    ModDataComponents.DATA_COMPONENT_TYPES.register(modBusGroup);
     ModItems.ITEMS.register(modBusGroup);
     ModEntityTypes.ENTITY_TYPES.register(modBusGroup);
     ModTabs.CREATIVE_TABS.register(modBusGroup);

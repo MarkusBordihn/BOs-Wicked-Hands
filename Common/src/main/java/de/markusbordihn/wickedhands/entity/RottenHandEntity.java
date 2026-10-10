@@ -31,20 +31,30 @@ import de.markusbordihn.wickedhands.client.effect.AwakeningEffects;
 import de.markusbordihn.wickedhands.data.CompanionMode;
 import de.markusbordihn.wickedhands.data.HandLifecycle;
 import de.markusbordihn.wickedhands.data.HandState;
+import de.markusbordihn.wickedhands.item.LifelessRottenHandItem;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
@@ -53,13 +63,17 @@ import net.minecraft.world.entity.SpawnPlacementType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 
 public class RottenHandEntity extends AbstractRottenHandEntity {
 
@@ -79,9 +93,17 @@ public class RottenHandEntity extends AbstractRottenHandEntity {
   private static final String TRANSLATION_KEY_PREFIX = "entity." + Constants.MOD_ID + "." + ID;
   private static final String FOLLOW_TRANSLATION_KEY = TRANSLATION_KEY_PREFIX + ".follow";
   private static final String STAY_TRANSLATION_KEY = TRANSLATION_KEY_PREFIX + ".stay";
+  private static final String REMAINS_RETURNED_TRANSLATION_KEY =
+      TRANSLATION_KEY_PREFIX + ".remains_returned";
+  private static final String REMAINS_DROPPED_TRANSLATION_KEY =
+      TRANSLATION_KEY_PREFIX + ".remains_dropped";
+  private static final int GRAB_COOLDOWN_TICKS = 100;
+  private static final int GRAB_DURATION_TICKS = 30;
+  private static final int GRAB_SLOWNESS_AMPLIFIER = 3;
 
   private final AwakeningEffects awakeningEffects = new AwakeningEffects(this);
   private HandState handState = HandState.EMPTY;
+  private long nextGrabGameTime;
 
   public RottenHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level);
@@ -168,7 +190,7 @@ public class RottenHandEntity extends AbstractRottenHandEntity {
   }
 
   private void toggleCompanionMode(Player player) {
-    if (this.handState.lifecycle() != HandLifecycle.COMPANION) {
+    if (!this.isCompanion()) {
       return;
     }
 
@@ -183,10 +205,103 @@ public class RottenHandEntity extends AbstractRottenHandEntity {
             companionMode == CompanionMode.STAY ? STAY_TRANSLATION_KEY : FOLLOW_TRANSLATION_KEY));
   }
 
-  private void applyCompanionObjectives() {
+  @Override
+  public boolean doHurtTarget(ServerLevel serverLevel, Entity target) {
+    boolean hurtTarget = super.doHurtTarget(serverLevel, target);
+    if (hurtTarget
+        && this.isCompanion()
+        && serverLevel.getGameTime() >= this.nextGrabGameTime
+        && target instanceof LivingEntity livingTarget) {
+      this.grab(serverLevel, livingTarget);
+    }
+    return hurtTarget;
+  }
+
+  private void grab(ServerLevel serverLevel, LivingEntity target) {
+    this.nextGrabGameTime = serverLevel.getGameTime() + GRAB_COOLDOWN_TICKS;
+    target.addEffect(
+        new MobEffectInstance(MobEffects.SLOWNESS, GRAB_DURATION_TICKS, GRAB_SLOWNESS_AMPLIFIER),
+        this);
+    target.setDeltaMovement(Vec3.ZERO);
+    target.hurtMarked = true;
+    this.playSound(SoundEvents.SLIME_SQUISH_SMALL, 1.0F, 0.6F);
+    BlockState groundState = target.getBlockStateOn();
+    if (!groundState.isAir()) {
+      serverLevel.sendParticles(
+          new BlockParticleOption(ParticleTypes.BLOCK, groundState),
+          target.getX(),
+          target.getY(),
+          target.getZ(),
+          12,
+          0.25D,
+          0.05D,
+          0.25D,
+          0.1D);
+    }
+  }
+
+  @Override
+  public void die(DamageSource damageSource) {
+    boolean wasDead = this.dead;
+    super.die(damageSource);
+    if (!wasDead
+        && this.dead
+        && this.isCompanion()
+        && this.level() instanceof ServerLevel serverLevel) {
+      this.returnRemainsToOwner(serverLevel);
+    }
+  }
+
+  private void returnRemainsToOwner(ServerLevel serverLevel) {
+    ItemStack remains =
+        LifelessRottenHandItem.createCompanionRemains(this.getUUID(), this.getCustomName());
+    UUID ownerUUID = this.getOwnerUUID();
+    ServerPlayer owner =
+        ownerUUID == null ? null : serverLevel.getServer().getPlayerList().getPlayer(ownerUUID);
+    if (owner != null && owner.isAlive()) {
+      if (!owner.getInventory().add(remains)) {
+        owner.drop(remains, false);
+      }
+      owner.sendSystemMessage(Component.translatable(REMAINS_RETURNED_TRANSLATION_KEY));
+      return;
+    }
+
+    ItemEntity droppedRemains = this.spawnAtLocation(serverLevel, remains);
+    if (droppedRemains != null) {
+      droppedRemains.setInvulnerable(true);
+      droppedRemains.setUnlimitedLifetime();
+    }
+    if (owner != null) {
+      BlockPos remainsPosition = this.blockPosition();
+      owner.sendSystemMessage(
+          Component.translatable(
+              REMAINS_DROPPED_TRANSLATION_KEY,
+              remainsPosition.getX(),
+              remainsPosition.getY(),
+              remainsPosition.getZ()));
+    }
+  }
+
+  @Override
+  protected void dropFromLootTable(
+      ServerLevel serverLevel, DamageSource damageSource, boolean causedByPlayer) {
+    if (!this.isCompanion()) {
+      super.dropFromLootTable(serverLevel, damageSource, causedByPlayer);
+    }
+  }
+
+  private boolean isCompanion() {
+    return this.handState.lifecycle() == HandLifecycle.COMPANION;
+  }
+
+  private void applySwimmingAndMeleeAttack() {
     AttributeHandler.setEnvironmentalAttribute(this, EnvironmentalAttributeType.CAN_FLOAT, true);
     ObjectiveHandler.addOrUpdateCustomObjective(
         this, new ObjectiveDataEntry(ObjectiveType.MELEE_ATTACK));
+  }
+
+  private void applyCompanionObjectives() {
+    this.applySwimmingAndMeleeAttack();
     ObjectiveHandler.addOrUpdateCustomObjective(
         this, new ObjectiveDataEntry(ObjectiveType.OWNER_HURT_BY_TARGET));
     ObjectiveHandler.addOrUpdateCustomObjective(
@@ -223,9 +338,7 @@ public class RottenHandEntity extends AbstractRottenHandEntity {
       SpawnGroupData spawnGroupData) {
     SpawnGroupData result =
         super.finalizeSpawn(serverLevelAccessor, difficulty, entitySpawnReason, spawnGroupData);
-    AttributeHandler.setEnvironmentalAttribute(this, EnvironmentalAttributeType.CAN_FLOAT, true);
-    ObjectiveHandler.addOrUpdateCustomObjective(
-        this, new ObjectiveDataEntry(ObjectiveType.MELEE_ATTACK));
+    this.applySwimmingAndMeleeAttack();
     ObjectiveHandler.addOrUpdateCustomObjective(
         this, new ObjectiveDataEntry(ObjectiveType.ATTACK_PLAYER));
     ObjectiveHandler.addOrUpdateCustomObjective(

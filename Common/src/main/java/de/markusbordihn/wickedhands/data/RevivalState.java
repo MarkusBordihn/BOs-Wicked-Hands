@@ -25,9 +25,10 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 
-public record RevivalState(Optional<UUID> ownerUUID, int elapsedTicks) {
+public record RevivalState(
+    Optional<UUID> ownerUUID, Optional<UUID> companionUUID, int elapsedTicks) {
 
-  public static final RevivalState EMPTY = new RevivalState(Optional.empty(), 0);
+  public static final RevivalState EMPTY = new RevivalState(Optional.empty(), Optional.empty(), 0);
 
   public static final Codec<RevivalState> CODEC =
       RecordCodecBuilder.create(
@@ -35,16 +36,23 @@ public record RevivalState(Optional<UUID> ownerUUID, int elapsedTicks) {
               instance
                   .group(
                       UUIDUtil.CODEC.optionalFieldOf("owner").forGetter(RevivalState::ownerUUID),
+                      UUIDUtil.CODEC
+                          .optionalFieldOf("companion")
+                          .forGetter(RevivalState::companionUUID),
                       Codec.INT
                           .optionalFieldOf("elapsed_ticks", EMPTY.elapsedTicks())
                           .forGetter(RevivalState::elapsedTicks))
                   .apply(instance, RevivalState::new));
 
   public RevivalState withOwnerUUID(UUID ownerUUID) {
-    return new RevivalState(Optional.of(ownerUUID), this.elapsedTicks);
+    return new RevivalState(Optional.of(ownerUUID), this.companionUUID, this.elapsedTicks);
+  }
+
+  public RevivalState withCompanionUUID(Optional<UUID> companionUUID) {
+    return new RevivalState(this.ownerUUID, companionUUID, this.elapsedTicks);
   }
 
   public RevivalState withElapsedTicks(int elapsedTicks) {
-    return new RevivalState(this.ownerUUID, elapsedTicks);
+    return new RevivalState(this.ownerUUID, this.companionUUID, elapsedTicks);
   }
 }
