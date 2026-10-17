@@ -1,5 +1,5 @@
 {
-  "parent": "wicked_hands:summon_rotten_hand",
+  "parent": "wicked_hands:start_ritual",
   "criteria": {
     "companion": {
       "trigger": "minecraft:impossible"

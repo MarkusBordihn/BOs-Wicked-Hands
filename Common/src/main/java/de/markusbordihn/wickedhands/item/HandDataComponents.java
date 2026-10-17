@@ -36,5 +36,14 @@ public final class HandDataComponents {
           .networkSynchronized(UUIDUtil.STREAM_CODEC)
           .build();
 
+  public static final String OWNER_UUID_ID = "owner_uuid";
+  public static final Identifier OWNER_UUID_COMPONENT_ID =
+      Identifier.fromNamespaceAndPath(Constants.MOD_ID, OWNER_UUID_ID);
+  public static final DataComponentType<UUID> OWNER_UUID =
+      DataComponentType.<UUID>builder()
+          .persistent(UUIDUtil.CODEC)
+          .networkSynchronized(UUIDUtil.STREAM_CODEC)
+          .build();
+
   private HandDataComponents() {}
 }

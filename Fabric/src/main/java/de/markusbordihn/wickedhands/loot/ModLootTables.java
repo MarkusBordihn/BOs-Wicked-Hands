@@ -27,10 +27,7 @@ public final class ModLootTables {
 
   public static void register() {
     LootTableEvents.MODIFY.register(
-        (lootTableKey, lootTableBuilder, lootTableSource, registries) -> {
-          if (lootTableKey.equals(ZombieLoot.ZOMBIE_LOOT_TABLE)) {
-            lootTableBuilder.withPool(ZombieLoot.createRottenHandDropPool());
-          }
-        });
+        (lootTableKey, lootTableBuilder, lootTableSource, registries) ->
+            HandLootInjections.createDropPool(lootTableKey).ifPresent(lootTableBuilder::withPool));
   }
 }

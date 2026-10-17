@@ -31,5 +31,9 @@ public final class ModDataComponents {
         BuiltInRegistries.DATA_COMPONENT_TYPE,
         HandDataComponents.COMPANION_UUID_COMPONENT_ID,
         HandDataComponents.COMPANION_UUID);
+    Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        HandDataComponents.OWNER_UUID_COMPONENT_ID,
+        HandDataComponents.OWNER_UUID);
   }
 }

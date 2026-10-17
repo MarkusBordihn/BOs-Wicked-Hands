@@ -17,28 +17,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package de.markusbordihn.wickedhands.loot;
+package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.storage.loot.LootPool;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.entries.NestedLootTable;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.level.Level;
 
-public final class ZombieLoot {
+public class LifelessBoneHandEntity extends AbstractLifelessHandEntity {
 
-  public static final ResourceKey<LootTable> ZOMBIE_LOOT_TABLE =
-      ResourceKey.create(Registries.LOOT_TABLE, Identifier.withDefaultNamespace("entities/zombie"));
-  public static final ResourceKey<LootTable> ROTTEN_HAND_DROP_LOOT_TABLE =
-      ResourceKey.create(
-          Registries.LOOT_TABLE,
-          Identifier.fromNamespaceAndPath(Constants.MOD_ID, "injections/zombie"));
+  public static final String ID = "lifeless_bone_hand";
+  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
 
-  private ZombieLoot() {}
+  public LifelessBoneHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
+    super(entityType, level, BoneHandEntity.ENTITY_ID);
+  }
 
-  public static LootPool.Builder createRottenHandDropPool() {
-    return LootPool.lootPool().add(NestedLootTable.lootTableReference(ROTTEN_HAND_DROP_LOOT_TABLE));
+  public static EntityType<LifelessBoneHandEntity> createEntityType() {
+    return createHandEntityType(LifelessBoneHandEntity::new, MobCategory.MISC, ENTITY_ID);
   }
 }

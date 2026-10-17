@@ -5,15 +5,34 @@
 This change log includes the summarized changes. For the full changelog, please go to
 the [GitHub History][history] instead.
 
-### 0.3.0 (alpha)
+### 0.3.0 (beta)
 
 - Fixed revived hands staying listed as a saved NPC in Easy NPC after the ritual.
+- Fixed the mod version shown on NeoForge.
 - Changed fallen companion hands to leave only their remains instead of their usual loot.
+- Changed the required versions to Easy NPC 7.16.0 and Easy Model Entities 2.6.0.
+- Changed switching a companion's mode with Sneak + Right-Click to require an empty hand.
+- Changed the "By Candlelight" advancement, earlier progress for it starts over.
+- Changed the lifeless hands to whisper their revival hint in chat, with details in the tooltip.
 - Added a "grab" to companion hands, a hit holds the target in place and slows it for a moment.
 - Added the remains of a fallen companion returning to its owner's inventory.
 - Added protected remains at the place of death when the owner is offline or dead.
+- Added owner-bound remains, only their owner can revive them or pick up protected remains.
 - Added reviving the remains with the ritual, waking the same companion with its name.
 - Added the placed "Lifeless Rotten Hand" lying on its back.
+- Added the "Lifeless Drowned Hand", rarely dropped by Drowned killed by a player.
+- Added the "Lifeless Bone Hand", rarely dropped by Skeletons killed by a player.
+- Added Kelp as the ritual offering for the "Drowned Hand" and Bone Meal for the "Bone Hand".
+- Added diving to the "Drowned Hand", it breathes underwater and swims fast.
+- Added the "Drowned Hand" putting out its owner when the owner is on fire.
+- Added the "Bone Hand" pointing at monsters that approach or hunt its owner.
+- Added a wake-up animation and a wave at the owner when a companion is revived.
+- Added companions waving at other players who come close.
+- Added hurt and sitting animations to every hand.
+- Added spawn eggs and advancements for the "Drowned Hand" and the "Bone Hand".
+- Added "Shoulder" after "Follow", the companion rides on its owner's shoulder like a parrot.
+- Added companion hands joining in when their owner attacks something.
+- Added companions in "Follow" mode joining their owner in other dimensions.
 
 ### 0.2.0 (alpha)
 

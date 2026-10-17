@@ -25,19 +25,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.TestResources;
-import de.markusbordihn.wickedhands.item.LifelessRottenHandItem;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class LootTableResourceTest {
 
-  private static final String ROTTEN_HAND_LOOT_TABLE =
-      "data/wicked_hands/loot_table/entities/rotten_hand.json";
-  private static final String ZOMBIE_INJECTION_LOOT_TABLE =
-      "data/wicked_hands/loot_table/injections/zombie.json";
-  private static final double ZOMBIE_DROP_CHANCE = 0.025D;
+  private static final double ORIGIN_DROP_CHANCE = 0.025D;
 
   private static JsonObject singlePool(String lootTable) {
     List<JsonElement> pools = TestResources.readJson(lootTable).getAsJsonArray("pools").asList();
@@ -45,11 +43,11 @@ class LootTableResourceTest {
     return pools.getFirst().getAsJsonObject();
   }
 
-  private static void assertDropsLifelessRottenHand(JsonObject pool) {
+  private static void assertDropsLifelessHand(JsonObject pool, String handType) {
     List<JsonElement> entries = pool.getAsJsonArray("entries").asList();
     assertEquals(1, entries.size());
     assertEquals(
-        LifelessRottenHandItem.ITEM_ID.toString(),
+        Constants.MOD_ID + ":lifeless_" + handType + "_hand",
         entries.getFirst().getAsJsonObject().get("name").getAsString());
   }
 
@@ -61,26 +59,29 @@ class LootTableResourceTest {
         .orElseThrow(() -> new AssertionError("Missing condition " + conditionType));
   }
 
-  @Test
-  @DisplayName("Rotten hand always drops a lifeless rotten hand")
-  void rottenHandAlwaysDropsItem() {
-    JsonObject pool = singlePool(ROTTEN_HAND_LOOT_TABLE);
-    assertFalse(pool.has("conditions"), "Rotten hand drop must not depend on conditions");
+  @ParameterizedTest
+  @ValueSource(strings = {"rotten", "drowned", "bone"})
+  @DisplayName("Every hand always drops its lifeless hand")
+  void handAlwaysDropsItem(String handType) {
+    JsonObject pool =
+        singlePool("data/wicked_hands/loot_table/entities/" + handType + "_hand.json");
+    assertFalse(pool.has("conditions"), "Hand drop must not depend on conditions");
     assertEquals(1.0D, pool.get("rolls").getAsDouble());
-    assertDropsLifelessRottenHand(pool);
+    assertDropsLifelessHand(pool, handType);
   }
 
-  @Test
-  @DisplayName("Zombies rarely drop a lifeless rotten hand when killed by a player")
-  void zombieDropIsRareAndPlayerOnly() {
-    JsonObject pool = singlePool(ZOMBIE_INJECTION_LOOT_TABLE);
-    assertDropsLifelessRottenHand(pool);
+  @ParameterizedTest
+  @CsvSource({"zombie, rotten", "drowned, drowned", "skeleton, bone"})
+  @DisplayName("Origin mobs rarely drop their lifeless hand when killed by a player")
+  void originDropIsRareAndPlayerOnly(String originMob, String handType) {
+    JsonObject pool = singlePool("data/wicked_hands/loot_table/injections/" + originMob + ".json");
+    assertDropsLifelessHand(pool, handType);
     condition(pool, "minecraft:killed_by_player");
     JsonObject randomChance = condition(pool, "minecraft:random_chance_with_enchanted_bonus");
-    assertEquals(ZOMBIE_DROP_CHANCE, randomChance.get("unenchanted_chance").getAsDouble());
+    assertEquals(ORIGIN_DROP_CHANCE, randomChance.get("unenchanted_chance").getAsDouble());
     assertTrue(
         randomChance.getAsJsonObject("enchanted_chance").get("base").getAsDouble()
-            > ZOMBIE_DROP_CHANCE,
-        "Looting should raise the zombie drop chance");
+            > ORIGIN_DROP_CHANCE,
+        "Looting should raise the drop chance");
   }
 }

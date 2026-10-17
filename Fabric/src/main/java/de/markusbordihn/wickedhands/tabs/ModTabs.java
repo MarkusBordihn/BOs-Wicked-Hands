@@ -38,12 +38,10 @@ public final class ModTabs {
             .icon(ModItems.LIFELESS_ROTTEN_HAND::getDefaultInstance)
             .title(WickedHandsTab.TITLE)
             .displayItems(
-                (itemDisplayParameters, output) -> {
-                  output.accept(ModItems.ROTTEN_HAND_SPAWN_EGG);
-                  output.accept(ModItems.LIFELESS_ROTTEN_HAND);
-                })
+                (itemDisplayParameters, output) ->
+                    WickedHandsTab.displayItems().forEach(output::accept))
             .build());
     CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS)
-        .register(output -> output.accept(ModItems.ROTTEN_HAND_SPAWN_EGG));
+        .register(output -> WickedHandsTab.spawnEggs().forEach(output::accept));
   }
 }

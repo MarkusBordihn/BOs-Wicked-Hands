@@ -22,6 +22,7 @@ package de.markusbordihn.wickedhands.entity;
 import de.markusbordihn.wickedhands.Constants;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
@@ -41,13 +42,31 @@ public final class ModEntityTypes {
       LIFELESS_ROTTEN_HAND =
           ENTITY_TYPES.register(
               LifelessRottenHandEntity.ID, LifelessRottenHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<DrownedHandEntity>> DROWNED_HAND =
+      ENTITY_TYPES.register(DrownedHandEntity.ID, DrownedHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<LifelessDrownedHandEntity>>
+      LIFELESS_DROWNED_HAND =
+          ENTITY_TYPES.register(
+              LifelessDrownedHandEntity.ID, LifelessDrownedHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<BoneHandEntity>> BONE_HAND =
+      ENTITY_TYPES.register(BoneHandEntity.ID, BoneHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<LifelessBoneHandEntity>>
+      LIFELESS_BONE_HAND =
+          ENTITY_TYPES.register(
+              LifelessBoneHandEntity.ID, LifelessBoneHandEntity::createEntityType);
 
   private ModEntityTypes() {}
 
   @SubscribeEvent
   public static void registerEntityAttributes(EntityAttributeCreationEvent event) {
     event.put(ROTTEN_HAND.get(), RottenHandEntity.createAttributes().build());
-    event.put(LIFELESS_ROTTEN_HAND.get(), LifelessRottenHandEntity.createAttributes().build());
+    event.put(DROWNED_HAND.get(), DrownedHandEntity.createAttributes().build());
+    event.put(BONE_HAND.get(), BoneHandEntity.createAttributes().build());
+    AttributeSupplier lifelessHandAttributes =
+        AbstractLifelessHandEntity.createAttributes().build();
+    event.put(LIFELESS_ROTTEN_HAND.get(), lifelessHandAttributes);
+    event.put(LIFELESS_DROWNED_HAND.get(), lifelessHandAttributes);
+    event.put(LIFELESS_BONE_HAND.get(), lifelessHandAttributes);
   }
 
   @SubscribeEvent

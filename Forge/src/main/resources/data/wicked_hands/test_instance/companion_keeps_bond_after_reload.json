@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "wicked_hands:companion_keeps_bond_after_reload",
+  "environment": "minecraft:default",
+  "structure": "wicked_hands:gametest.1x1x1",
+  "max_ticks": 500
+}

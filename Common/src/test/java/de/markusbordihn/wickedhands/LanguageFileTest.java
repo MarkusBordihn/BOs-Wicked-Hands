@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonObject;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,12 +34,34 @@ import org.junit.jupiter.params.provider.ValueSource;
 class LanguageFileTest {
 
   private static final String LANGUAGE_FOLDER = "assets/" + Constants.MOD_ID + "/lang/";
-  private static final List<String> REQUIRED_KEYS =
+  private static final List<String> HAND_TYPES = List.of("rotten", "drowned", "bone");
+  private static final List<String> MESSAGE_KEYS =
       List.of(
-          "entity.wicked_hands.rotten_hand",
-          "item.wicked_hands.lifeless_rotten_hand",
-          "item.wicked_hands.lifeless_rotten_hand.tooltip",
-          "item.wicked_hands.lifeless_rotten_hand.revival_hint");
+          "message.wicked_hands.hand.follow",
+          "message.wicked_hands.hand.shoulder",
+          "message.wicked_hands.hand.stay",
+          "message.wicked_hands.hand.remains_returned",
+          "message.wicked_hands.hand.remains_dropped",
+          "message.wicked_hands.hand.ritual_incomplete",
+          "message.wicked_hands.hand.ritual_whisper",
+          "message.wicked_hands.hand.whisper",
+          "item.wicked_hands.lifeless_hand.ritual");
+  private static final List<String> REQUIRED_KEYS =
+      Stream.concat(
+              MESSAGE_KEYS.stream(),
+              HAND_TYPES.stream()
+                  .flatMap(
+                      handType ->
+                          Stream.of(
+                              "entity.wicked_hands." + handType + "_hand",
+                              "entity.wicked_hands.lifeless_" + handType + "_hand",
+                              "item.wicked_hands.lifeless_" + handType + "_hand",
+                              "item.wicked_hands.lifeless_" + handType + "_hand.tooltip",
+                              "item.wicked_hands.lifeless_" + handType + "_hand.revival_hint",
+                              "item.wicked_hands.lifeless_" + handType + "_hand.offering",
+                              "item.wicked_hands." + handType + "_hand_spawn_egg",
+                              "advancements.wicked_hands." + handType + "_hand_companion.title")))
+          .toList();
 
   private static JsonObject readLanguage(String language) {
     return TestResources.readJson(LANGUAGE_FOLDER + language + ".json");

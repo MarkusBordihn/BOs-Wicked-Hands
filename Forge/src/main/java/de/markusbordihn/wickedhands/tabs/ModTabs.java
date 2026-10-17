@@ -41,10 +41,8 @@ public final class ModTabs {
                   .icon(() -> ModItems.LIFELESS_ROTTEN_HAND.get().getDefaultInstance())
                   .title(WickedHandsTab.TITLE)
                   .displayItems(
-                      (itemDisplayParameters, output) -> {
-                        output.accept(ModItems.ROTTEN_HAND_SPAWN_EGG.get());
-                        output.accept(ModItems.LIFELESS_ROTTEN_HAND.get());
-                      })
+                      (itemDisplayParameters, output) ->
+                          WickedHandsTab.displayItems().forEach(output::accept))
                   .build());
 
   private ModTabs() {}
@@ -55,7 +53,7 @@ public final class ModTabs {
 
   private static void addToVanillaTabs(BuildCreativeModeTabContentsEvent event) {
     if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
-      event.accept(ModItems.ROTTEN_HAND_SPAWN_EGG.get());
+      WickedHandsTab.spawnEggs().forEach(event::accept);
     }
   }
 }

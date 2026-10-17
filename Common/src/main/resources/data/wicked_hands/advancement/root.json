@@ -1,10 +1,10 @@
 {
   "criteria": {
-    "lifeless_rotten_hand": {
+    "lifeless_hand": {
       "conditions": {
         "items": [
           {
-            "items": "wicked_hands:lifeless_rotten_hand"
+            "items": "#wicked_hands:lifeless_hands"
           }
         ]
       },
@@ -26,7 +26,7 @@
   },
   "requirements": [
     [
-      "lifeless_rotten_hand"
+      "lifeless_hand"
     ]
   ]
 }

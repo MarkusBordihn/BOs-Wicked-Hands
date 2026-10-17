@@ -20,24 +20,25 @@
 package de.markusbordihn.wickedhands.clienttest;
 
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.Until;
+import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.Parameters;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class HandAdvancementsClientTest extends ClientTestBase {
 
   private static final long CHAT_TICKS = 20;
-  private static final long RENDER_TICKS = 10;
 
   @Test
   @DisplayName("Advancement tab shows all hand advancements")
   void advancementTabShowsHandAdvancements() {
-    renderProfile("shown");
-    command("advancement grant @s through wicked_hands:rotten_hand_companion");
+    client.renderSettings(
+        Parameters.of().with("gui", true).with("chat", true).with("toasts", true));
+    client.runCommand("advancement grant @s through " + MOD_ID + ":rotten_hand_companion");
     client.await(Until.ticksElapsed(CHAT_TICKS));
     client.saveScreenshot("advancement_chat");
     client.pressBindingAndAwaitScreen("key.advancements");
     client.await(Until.ticksElapsed(RENDER_TICKS));
     client.saveScreenshot("advancement_tab");
-    command("advancement revoke @s from wicked_hands:root");
+    client.runCommand("advancement revoke @s from " + MOD_ID + ":root");
   }
 }

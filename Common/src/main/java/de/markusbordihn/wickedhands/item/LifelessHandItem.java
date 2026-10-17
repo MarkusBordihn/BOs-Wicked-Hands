@@ -20,10 +20,12 @@
 package de.markusbordihn.wickedhands.item;
 
 import de.markusbordihn.wickedhands.Constants;
-import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
+import de.markusbordihn.wickedhands.entity.AbstractHandEntity;
+import de.markusbordihn.wickedhands.entity.AbstractLifelessHandEntity;
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -45,41 +47,51 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-public class LifelessRottenHandItem extends Item {
+public class LifelessHandItem extends Item {
 
-  public static final String ID = "lifeless_rotten_hand";
-  public static final Identifier ITEM_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  private static final String RITUAL_TOOLTIP_KEY =
+      "item." + Constants.MOD_ID + ".lifeless_hand.ritual";
+  private static final int WHISPER_COOLDOWN_TICKS = 60;
 
-  private static final String TOOLTIP_TRANSLATION_KEY =
-      "item." + Constants.MOD_ID + "." + ID + ".tooltip";
-  private static final String REVIVAL_HINT_TRANSLATION_KEY =
-      "item." + Constants.MOD_ID + "." + ID + ".revival_hint";
+  private final Identifier lifelessHandId;
 
-  private LifelessRottenHandItem(Item.Properties properties) {
+  private LifelessHandItem(Item.Properties properties, Identifier lifelessHandId) {
     super(properties);
+    this.lifelessHandId = lifelessHandId;
   }
 
-  public static Item create() {
-    return new LifelessRottenHandItem(
+  public static Item create(Identifier lifelessHandId) {
+    return new LifelessHandItem(
         new Item.Properties()
-            .setId(ResourceKey.create(Registries.ITEM, ITEM_ID))
-            .component(DataComponents.LORE, createTooltip()));
+            .setId(ResourceKey.create(Registries.ITEM, lifelessHandId))
+            .component(DataComponents.LORE, createTooltip(lifelessHandId)),
+        lifelessHandId);
   }
 
-  public static ItemStack createCompanionRemains(UUID companionUUID, Component customName) {
-    ItemStack remains = new ItemStack(BuiltInRegistries.ITEM.getValue(ITEM_ID));
+  public static ItemStack createCompanionRemains(
+      Identifier lifelessHandId,
+      UUID companionUUID,
+      Optional<UUID> ownerUUID,
+      Component customName) {
+    ItemStack remains = new ItemStack(BuiltInRegistries.ITEM.getValue(lifelessHandId));
     remains.set(HandDataComponents.COMPANION_UUID, companionUUID);
+    ownerUUID.ifPresent(uuid -> remains.set(HandDataComponents.OWNER_UUID, uuid));
     if (customName != null) {
       remains.set(DataComponents.CUSTOM_NAME, customName);
     }
     return remains;
   }
 
-  private static ItemLore createTooltip() {
+  private static ItemLore createTooltip(Identifier lifelessHandId) {
     return new ItemLore(
-        List.of(
-            Component.translatable(TOOLTIP_TRANSLATION_KEY)
-                .withStyle(style -> style.withColor(ChatFormatting.GRAY).withItalic(false))));
+        Stream.of(
+                Component.translatable(lifelessHandId.toLanguageKey("item", "tooltip")),
+                Component.translatable(RITUAL_TOOLTIP_KEY),
+                Component.translatable(lifelessHandId.toLanguageKey("item", "offering")))
+            .<Component>map(
+                line ->
+                    line.withStyle(style -> style.withColor(ChatFormatting.GRAY).withItalic(false)))
+            .toList());
   }
 
   @Override
@@ -97,8 +109,9 @@ public class LifelessRottenHandItem extends Item {
       double surfaceHeight =
           ritualBase.getCollisionShape(level, ritualBasePosition).max(Direction.Axis.Y);
       ItemStack itemStack = context.getItemInHand();
-      if (!LifelessRottenHandEntity.place(
+      if (!AbstractLifelessHandEntity.place(
           serverLevel,
+          this.lifelessHandId,
           Vec3.atBottomCenterOf(ritualBasePosition).add(0.0D, surfaceHeight, 0.0D),
           context.getRotation() + 180.0F,
           context.getPlayer(),
@@ -114,7 +127,12 @@ public class LifelessRottenHandItem extends Item {
   @Override
   public InteractionResult use(Level level, Player player, InteractionHand hand) {
     if (!level.isClientSide()) {
-      player.sendOverlayMessage(Component.translatable(REVIVAL_HINT_TRANSLATION_KEY));
+      ItemStack itemStack = player.getItemInHand(hand);
+      player.sendSystemMessage(
+          AbstractHandEntity.createWhisper(
+              itemStack.getHoverName(),
+              Component.translatable(this.getDescriptionId() + ".revival_hint")));
+      player.getCooldowns().addCooldown(itemStack, WHISPER_COOLDOWN_TICKS);
     }
     return InteractionResult.SUCCESS;
   }

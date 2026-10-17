@@ -33,44 +33,62 @@ public final class ModGameTests {
       DeferredRegister.create(Registries.TEST_FUNCTION, Constants.MOD_ID);
 
   private static final SmokeTest SMOKE_TESTS = new SmokeTest();
-  private static final RottenHandGameTests ROTTEN_HAND_TESTS = new RottenHandGameTests();
+  private static final HandGameTests HAND_TESTS = new HandGameTests();
 
   static {
     register("smoke_mod_registered", SMOKE_TESTS::testModRegistered);
     register(
-        "rotten_hand_spawns_naturally_at_night",
-        ROTTEN_HAND_TESTS::testRottenHandSpawnsNaturallyAtNight);
+        "rotten_hand_spawns_naturally_at_night", HAND_TESTS::testRottenHandSpawnsNaturallyAtNight);
     register(
         "rotten_hand_drops_lifeless_rotten_hand",
-        ROTTEN_HAND_TESTS::testRottenHandDropsLifelessRottenHand);
+        HAND_TESTS::testRottenHandDropsLifelessRottenHand);
     register(
         "summoned_rotten_hand_drops_lifeless_rotten_hand",
-        ROTTEN_HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
-    register("rotten_hand_attacks_animals", ROTTEN_HAND_TESTS::testRottenHandAttacksAnimals);
-    register("rotten_hand_swims_to_surface", ROTTEN_HAND_TESTS::testRottenHandSwimsToSurface);
+        HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
+    register("rotten_hand_attacks_animals", HAND_TESTS::testRottenHandAttacksAnimals);
+    register("rotten_hand_swims_to_surface", HAND_TESTS::testRottenHandSwimsToSurface);
     register(
-        "rotten_hand_uses_active_model_profile",
-        ROTTEN_HAND_TESTS::testRottenHandUsesActiveModelProfile);
-    register(
-        "rotten_hand_despawns_when_far_away", ROTTEN_HAND_TESTS::testRottenHandDespawnsWhenFarAway);
-    register(
-        "zombie_drops_lifeless_rotten_hand", ROTTEN_HAND_TESTS::testZombieDropsLifelessRottenHand);
+        "rotten_hand_uses_active_model_profile", HAND_TESTS::testRottenHandUsesActiveModelProfile);
+    register("rotten_hand_despawns_when_far_away", HAND_TESTS::testRottenHandDespawnsWhenFarAway);
+    register("zombie_drops_lifeless_rotten_hand", HAND_TESTS::testZombieDropsLifelessRottenHand);
     register(
         "lifeless_rotten_hand_is_placed_on_soul_sand",
-        ROTTEN_HAND_TESTS::testLifelessRottenHandIsPlacedOnSoulSand);
-    register("revival_ritual_needs_candles", ROTTEN_HAND_TESTS::testRevivalRitualNeedsCandles);
-    register(
-        "revival_ritual_creates_companion", ROTTEN_HAND_TESTS::testRevivalRitualCreatesCompanion);
-    register(
-        "revival_ritual_grants_advancements",
-        ROTTEN_HAND_TESTS::testRevivalRitualGrantsAdvancements);
-    register("only_companion_grabs_target", ROTTEN_HAND_TESTS::testOnlyCompanionGrabsTarget);
+        HAND_TESTS::testLifelessRottenHandIsPlacedOnSoulSand);
+    register("revival_ritual_needs_candles", HAND_TESTS::testRevivalRitualNeedsCandles);
+    register("revival_ritual_creates_companion", HAND_TESTS::testRevivalRitualCreatesCompanion);
+    register("revival_ritual_grants_advancements", HAND_TESTS::testRevivalRitualGrantsAdvancements);
+    register("only_companion_grabs_target", HAND_TESTS::testOnlyCompanionGrabsTarget);
     register(
         "fallen_companion_without_owner_leaves_protected_remains",
-        ROTTEN_HAND_TESTS::testFallenCompanionWithoutOwnerLeavesProtectedRemains);
+        HAND_TESTS::testFallenCompanionWithoutOwnerLeavesProtectedRemains);
+    register(
+        "stranger_cannot_revive_foreign_remains",
+        HAND_TESTS::testStrangerCannotReviveForeignRemains);
     register(
         "fallen_companion_returns_and_revives_with_same_identity",
-        ROTTEN_HAND_TESTS::testFallenCompanionReturnsAndRevivesWithSameIdentity);
+        HAND_TESTS::testFallenCompanionReturnsAndRevivesWithSameIdentity);
+    register(
+        "fallen_drowned_hand_returns_and_revives_with_same_identity",
+        HAND_TESTS::testFallenDrownedHandReturnsAndRevivesWithSameIdentity);
+    register(
+        "fallen_bone_hand_returns_and_revives_with_same_identity",
+        HAND_TESTS::testFallenBoneHandReturnsAndRevivesWithSameIdentity);
+    register("drowned_hand_ritual_needs_kelp", HAND_TESTS::testDrownedHandRitualNeedsKelp);
+    register("bone_hand_ritual_creates_companion", HAND_TESTS::testBoneHandRitualCreatesCompanion);
+    register("drowned_hand_breathes_underwater", HAND_TESTS::testDrownedHandBreathesUnderwater);
+    register(
+        "drowned_hand_extinguishes_burning_owner",
+        HAND_TESTS::testDrownedHandExtinguishesBurningOwner);
+    register("bone_hand_warns_about_monster_once", HAND_TESTS::testBoneHandWarnsAboutMonsterOnce);
+    register("companion_waves_at_stranger_once", HAND_TESTS::testCompanionWavesAtStrangerOnce);
+    register("companion_keeps_bond_after_reload", HAND_TESTS::testCompanionKeepsBondAfterReload);
+    register("companion_defends_and_joins_owner", HAND_TESTS::testCompanionDefendsAndJoinsOwner);
+    register(
+        "companion_ignores_owner_hitting_sibling_companion",
+        HAND_TESTS::testCompanionIgnoresOwnerHittingSiblingCompanion);
+    register(
+        "following_companion_joins_owner_in_other_dimension",
+        HAND_TESTS::testFollowingCompanionJoinsOwnerInOtherDimension);
   }
 
   private ModGameTests() {}

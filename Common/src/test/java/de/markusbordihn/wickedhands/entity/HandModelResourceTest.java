@@ -51,12 +51,14 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class RottenHandModelResourceTest {
+class HandModelResourceTest {
 
   private static final List<String> REQUIRED_ANIMATIONS =
-      List.of("idle", "walk", "attack", "attack_2");
+      List.of("idle", "walk", "attack", "attack_2", "shoulder");
+  private static final List<String> GESTURE_ANIMATIONS = List.of("revive", "wave", "point");
 
   private static Identifier profileId(String entityId) {
     return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "entity/" + entityId);
@@ -70,10 +72,10 @@ class RottenHandModelResourceTest {
     return "assets/wicked_hands/easy_model_entities/render_profiles/entity/" + entityId + ".json";
   }
 
-  private static JsonObject readModel() {
+  private static JsonObject readModel(String entityId) {
     return TestResources.readJson(
         TestResources.assetPath(
-            TestResources.readJson(renderProfile(RottenHandEntity.ID)).get("model").getAsString(),
+            TestResources.readJson(renderProfile(entityId)).get("model").getAsString(),
             "",
             ".bbmodel"));
   }
@@ -101,8 +103,22 @@ class RottenHandModelResourceTest {
     return Optional.of(new Resource(mock(PackResources.class), () -> Files.newInputStream(path)));
   }
 
+  private static Set<String> animationNames(String entityId) {
+    return readModel(entityId).getAsJsonArray("animations").asList().stream()
+        .map(animation -> animation.getAsJsonObject().get("name").getAsString())
+        .collect(Collectors.toSet());
+  }
+
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        LifelessRottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        LifelessDrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        LifelessBoneHandEntity.ID
+      })
   @DisplayName("Easy Model Entities accepts the server profile")
   void serverProfileIsActive(String entityId) throws IOException {
     EasyModelEntityProfile profile;
@@ -113,7 +129,15 @@ class RottenHandModelResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        LifelessRottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        LifelessDrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        LifelessBoneHandEntity.ID
+      })
   @DisplayName("Easy Model Entities accepts the render profile")
   void renderProfileIsActive(String entityId) throws IOException {
     EasyModelRenderProfile renderProfile = parseRenderProfile(entityId);
@@ -122,7 +146,15 @@ class RottenHandModelResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        LifelessRottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        LifelessDrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        LifelessBoneHandEntity.ID
+      })
   @DisplayName("Model bakes for its body type without the fallback model")
   void modelBakesWithoutFallback(String entityId) throws IOException {
     ModelBakeResult bakeResult =
@@ -131,7 +163,15 @@ class RottenHandModelResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        LifelessRottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        LifelessDrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        LifelessBoneHandEntity.ID
+      })
   @DisplayName("Server profile and render profile describe the same model version")
   void profilesMatch(String entityId) {
     JsonObject profile = TestResources.readJson(profile(entityId));
@@ -140,19 +180,30 @@ class RottenHandModelResourceTest {
     assertEquals(profile.get("preset_type"), renderProfile.get("preset_type"));
   }
 
-  @Test
-  @DisplayName("Lifeless hand uses the rotten hand model without any animation")
-  void lifelessHandIsMotionless() throws IOException {
+  @ParameterizedTest
+  @CsvSource({
+    RottenHandEntity.ID + ", " + LifelessRottenHandEntity.ID,
+    DrownedHandEntity.ID + ", " + LifelessDrownedHandEntity.ID,
+    BoneHandEntity.ID + ", " + LifelessBoneHandEntity.ID
+  })
+  @DisplayName("Lifeless hand uses its companion model without any animation")
+  void lifelessHandIsMotionless(String companionId, String lifelessHandId) throws IOException {
+    assertEquals(ModelAnimationMode.NONE, parseRenderProfile(lifelessHandId).animation().mode());
     assertEquals(
-        ModelAnimationMode.NONE,
-        parseRenderProfile(LifelessRottenHandEntity.ID).animation().mode());
-    assertEquals(
-        TestResources.readJson(renderProfile(RottenHandEntity.ID)).get("model"),
-        TestResources.readJson(renderProfile(LifelessRottenHandEntity.ID)).get("model"));
+        TestResources.readJson(renderProfile(companionId)).get("model"),
+        TestResources.readJson(renderProfile(lifelessHandId)).get("model"));
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, LifelessRottenHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        LifelessRottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        LifelessDrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        LifelessBoneHandEntity.ID
+      })
   @DisplayName("Render profile points at an existing model and texture")
   void renderProfileResourcesExist(String entityId) {
     JsonObject renderProfile = TestResources.readJson(renderProfile(entityId));
@@ -162,22 +213,46 @@ class RottenHandModelResourceTest {
     assertTrue(Files.exists(TestResources.assetPath(textureId, "", "")), textureId);
   }
 
-  @Test
-  @DisplayName("Model has idle, walk and attack animations with a variant")
-  void requiredAnimationsExist() {
-    Set<String> animationNames =
-        readModel().getAsJsonArray("animations").asList().stream()
-            .map(animation -> animation.getAsJsonObject().get("name").getAsString())
-            .collect(Collectors.toSet());
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, DrownedHandEntity.ID, BoneHandEntity.ID})
+  @DisplayName("Model has idle, walk, shoulder and attack animations with a variant")
+  void requiredAnimationsExist(String entityId) {
+    Set<String> animationNames = animationNames(entityId);
     assertTrue(
         animationNames.containsAll(REQUIRED_ANIMATIONS),
         "Missing animations, found " + animationNames);
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, DrownedHandEntity.ID, BoneHandEntity.ID})
+  @DisplayName("Model has revive, wave and point gestures")
+  void gestureAnimationsExist(String entityId) {
+    Set<String> animationNames = animationNames(entityId);
+    assertTrue(
+        animationNames.containsAll(GESTURE_ANIMATIONS),
+        "Missing gestures, found " + animationNames);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {DrownedHandEntity.ID, BoneHandEntity.ID})
+  @DisplayName("Model has the same animations as the rotten hand")
+  void animationSetsMatch(String entityId) {
+    assertEquals(animationNames(RottenHandEntity.ID), animationNames(entityId));
+  }
+
   @Test
+  @DisplayName("Bone hand texture renders from both sides")
+  void boneHandTextureIsDoubleSided() {
+    for (JsonElement texture : readModel(BoneHandEntity.ID).getAsJsonArray("textures")) {
+      assertEquals("double", texture.getAsJsonObject().get("render_sides").getAsString());
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {RottenHandEntity.ID, DrownedHandEntity.ID, BoneHandEntity.ID})
   @DisplayName("Every animated bone exists in the model")
-  void animatorsReferenceExistingBones() {
-    JsonObject model = readModel();
+  void animatorsReferenceExistingBones(String entityId) {
+    JsonObject model = readModel(entityId);
     Set<String> boneIds =
         model.getAsJsonArray("groups").asList().stream()
             .map(group -> group.getAsJsonObject().get("uuid").getAsString())

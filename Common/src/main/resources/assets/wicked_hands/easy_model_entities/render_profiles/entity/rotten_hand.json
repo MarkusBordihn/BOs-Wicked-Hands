@@ -8,6 +8,9 @@
     "scale": 1.0,
     "shadow_radius": 0.3
   },
+  "shoulder": {
+    "offset": [0.04, -0.2, 0.0]
+  },
   "animation": {
     "mode": "automatic",
     "walk_speed_multiplier": 2.0

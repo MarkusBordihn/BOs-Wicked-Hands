@@ -28,18 +28,20 @@ public final class HandAdvancements {
 
   public static final Identifier ROOT_ID =
       Identifier.fromNamespaceAndPath(Constants.MOD_ID, "root");
-  public static final Identifier SUMMON_ROTTEN_HAND_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "summon_rotten_hand");
-  public static final Identifier ROTTEN_HAND_COMPANION_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "rotten_hand_companion");
+  public static final Identifier START_RITUAL_ID =
+      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "start_ritual");
 
   private static final String COMPANION_CRITERION = "companion";
 
   private HandAdvancements() {}
 
-  public static void awardRottenHandCompanion(ServerPlayer serverPlayer) {
+  public static Identifier companionAdvancementId(Identifier handId) {
+    return handId.withSuffix("_companion");
+  }
+
+  public static void awardCompanion(ServerPlayer serverPlayer, Identifier handId) {
     AdvancementHolder advancement =
-        serverPlayer.level().getServer().getAdvancements().get(ROTTEN_HAND_COMPANION_ID);
+        serverPlayer.level().getServer().getAdvancements().get(companionAdvancementId(handId));
     if (advancement == null) {
       return;
     }

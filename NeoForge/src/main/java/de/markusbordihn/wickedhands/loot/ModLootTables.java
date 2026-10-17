@@ -30,8 +30,7 @@ public final class ModLootTables {
 
   @SubscribeEvent
   public static void onLootTableLoad(LootTableLoadEvent event) {
-    if (event.getKey().equals(ZombieLoot.ZOMBIE_LOOT_TABLE)) {
-      event.getTable().addPool(ZombieLoot.createRottenHandDropPool().build());
-    }
+    HandLootInjections.createDropPool(event.getKey())
+        .ifPresent(dropPool -> event.getTable().addPool(dropPool.build()));
   }
 }

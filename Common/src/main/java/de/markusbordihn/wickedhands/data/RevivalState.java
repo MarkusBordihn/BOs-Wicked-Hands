@@ -26,9 +26,13 @@ import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 
 public record RevivalState(
-    Optional<UUID> ownerUUID, Optional<UUID> companionUUID, int elapsedTicks) {
+    Optional<UUID> ownerUUID,
+    Optional<UUID> companionUUID,
+    Optional<UUID> boundOwnerUUID,
+    int elapsedTicks) {
 
-  public static final RevivalState EMPTY = new RevivalState(Optional.empty(), Optional.empty(), 0);
+  public static final RevivalState EMPTY =
+      new RevivalState(Optional.empty(), Optional.empty(), Optional.empty(), 0);
 
   public static final Codec<RevivalState> CODEC =
       RecordCodecBuilder.create(
@@ -39,20 +43,32 @@ public record RevivalState(
                       UUIDUtil.CODEC
                           .optionalFieldOf("companion")
                           .forGetter(RevivalState::companionUUID),
+                      UUIDUtil.CODEC
+                          .optionalFieldOf("bound_owner")
+                          .forGetter(RevivalState::boundOwnerUUID),
                       Codec.INT
                           .optionalFieldOf("elapsed_ticks", EMPTY.elapsedTicks())
                           .forGetter(RevivalState::elapsedTicks))
                   .apply(instance, RevivalState::new));
 
   public RevivalState withOwnerUUID(UUID ownerUUID) {
-    return new RevivalState(Optional.of(ownerUUID), this.companionUUID, this.elapsedTicks);
+    return new RevivalState(
+        Optional.of(ownerUUID), this.companionUUID, this.boundOwnerUUID, this.elapsedTicks);
   }
 
   public RevivalState withCompanionUUID(Optional<UUID> companionUUID) {
-    return new RevivalState(this.ownerUUID, companionUUID, this.elapsedTicks);
+    return new RevivalState(this.ownerUUID, companionUUID, this.boundOwnerUUID, this.elapsedTicks);
+  }
+
+  public RevivalState withBoundOwnerUUID(Optional<UUID> boundOwnerUUID) {
+    return new RevivalState(this.ownerUUID, this.companionUUID, boundOwnerUUID, this.elapsedTicks);
   }
 
   public RevivalState withElapsedTicks(int elapsedTicks) {
-    return new RevivalState(this.ownerUUID, this.companionUUID, elapsedTicks);
+    return new RevivalState(this.ownerUUID, this.companionUUID, this.boundOwnerUUID, elapsedTicks);
+  }
+
+  public boolean isBoundToOtherThan(UUID playerUUID) {
+    return this.boundOwnerUUID.filter(uuid -> !uuid.equals(playerUUID)).isPresent();
   }
 }

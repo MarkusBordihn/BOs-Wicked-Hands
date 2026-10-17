@@ -17,28 +17,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package de.markusbordihn.wickedhands.item;
+package de.markusbordihn.wickedhands.entity;
 
-import de.markusbordihn.wickedhands.Constants;
-import de.markusbordihn.wickedhands.entity.RottenHandEntity;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.SpawnEggItem;
+import java.util.Locale;
 
-public final class RottenHandSpawnEgg {
+public enum HandGesture {
+  REVIVE(60),
+  WAVE(32),
+  POINT(30);
 
-  public static final String ID = RottenHandEntity.ID + "_spawn_egg";
-  public static final Identifier ITEM_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  private final String animationName = this.name().toLowerCase(Locale.ROOT);
+  private final int durationTicks;
 
-  private RottenHandSpawnEgg() {}
+  HandGesture(int durationTicks) {
+    this.durationTicks = durationTicks;
+  }
 
-  public static Item create(EntityType<RottenHandEntity> rottenHandType) {
-    return new SpawnEggItem(
-        new Item.Properties()
-            .setId(ResourceKey.create(Registries.ITEM, ITEM_ID))
-            .spawnEgg(rottenHandType));
+  public String getAnimationName() {
+    return this.animationName;
+  }
+
+  public int getDurationTicks() {
+    return this.durationTicks;
   }
 }

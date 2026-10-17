@@ -24,6 +24,7 @@ import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
@@ -34,16 +35,26 @@ public final class ModEntityTypes {
       RottenHandEntity.createEntityType();
   public static final EntityType<LifelessRottenHandEntity> LIFELESS_ROTTEN_HAND =
       LifelessRottenHandEntity.createEntityType();
+  public static final EntityType<DrownedHandEntity> DROWNED_HAND =
+      DrownedHandEntity.createEntityType();
+  public static final EntityType<LifelessDrownedHandEntity> LIFELESS_DROWNED_HAND =
+      LifelessDrownedHandEntity.createEntityType();
+  public static final EntityType<BoneHandEntity> BONE_HAND = BoneHandEntity.createEntityType();
+  public static final EntityType<LifelessBoneHandEntity> LIFELESS_BONE_HAND =
+      LifelessBoneHandEntity.createEntityType();
 
   private ModEntityTypes() {}
 
   public static void register() {
     Registry.register(BuiltInRegistries.ENTITY_TYPE, RottenHandEntity.ENTITY_ID, ROTTEN_HAND);
     FabricDefaultAttributeRegistry.register(ROTTEN_HAND, RottenHandEntity.createAttributes());
-    Registry.register(
-        BuiltInRegistries.ENTITY_TYPE, LifelessRottenHandEntity.ENTITY_ID, LIFELESS_ROTTEN_HAND);
-    FabricDefaultAttributeRegistry.register(
-        LIFELESS_ROTTEN_HAND, LifelessRottenHandEntity.createAttributes());
+    Registry.register(BuiltInRegistries.ENTITY_TYPE, DrownedHandEntity.ENTITY_ID, DROWNED_HAND);
+    FabricDefaultAttributeRegistry.register(DROWNED_HAND, DrownedHandEntity.createAttributes());
+    Registry.register(BuiltInRegistries.ENTITY_TYPE, BoneHandEntity.ENTITY_ID, BONE_HAND);
+    FabricDefaultAttributeRegistry.register(BONE_HAND, BoneHandEntity.createAttributes());
+    registerLifelessHand(LifelessRottenHandEntity.ENTITY_ID, LIFELESS_ROTTEN_HAND);
+    registerLifelessHand(LifelessDrownedHandEntity.ENTITY_ID, LIFELESS_DROWNED_HAND);
+    registerLifelessHand(LifelessBoneHandEntity.ENTITY_ID, LIFELESS_BONE_HAND);
     SpawnPlacements.register(
         ROTTEN_HAND,
         RottenHandEntity.SPAWN_PLACEMENT_TYPE,
@@ -56,5 +67,13 @@ public final class ModEntityTypes {
         RottenHandEntity.SPAWN_WEIGHT,
         RottenHandEntity.SPAWN_GROUP_SIZE,
         RottenHandEntity.SPAWN_GROUP_SIZE);
+  }
+
+  private static void registerLifelessHand(
+      Identifier lifelessHandId,
+      EntityType<? extends AbstractLifelessHandEntity> lifelessHandType) {
+    Registry.register(BuiltInRegistries.ENTITY_TYPE, lifelessHandId, lifelessHandType);
+    FabricDefaultAttributeRegistry.register(
+        lifelessHandType, AbstractLifelessHandEntity.createAttributes());
   }
 }

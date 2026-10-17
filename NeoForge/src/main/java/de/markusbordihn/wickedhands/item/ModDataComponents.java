@@ -31,10 +31,13 @@ public final class ModDataComponents {
   public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENT_TYPES =
       DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, Constants.MOD_ID);
 
-  public static final DeferredHolder<DataComponentType<?>, DataComponentType<UUID>>
-      COMPANION_UUID =
-          DATA_COMPONENT_TYPES.register(
-              HandDataComponents.COMPANION_UUID_ID, () -> HandDataComponents.COMPANION_UUID);
+  public static final DeferredHolder<DataComponentType<?>, DataComponentType<UUID>> COMPANION_UUID =
+      DATA_COMPONENT_TYPES.register(
+          HandDataComponents.COMPANION_UUID_ID, () -> HandDataComponents.COMPANION_UUID);
+
+  public static final DeferredHolder<DataComponentType<?>, DataComponentType<UUID>> OWNER_UUID =
+      DATA_COMPONENT_TYPES.register(
+          HandDataComponents.OWNER_UUID_ID, () -> HandDataComponents.OWNER_UUID);
 
   private ModDataComponents() {}
 }

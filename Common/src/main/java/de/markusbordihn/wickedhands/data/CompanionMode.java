@@ -25,6 +25,7 @@ import net.minecraft.util.StringRepresentable;
 
 public enum CompanionMode implements StringRepresentable {
   FOLLOW,
+  SHOULDER,
   STAY;
 
   public static final Codec<CompanionMode> CODEC =

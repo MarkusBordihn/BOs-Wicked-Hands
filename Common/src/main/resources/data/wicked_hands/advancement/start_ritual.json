@@ -1,14 +1,14 @@
 {
   "parent": "wicked_hands:root",
   "criteria": {
-    "summoned_rotten_hand": {
+    "ritual_started": {
       "conditions": {
         "entity": [
           {
             "condition": "minecraft:entity_properties",
             "entity": "this",
             "predicate": {
-              "type": "wicked_hands:lifeless_rotten_hand"
+              "type": "#wicked_hands:lifeless_hands"
             }
           }
         ]
@@ -18,18 +18,18 @@
   },
   "display": {
     "description": {
-      "translate": "advancements.wicked_hands.summon_rotten_hand.description"
+      "translate": "advancements.wicked_hands.start_ritual.description"
     },
     "icon": {
       "id": "minecraft:candle"
     },
     "title": {
-      "translate": "advancements.wicked_hands.summon_rotten_hand.title"
+      "translate": "advancements.wicked_hands.start_ritual.title"
     }
   },
   "requirements": [
     [
-      "summoned_rotten_hand"
+      "ritual_started"
     ]
   ]
 }

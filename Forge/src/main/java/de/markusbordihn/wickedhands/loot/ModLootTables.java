@@ -19,6 +19,8 @@
 
 package de.markusbordihn.wickedhands.loot;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraftforge.event.LootTableLoadEvent;
 
 public final class ModLootTables {
@@ -30,8 +32,7 @@ public final class ModLootTables {
   }
 
   private static void onLootTableLoad(LootTableLoadEvent event) {
-    if (event.getName().equals(ZombieLoot.ZOMBIE_LOOT_TABLE.identifier())) {
-      event.getTable().addPool(ZombieLoot.createRottenHandDropPool().build());
-    }
+    HandLootInjections.createDropPool(ResourceKey.create(Registries.LOOT_TABLE, event.getName()))
+        .ifPresent(dropPool -> event.getTable().addPool(dropPool.build()));
   }
 }

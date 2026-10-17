@@ -35,5 +35,9 @@ public final class ModDataComponents {
       DATA_COMPONENT_TYPES.register(
           HandDataComponents.COMPANION_UUID_ID, () -> HandDataComponents.COMPANION_UUID);
 
+  public static final RegistryObject<DataComponentType<UUID>> OWNER_UUID =
+      DATA_COMPONENT_TYPES.register(
+          HandDataComponents.OWNER_UUID_ID, () -> HandDataComponents.OWNER_UUID);
+
   private ModDataComponents() {}
 }

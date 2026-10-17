@@ -20,7 +20,13 @@
 package de.markusbordihn.wickedhands.item;
 
 import de.markusbordihn.wickedhands.Constants;
+import de.markusbordihn.wickedhands.entity.BoneHandEntity;
+import de.markusbordihn.wickedhands.entity.DrownedHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessBoneHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessDrownedHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
+import de.markusbordihn.wickedhands.entity.RottenHandEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -32,10 +38,30 @@ public final class ModItems {
       DeferredRegister.create(Registries.ITEM, Constants.MOD_ID);
 
   public static final DeferredHolder<Item, Item> LIFELESS_ROTTEN_HAND =
-      ITEMS.register(LifelessRottenHandItem.ID, LifelessRottenHandItem::create);
+      ITEMS.register(
+          LifelessRottenHandEntity.ID,
+          () -> LifelessHandItem.create(LifelessRottenHandEntity.ENTITY_ID));
+  public static final DeferredHolder<Item, Item> LIFELESS_DROWNED_HAND =
+      ITEMS.register(
+          LifelessDrownedHandEntity.ID,
+          () -> LifelessHandItem.create(LifelessDrownedHandEntity.ENTITY_ID));
+  public static final DeferredHolder<Item, Item> LIFELESS_BONE_HAND =
+      ITEMS.register(
+          LifelessBoneHandEntity.ID,
+          () -> LifelessHandItem.create(LifelessBoneHandEntity.ENTITY_ID));
   public static final DeferredHolder<Item, Item> ROTTEN_HAND_SPAWN_EGG =
       ITEMS.register(
-          RottenHandSpawnEgg.ID, () -> RottenHandSpawnEgg.create(ModEntityTypes.ROTTEN_HAND.get()));
+          HandSpawnEgg.itemId(RottenHandEntity.ENTITY_ID).getPath(),
+          () -> HandSpawnEgg.create(RottenHandEntity.ENTITY_ID, ModEntityTypes.ROTTEN_HAND.get()));
+  public static final DeferredHolder<Item, Item> DROWNED_HAND_SPAWN_EGG =
+      ITEMS.register(
+          HandSpawnEgg.itemId(DrownedHandEntity.ENTITY_ID).getPath(),
+          () ->
+              HandSpawnEgg.create(DrownedHandEntity.ENTITY_ID, ModEntityTypes.DROWNED_HAND.get()));
+  public static final DeferredHolder<Item, Item> BONE_HAND_SPAWN_EGG =
+      ITEMS.register(
+          HandSpawnEgg.itemId(BoneHandEntity.ENTITY_ID).getPath(),
+          () -> HandSpawnEgg.create(BoneHandEntity.ENTITY_ID, ModEntityTypes.BONE_HAND.get()));
 
   private ModItems() {}
 }

@@ -29,24 +29,50 @@ import de.markusbordihn.easynpc.data.render.RenderDataEntry;
 import de.markusbordihn.easynpc.data.render.RenderType;
 import de.markusbordihn.easynpc.data.synched.SynchedDataIndex;
 import de.markusbordihn.easynpc.entity.easynpc.npc.easymodelentities.EasyModelNPC;
+import de.markusbordihn.wickedhands.Constants;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 
-public abstract class AbstractRottenHandEntity extends EasyModelNPC {
+public abstract class AbstractHandEntity extends EasyModelNPC {
 
-  protected AbstractRottenHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
+  protected static final String MESSAGE_KEY_PREFIX = "message." + Constants.MOD_ID + ".hand.";
+  private static final String WHISPER_MESSAGE_KEY = MESSAGE_KEY_PREFIX + "whisper";
+
+  protected AbstractHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level);
+  }
+
+  public static Component createWhisper(Component speaker, Component message) {
+    return Component.translatable(WHISPER_MESSAGE_KEY, speaker, message)
+        .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
+  }
+
+  protected static <T extends AbstractHandEntity> EntityType<T> createHandEntityType(
+      EntityType.EntityFactory<T> entityFactory, MobCategory mobCategory, Identifier entityId) {
+    return EntityType.Builder.of(entityFactory, mobCategory)
+        .sized(0.75F, 0.375F)
+        .clientTrackingRange(8)
+        .build(ResourceKey.create(Registries.ENTITY_TYPE, entityId));
   }
 
   private static boolean hasSavedEntityAttributes(ValueInput valueInput) {
     return valueInput.read(EntityAttributes.ENTITY_ATTRIBUTE_TAG, CompoundTag.CODEC).isPresent();
   }
 
-  protected abstract String getModelId();
+  private String getModelId() {
+    Identifier entityId = EntityType.getKey(this.getType());
+    return entityId.getNamespace() + ":entity/" + entityId.getPath();
+  }
 
   @Override
   public void defineSynchedRenderData(SynchedEntityData.Builder builder) {
