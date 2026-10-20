@@ -62,8 +62,8 @@ public class HandTest {
   }
 
   @GameTest(structure = "wicked_hands:gametest.1x1x1")
-  public void testZombieDropsLifelessRottenHand(GameTestHelper helper) {
-    this.handGameTests.testZombieDropsLifelessRottenHand(helper);
+  public void testMonstersDropTheirLifelessHand(GameTestHelper helper) {
+    this.handGameTests.testMonstersDropTheirLifelessHand(helper);
   }
 
   @GameTest(structure = "wicked_hands:gametest.1x1x1")
@@ -120,6 +120,67 @@ public class HandTest {
       maxTicks = HandGameTests.TWO_RITUALS_MAX_TICKS)
   public void testFallenBoneHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
     this.handGameTests.testFallenBoneHandReturnsAndRevivesWithSameIdentity(helper);
+  }
+
+  @GameTest(
+      structure = "wicked_hands:gametest.1x1x1",
+      maxTicks = HandGameTests.TWO_RITUALS_MAX_TICKS)
+  public void testFallenHuskHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    this.handGameTests.testFallenHuskHandReturnsAndRevivesWithSameIdentity(helper);
+  }
+
+  @GameTest(
+      structure = "wicked_hands:gametest.1x1x1",
+      maxTicks = HandGameTests.TWO_RITUALS_MAX_TICKS)
+  public void testFallenStrayHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    this.handGameTests.testFallenStrayHandReturnsAndRevivesWithSameIdentity(helper);
+  }
+
+  @GameTest(
+      structure = "wicked_hands:gametest.1x1x1",
+      maxTicks = HandGameTests.TWO_RITUALS_MAX_TICKS)
+  public void testFallenWitheredHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    this.handGameTests.testFallenWitheredHandReturnsAndRevivesWithSameIdentity(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = HandGameTests.RITUAL_MAX_TICKS)
+  public void testHuskHandRitualCreatesWeakeningCompanion(GameTestHelper helper) {
+    this.handGameTests.testHuskHandRitualCreatesWeakeningCompanion(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = HandGameTests.RITUAL_MAX_TICKS)
+  public void testStrayHandRitualCreatesChillingCompanion(GameTestHelper helper) {
+    this.handGameTests.testStrayHandRitualCreatesChillingCompanion(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = HandGameTests.RITUAL_MAX_TICKS)
+  public void testWitheredHandRitualCreatesWitheringCompanion(GameTestHelper helper) {
+    this.handGameTests.testWitheredHandRitualCreatesWitheringCompanion(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testWitheredHandIsImmuneToFire(GameTestHelper helper) {
+    this.handGameTests.testWitheredHandIsImmuneToFire(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testShoulderBoneAndWitheredHandsGrantPassives(GameTestHelper helper) {
+    this.handGameTests.testShoulderBoneAndWitheredHandsGrantPassives(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testShoulderRottenAndDrownedHandsGrantPassives(GameTestHelper helper) {
+    this.handGameTests.testShoulderRottenAndDrownedHandsGrantPassives(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = HandGameTests.BEHAVIOUR_MAX_TICKS)
+  public void testShoulderPassiveAppliesOnPlayerTick(GameTestHelper helper) {
+    this.handGameTests.testShoulderPassiveAppliesOnPlayerTick(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testShoulderHandsProtectFromHungerAndFreezing(GameTestHelper helper) {
+    this.handGameTests.testShoulderHandsProtectFromHungerAndFreezing(helper);
   }
 
   @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = HandGameTests.RITUAL_MAX_TICKS)

@@ -23,8 +23,10 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.markusbordihn.easymodelentities.data.profile.EasyModelEntityProfile;
 import de.markusbordihn.easymodelentities.profile.EasyModelProfileManager;
 import de.markusbordihn.easynpc.api.handler.EasyNPCEntityHandler;
+import de.markusbordihn.easynpc.api.handler.EasyNPCShoulderHandler;
 import de.markusbordihn.easynpc.data.npc.NPCRemovalReason;
 import de.markusbordihn.easynpc.data.npc.SavedNPCEntityEntry;
+import de.markusbordihn.easynpc.data.npc.ShoulderSide;
 import de.markusbordihn.easynpc.data.objective.ObjectiveType;
 import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.advancement.HandAdvancements;
@@ -36,21 +38,31 @@ import de.markusbordihn.wickedhands.entity.AbstractLifelessHandEntity;
 import de.markusbordihn.wickedhands.entity.BoneHandEntity;
 import de.markusbordihn.wickedhands.entity.DrownedHandEntity;
 import de.markusbordihn.wickedhands.entity.HandGesture;
+import de.markusbordihn.wickedhands.entity.HuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessBoneHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessDrownedHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessHuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessStrayHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessWitheredHandEntity;
 import de.markusbordihn.wickedhands.entity.RottenHandEntity;
+import de.markusbordihn.wickedhands.entity.ShoulderPassive;
+import de.markusbordihn.wickedhands.entity.ShoulderPassiveHandler;
+import de.markusbordihn.wickedhands.entity.StrayHandEntity;
+import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import de.markusbordihn.wickedhands.item.HandDataComponents;
 import de.markusbordihn.wickedhands.item.LifelessHandItem;
-import de.markusbordihn.wickedhands.loot.HandLootInjections;
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -61,6 +73,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -68,6 +81,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -76,6 +91,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biomes;
@@ -108,7 +124,16 @@ public class HandGameTests {
   private static final long MIDNIGHT_DAY_TIME = 18000L;
   private static final int SPAWN_RULE_ATTEMPTS = 200;
   private static final double DESPAWN_DISTANCE = 128.0D;
-  private static final int ZOMBIE_LOOT_ROLLS = 2000;
+  private static final Map<EntityType<?>, Identifier> LIFELESS_HAND_BY_MONSTER =
+      Map.of(
+          EntityType.ZOMBIE, LifelessRottenHandEntity.ENTITY_ID,
+          EntityType.DROWNED, LifelessDrownedHandEntity.ENTITY_ID,
+          EntityType.SKELETON, LifelessBoneHandEntity.ENTITY_ID,
+          EntityType.HUSK, LifelessHuskHandEntity.ENTITY_ID,
+          EntityType.STRAY, LifelessStrayHandEntity.ENTITY_ID,
+          EntityType.WITHER_SKELETON, LifelessWitheredHandEntity.ENTITY_ID);
+  private static final int LOOT_ROLLS_PER_MONSTER = 2000;
+  private static final float FIRE_DAMAGE = 4.0F;
   private static final int MINIMUM_EXPECTED_HAND_DROPS = 20;
   private static final int MAXIMUM_EXPECTED_HAND_DROPS = 100;
   private static final int WATER_DEPTH = 3;
@@ -116,6 +141,7 @@ public class HandGameTests {
   private static final int PAST_AIR_SUPPLY_TICKS = 340;
   private static final double APPROACH_SPEED = 0.1D;
   private static final int OWNER_BURN_SECONDS = 20;
+  private static final int OWNER_HUNGER_TICKS = 200;
   private static final int STRANGER_WAVE_CHECK_TICKS = 100;
   private static final int SIBLING_TARGET_CHECK_TICKS = 40;
   private static final int STAYING_COMPANION_CHECK_TICKS = 60;
@@ -125,6 +151,7 @@ public class HandGameTests {
   private static final int AFTER_RITUAL_TICKS = RevivalRitual.DURATION_TICKS + 5;
   private static final BlockPos BESIDE_RITUAL_POSITION = TEST_POSITION.south(3);
   private static final BlockPos MONSTER_POSITION = TEST_POSITION.north(4);
+  private static final int RITUAL_AREA_RADIUS = 8;
   private static final List<BlockPos> CANDLE_POSITIONS =
       List.of(
           TEST_POSITION.east(), TEST_POSITION.west(), TEST_POSITION.north(), TEST_POSITION.south());
@@ -192,12 +219,27 @@ public class HandGameTests {
 
   private static AbstractLifelessHandEntity startRevivalRitual(
       GameTestHelper helper, Player player, ItemStack lifelessHandStack, Item catalyst) {
+    forceLoadRitualArea(helper);
     placeLitCandles(helper);
     AbstractLifelessHandEntity lifelessHand =
         placeLifelessHand(helper, player, lifelessHandStack, AbstractLifelessHandEntity.class);
     player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(catalyst));
     lifelessHand.mobInteract(player, InteractionHand.MAIN_HAND);
     return lifelessHand;
+  }
+
+  // Vanilla force-loads only the chunks of the 1x1x1 structure, entities beyond them stop ticking.
+  private static void forceLoadRitualArea(GameTestHelper helper) {
+    BlockPos ritualPosition = helper.absolutePos(TEST_POSITION);
+    ChunkPos northWestChunk =
+        ChunkPos.containing(ritualPosition.offset(-RITUAL_AREA_RADIUS, 0, -RITUAL_AREA_RADIUS));
+    ChunkPos southEastChunk =
+        ChunkPos.containing(ritualPosition.offset(RITUAL_AREA_RADIUS, 0, RITUAL_AREA_RADIUS));
+    for (int chunkX = northWestChunk.x(); chunkX <= southEastChunk.x(); chunkX++) {
+      for (int chunkZ = northWestChunk.z(); chunkZ <= southEastChunk.z(); chunkZ++) {
+        helper.getLevel().setChunkForced(chunkX, chunkZ, true);
+      }
+    }
   }
 
   private static void placeBesideRitual(GameTestHelper helper, Player player) {
@@ -288,6 +330,152 @@ public class HandGameTests {
 
   private static Item item(Identifier itemId) {
     return BuiltInRegistries.ITEM.getValue(itemId);
+  }
+
+  private static AbstractHandEntity spawnWildHand(
+      GameTestHelper helper, Identifier handId, BlockPos position) {
+    return (AbstractHandEntity)
+        helper.spawn(
+            entityType(handId), Vec3.atBottomCenterOf(position), EntitySpawnReason.NATURAL);
+  }
+
+  private static void sitOnShoulder(GameTestHelper helper, ServerPlayer owner, Identifier handId) {
+    AbstractHandEntity hand = spawnWildHand(helper, handId, TEST_POSITION);
+    // Player.setEntityOnShoulder rejects players that are not on the ground.
+    owner.setOnGround(true);
+    helper.assertTrue(
+        EasyNPCShoulderHandler.sitOnShoulder(hand, owner),
+        Component.literal("Hand could not sit on the shoulder"));
+  }
+
+  private static void assertShoulderHandsGrantAttributePassives(
+      GameTestHelper helper,
+      Identifier leftHandId,
+      Holder<Attribute> leftAttribute,
+      ShoulderPassive leftPassive,
+      Identifier rightHandId,
+      Holder<Attribute> rightAttribute,
+      ShoulderPassive rightPassive) {
+    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    sitOnShoulder(helper, owner, leftHandId);
+    sitOnShoulder(helper, owner, rightHandId);
+    ShoulderPassiveHandler.update(owner);
+    helper.assertTrue(
+        hasShoulderPassive(owner, leftAttribute, leftPassive)
+            && hasShoulderPassive(owner, rightAttribute, rightPassive),
+        Component.literal("Hands on the shoulder did not grant their passives"));
+
+    owner.removeAllEffects();
+    ShoulderPassiveHandler.update(owner);
+    helper.assertTrue(
+        hasShoulderPassive(owner, leftAttribute, leftPassive)
+            && hasShoulderPassive(owner, rightAttribute, rightPassive),
+        Component.literal("Passives did not return after drinking milk"));
+
+    EasyNPCShoulderHandler.dismount(owner, ShoulderSide.LEFT);
+    ShoulderPassiveHandler.update(owner);
+    helper.assertTrue(
+        !hasShoulderPassive(owner, leftAttribute, leftPassive)
+            && hasShoulderPassive(owner, rightAttribute, rightPassive),
+        Component.literal("Dismounting one hand did not remove only its passive"));
+
+    EasyNPCShoulderHandler.dismount(owner, ShoulderSide.RIGHT);
+    ShoulderPassiveHandler.update(owner);
+    helper.assertFalse(
+        hasShoulderPassive(owner, rightAttribute, rightPassive),
+        Component.literal("Passive stayed after the hand left the shoulder"));
+    helper.succeed();
+  }
+
+  private static void assertMonsterDropsLifelessHand(
+      GameTestHelper helper, EntityType<?> monsterType, Identifier lifelessHandId) {
+    ServerLevel level = helper.getLevel();
+    LootTable monsterLootTable =
+        level
+            .getServer()
+            .reloadableRegistries()
+            .getLootTable(monsterType.getDefaultLootTable().orElseThrow());
+    Entity monster = helper.spawn(monsterType, TEST_POSITION);
+    Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+    LootParams lootParams =
+        new LootParams.Builder(level)
+            .withParameter(LootContextParams.THIS_ENTITY, monster)
+            .withParameter(LootContextParams.ORIGIN, monster.position())
+            .withParameter(
+                LootContextParams.DAMAGE_SOURCE, level.damageSources().playerAttack(player))
+            .withParameter(LootContextParams.ATTACKING_ENTITY, player)
+            .withParameter(LootContextParams.DIRECT_ATTACKING_ENTITY, player)
+            .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, player)
+            .create(LootContextParamSets.ENTITY);
+
+    Item lifelessHand = item(lifelessHandId);
+    int handDrops = 0;
+    for (int i = 0; i < LOOT_ROLLS_PER_MONSTER; i++) {
+      for (ItemStack itemStack : monsterLootTable.getRandomItems(lootParams)) {
+        if (itemStack.is(lifelessHand)) {
+          handDrops++;
+        }
+      }
+    }
+    monster.discard();
+
+    helper.assertTrue(
+        handDrops >= MINIMUM_EXPECTED_HAND_DROPS && handDrops <= MAXIMUM_EXPECTED_HAND_DROPS,
+        Component.literal(
+            "Expected 1-5% "
+                + lifelessHandId
+                + " from "
+                + LOOT_ROLLS_PER_MONSTER
+                + " "
+                + EntityType.getKey(monsterType)
+                + " kills, got "
+                + handDrops));
+  }
+
+  private static boolean hasShoulderPassive(
+      ServerPlayer owner, Holder<Attribute> attribute, ShoulderPassive shoulderPassive) {
+    return owner.hasEffect(shoulderPassive.getEffect())
+        && owner.getAttribute(attribute).hasModifier(shoulderPassive.getModifierId());
+  }
+
+  private static <T extends AbstractCompanionHandEntity>
+      void assertRitualCreatesCompanionWithHitAbility(
+          GameTestHelper helper,
+          Identifier lifelessHandId,
+          Item catalyst,
+          Class<T> companionClass,
+          Predicate<Pig> hitAbilityApplied) {
+    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    placeBesideRitual(helper, owner);
+    startRevivalRitual(helper, owner, new ItemStack(item(lifelessHandId)), catalyst);
+
+    helper.runAfterDelay(
+        AFTER_RITUAL_TICKS,
+        () -> {
+          T companion = findEntityNearTestPosition(helper, companionClass);
+          helper.assertTrue(
+              companion.isNPCOwnedBy(owner)
+                  && companion.getHandState().lifecycle() == HandLifecycle.COMPANION,
+              Component.literal("Ritual did not create a companion"));
+          AdvancementHolder companionAdvancement =
+              helper
+                  .getLevel()
+                  .getServer()
+                  .getAdvancements()
+                  .get(
+                      HandAdvancements.companionAdvancementId(
+                          BuiltInRegistries.ENTITY_TYPE.getKey(companion.getType())));
+          helper.assertTrue(
+              companionAdvancement != null
+                  && owner.getAdvancements().getOrStartProgress(companionAdvancement).isDone(),
+              Component.literal("Reviving the companion did not grant its advancement"));
+
+          Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION.east(2));
+          helper.assertTrue(
+              companion.doHurtTarget(helper.getLevel(), pig) && hitAbilityApplied.test(pig),
+              Component.literal("Companion hit did not apply its ability"));
+          helper.succeed();
+        });
   }
 
   private static void keepApproaching(GameTestHelper helper, Mob monster, Entity target) {
@@ -527,40 +715,10 @@ public class HandGameTests {
                 Component.literal("Rotten hand did not swim to the water surface")));
   }
 
-  public void testZombieDropsLifelessRottenHand(GameTestHelper helper) {
-    ServerLevel level = helper.getLevel();
-    LootTable zombieLootTable =
-        level.getServer().reloadableRegistries().getLootTable(HandLootInjections.ZOMBIE_LOOT_TABLE);
-    Entity zombie = helper.spawn(EntityType.ZOMBIE, TEST_POSITION);
-    Player player = helper.makeMockPlayer(GameType.SURVIVAL);
-    LootParams lootParams =
-        new LootParams.Builder(level)
-            .withParameter(LootContextParams.THIS_ENTITY, zombie)
-            .withParameter(LootContextParams.ORIGIN, zombie.position())
-            .withParameter(
-                LootContextParams.DAMAGE_SOURCE, level.damageSources().playerAttack(player))
-            .withParameter(LootContextParams.ATTACKING_ENTITY, player)
-            .withParameter(LootContextParams.DIRECT_ATTACKING_ENTITY, player)
-            .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, player)
-            .create(LootContextParamSets.ENTITY);
-
-    Item lifelessRottenHand = lifelessRottenHandItem();
-    int handDrops = 0;
-    for (int i = 0; i < ZOMBIE_LOOT_ROLLS; i++) {
-      for (ItemStack itemStack : zombieLootTable.getRandomItems(lootParams)) {
-        if (itemStack.is(lifelessRottenHand)) {
-          handDrops++;
-        }
-      }
-    }
-
-    helper.assertTrue(
-        handDrops >= MINIMUM_EXPECTED_HAND_DROPS && handDrops <= MAXIMUM_EXPECTED_HAND_DROPS,
-        Component.literal(
-            "Expected 1-5% lifeless rotten hands from "
-                + ZOMBIE_LOOT_ROLLS
-                + " zombie kills, got "
-                + handDrops));
+  public void testMonstersDropTheirLifelessHand(GameTestHelper helper) {
+    LIFELESS_HAND_BY_MONSTER.forEach(
+        (monsterType, lifelessHandId) ->
+            assertMonsterDropsLifelessHand(helper, monsterType, lifelessHandId));
     helper.succeed();
   }
 
@@ -798,6 +956,121 @@ public class HandGameTests {
   public void testFallenBoneHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
     assertFallenCompanionReturnsAndRevives(
         helper, item(LifelessBoneHandEntity.ENTITY_ID), Items.BONE_MEAL, BoneHandEntity.class);
+  }
+
+  public void testFallenHuskHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    assertFallenCompanionReturnsAndRevives(
+        helper, item(LifelessHuskHandEntity.ENTITY_ID), Items.SAND, HuskHandEntity.class);
+  }
+
+  public void testFallenStrayHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    assertFallenCompanionReturnsAndRevives(
+        helper, item(LifelessStrayHandEntity.ENTITY_ID), Items.SNOWBALL, StrayHandEntity.class);
+  }
+
+  public void testFallenWitheredHandReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {
+    assertFallenCompanionReturnsAndRevives(
+        helper, item(LifelessWitheredHandEntity.ENTITY_ID), Items.COAL, WitheredHandEntity.class);
+  }
+
+  public void testHuskHandRitualCreatesWeakeningCompanion(GameTestHelper helper) {
+    assertRitualCreatesCompanionWithHitAbility(
+        helper,
+        LifelessHuskHandEntity.ENTITY_ID,
+        Items.SAND,
+        HuskHandEntity.class,
+        pig -> pig.hasEffect(MobEffects.WEAKNESS));
+  }
+
+  public void testStrayHandRitualCreatesChillingCompanion(GameTestHelper helper) {
+    assertRitualCreatesCompanionWithHitAbility(
+        helper,
+        LifelessStrayHandEntity.ENTITY_ID,
+        Items.SNOWBALL,
+        StrayHandEntity.class,
+        pig -> pig.hasEffect(MobEffects.SLOWNESS) && pig.getTicksFrozen() > 0);
+  }
+
+  public void testWitheredHandRitualCreatesWitheringCompanion(GameTestHelper helper) {
+    assertRitualCreatesCompanionWithHitAbility(
+        helper,
+        LifelessWitheredHandEntity.ENTITY_ID,
+        Items.COAL,
+        WitheredHandEntity.class,
+        pig -> pig.hasEffect(MobEffects.WITHER));
+  }
+
+  public void testWitheredHandIsImmuneToFire(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    AbstractHandEntity boneHand =
+        spawnWildHand(helper, BoneHandEntity.ENTITY_ID, TEST_POSITION.east(2));
+    AbstractHandEntity witheredHand =
+        spawnWildHand(helper, WitheredHandEntity.ENTITY_ID, TEST_POSITION.west(2));
+    helper.assertTrue(
+        boneHand.hurtServer(level, level.damageSources().inFire(), FIRE_DAMAGE),
+        Component.literal("Bone hand was not hurt by fire"));
+    helper.assertFalse(
+        witheredHand.hurtServer(level, level.damageSources().inFire(), FIRE_DAMAGE)
+            || witheredHand.hurtServer(level, level.damageSources().lava(), FIRE_DAMAGE),
+        Component.literal("Withered hand was hurt by fire"));
+    helper.assertTrue(
+        witheredHand.getHealth() == witheredHand.getMaxHealth(),
+        Component.literal("Withered hand lost health to fire"));
+    helper.succeed();
+  }
+
+  public void testShoulderBoneAndWitheredHandsGrantPassives(GameTestHelper helper) {
+    assertShoulderHandsGrantAttributePassives(
+        helper,
+        BoneHandEntity.ENTITY_ID,
+        Attributes.ARMOR,
+        ShoulderPassive.BONE_GUARD,
+        WitheredHandEntity.ENTITY_ID,
+        Attributes.BURNING_TIME,
+        ShoulderPassive.ASHEN_SKIN);
+  }
+
+  public void testShoulderRottenAndDrownedHandsGrantPassives(GameTestHelper helper) {
+    assertShoulderHandsGrantAttributePassives(
+        helper,
+        RottenHandEntity.ENTITY_ID,
+        Attributes.KNOCKBACK_RESISTANCE,
+        ShoulderPassive.FIRM_GRIP,
+        DrownedHandEntity.ENTITY_ID,
+        Attributes.OXYGEN_BONUS,
+        ShoulderPassive.SECOND_BREATH);
+  }
+
+  public void testShoulderPassiveAppliesOnPlayerTick(GameTestHelper helper) {
+    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    sitOnShoulder(helper, owner, BoneHandEntity.ENTITY_ID);
+    // The mock player has no ticking connection, so NeoForge and Forge never fire its tick event.
+    helper.onEachTick(owner::doTick);
+    helper.succeedWhen(
+        () ->
+            helper.assertTrue(
+                hasShoulderPassive(owner, Attributes.ARMOR, ShoulderPassive.BONE_GUARD),
+                Component.literal("The player tick did not apply the shoulder passive")));
+  }
+
+  public void testShoulderHandsProtectFromHungerAndFreezing(GameTestHelper helper) {
+    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    sitOnShoulder(helper, owner, HuskHandEntity.ENTITY_ID);
+    sitOnShoulder(helper, owner, StrayHandEntity.ENTITY_ID);
+    owner.addEffect(new MobEffectInstance(MobEffects.HUNGER, OWNER_HUNGER_TICKS));
+    owner.setTicksFrozen(owner.getTicksRequiredToFreeze());
+    ShoulderPassiveHandler.update(owner);
+    helper.assertTrue(
+        owner.hasEffect(ShoulderPassive.DRY_STOMACH.getEffect())
+            && owner.hasEffect(ShoulderPassive.COLD_BLOOD.getEffect()),
+        Component.literal("Husk and Stray hands did not show their passive effects"));
+    helper.assertFalse(
+        owner.hasEffect(MobEffects.HUNGER),
+        Component.literal("Husk hand on the shoulder did not remove hunger"));
+    helper.assertTrue(
+        owner.getTicksFrozen() == 0,
+        Component.literal("Stray hand on the shoulder did not stop freezing"));
+    helper.succeed();
   }
 
   public void testDrownedHandRitualNeedsKelp(GameTestHelper helper) {

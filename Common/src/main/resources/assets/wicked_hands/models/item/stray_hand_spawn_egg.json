@@ -1,0 +1,7 @@
+{
+  "parent": "wicked_hands:item/lifeless_stray_hand",
+  "textures": {
+    "0": "wicked_hands:item/stray_hand_spawn_egg",
+    "particle": "wicked_hands:item/stray_hand_spawn_egg"
+  }
+}

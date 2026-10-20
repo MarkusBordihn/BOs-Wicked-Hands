@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "wicked_hands:shoulder_bone_and_withered_hands_grant_passives",
+  "environment": "minecraft:default",
+  "structure": "wicked_hands:gametest.1x1x1",
+  "max_ticks": 100
+}

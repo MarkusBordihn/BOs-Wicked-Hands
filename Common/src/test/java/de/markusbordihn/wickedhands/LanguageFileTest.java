@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonObject;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 class LanguageFileTest {
 
   private static final String LANGUAGE_FOLDER = "assets/" + Constants.MOD_ID + "/lang/";
-  private static final List<String> HAND_TYPES = List.of("rotten", "drowned", "bone");
+  private static final List<String> HAND_TYPES =
+      List.of("rotten", "drowned", "bone", "husk", "stray", "withered");
+  private static final List<String> SHOULDER_EFFECTS =
+      List.of(
+          "firm_grip", "second_breath", "bone_guard", "dry_stomach", "cold_blood", "ashen_skin");
   private static final List<String> MESSAGE_KEYS =
       List.of(
           "message.wicked_hands.hand.follow",
@@ -47,8 +52,14 @@ class LanguageFileTest {
           "message.wicked_hands.hand.whisper",
           "item.wicked_hands.lifeless_hand.ritual");
   private static final List<String> REQUIRED_KEYS =
-      Stream.concat(
+      Stream.of(
               MESSAGE_KEYS.stream(),
+              SHOULDER_EFFECTS.stream()
+                  .flatMap(
+                      shoulderEffect ->
+                          Stream.of(
+                              "effect.wicked_hands." + shoulderEffect,
+                              "effect.wicked_hands." + shoulderEffect + ".description")),
               HAND_TYPES.stream()
                   .flatMap(
                       handType ->
@@ -59,8 +70,10 @@ class LanguageFileTest {
                               "item.wicked_hands.lifeless_" + handType + "_hand.tooltip",
                               "item.wicked_hands.lifeless_" + handType + "_hand.revival_hint",
                               "item.wicked_hands.lifeless_" + handType + "_hand.offering",
+                              "item.wicked_hands.lifeless_" + handType + "_hand.shoulder",
                               "item.wicked_hands." + handType + "_hand_spawn_egg",
                               "advancements.wicked_hands." + handType + "_hand_companion.title")))
+          .flatMap(Function.identity())
           .toList();
 
   private static JsonObject readLanguage(String language) {

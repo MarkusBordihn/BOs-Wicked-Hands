@@ -22,7 +22,6 @@ package de.markusbordihn.wickedhands.clienttest;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.Until;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.Parameters;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.api.Entity;
-import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +29,6 @@ class RevivalRitualClientTest extends ClientTestBase {
 
   private static final String LIT_CANDLE = "minecraft:candle[lit=true]";
   private static final long VORTEX_TICKS = 60;
-  private static final Duration RITUAL_TIMEOUT = Duration.ofSeconds(20);
 
   @Test
   @DisplayName("Revival ritual wakes a lifeless rotten hand as companion")
@@ -48,9 +46,7 @@ class RevivalRitualClientTest extends ClientTestBase {
     client.await(Until.ticksElapsed(VORTEX_TICKS));
     client.saveScreenshot("revival_ritual");
 
-    Entity companion =
-        removeAfterTest(
-            client.awaitEntity(Parameters.of("type", ROTTEN_HAND), entity -> true, RITUAL_TIMEOUT));
+    Entity companion = removeAfterTest(awaitEntityOfType(ROTTEN_HAND));
     client.await(Until.entityAbsent(Parameters.of("uuid", lifelessHand.uuid())));
     lookAtCenterOf(companion);
     client.await(Until.ticksElapsed(RENDER_TICKS));

@@ -31,15 +31,20 @@ import net.minecraft.world.level.storage.loot.entries.NestedLootTable;
 
 public final class HandLootInjections {
 
-  public static final ResourceKey<LootTable> ZOMBIE_LOOT_TABLE = vanillaEntityLootTable("zombie");
   private static final Map<ResourceKey<LootTable>, ResourceKey<LootTable>> INJECTIONS =
       Map.of(
-          ZOMBIE_LOOT_TABLE,
+          vanillaEntityLootTable("zombie"),
           injection("zombie"),
           vanillaEntityLootTable("drowned"),
           injection("drowned"),
           vanillaEntityLootTable("skeleton"),
-          injection("skeleton"));
+          injection("skeleton"),
+          vanillaEntityLootTable("husk"),
+          injection("husk"),
+          vanillaEntityLootTable("stray"),
+          injection("stray"),
+          vanillaEntityLootTable("wither_skeleton"),
+          injection("wither_skeleton"));
 
   private HandLootInjections() {}
 

@@ -42,6 +42,16 @@ public final class ModEntityTypes {
   public static final EntityType<BoneHandEntity> BONE_HAND = BoneHandEntity.createEntityType();
   public static final EntityType<LifelessBoneHandEntity> LIFELESS_BONE_HAND =
       LifelessBoneHandEntity.createEntityType();
+  public static final EntityType<HuskHandEntity> HUSK_HAND = HuskHandEntity.createEntityType();
+  public static final EntityType<LifelessHuskHandEntity> LIFELESS_HUSK_HAND =
+      LifelessHuskHandEntity.createEntityType();
+  public static final EntityType<StrayHandEntity> STRAY_HAND = StrayHandEntity.createEntityType();
+  public static final EntityType<LifelessStrayHandEntity> LIFELESS_STRAY_HAND =
+      LifelessStrayHandEntity.createEntityType();
+  public static final EntityType<WitheredHandEntity> WITHERED_HAND =
+      WitheredHandEntity.createEntityType();
+  public static final EntityType<LifelessWitheredHandEntity> LIFELESS_WITHERED_HAND =
+      LifelessWitheredHandEntity.createEntityType();
 
   private ModEntityTypes() {}
 
@@ -52,9 +62,18 @@ public final class ModEntityTypes {
     FabricDefaultAttributeRegistry.register(DROWNED_HAND, DrownedHandEntity.createAttributes());
     Registry.register(BuiltInRegistries.ENTITY_TYPE, BoneHandEntity.ENTITY_ID, BONE_HAND);
     FabricDefaultAttributeRegistry.register(BONE_HAND, BoneHandEntity.createAttributes());
+    Registry.register(BuiltInRegistries.ENTITY_TYPE, HuskHandEntity.ENTITY_ID, HUSK_HAND);
+    FabricDefaultAttributeRegistry.register(HUSK_HAND, HuskHandEntity.createAttributes());
+    Registry.register(BuiltInRegistries.ENTITY_TYPE, StrayHandEntity.ENTITY_ID, STRAY_HAND);
+    FabricDefaultAttributeRegistry.register(STRAY_HAND, StrayHandEntity.createAttributes());
+    Registry.register(BuiltInRegistries.ENTITY_TYPE, WitheredHandEntity.ENTITY_ID, WITHERED_HAND);
+    FabricDefaultAttributeRegistry.register(WITHERED_HAND, WitheredHandEntity.createAttributes());
     registerLifelessHand(LifelessRottenHandEntity.ENTITY_ID, LIFELESS_ROTTEN_HAND);
     registerLifelessHand(LifelessDrownedHandEntity.ENTITY_ID, LIFELESS_DROWNED_HAND);
     registerLifelessHand(LifelessBoneHandEntity.ENTITY_ID, LIFELESS_BONE_HAND);
+    registerLifelessHand(LifelessHuskHandEntity.ENTITY_ID, LIFELESS_HUSK_HAND);
+    registerLifelessHand(LifelessStrayHandEntity.ENTITY_ID, LIFELESS_STRAY_HAND);
+    registerLifelessHand(LifelessWitheredHandEntity.ENTITY_ID, LIFELESS_WITHERED_HAND);
     SpawnPlacements.register(
         ROTTEN_HAND,
         RottenHandEntity.SPAWN_PLACEMENT_TYPE,

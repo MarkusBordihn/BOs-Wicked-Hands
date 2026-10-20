@@ -42,5 +42,14 @@ public final class ModEntityRenderers {
     event.registerEntityRenderer(ModEntityTypes.BONE_HAND.get(), EasyModelNPCRenderer::new);
     event.registerEntityRenderer(
         ModEntityTypes.LIFELESS_BONE_HAND.get(), EasyModelNPCRenderer::new);
+    event.registerEntityRenderer(ModEntityTypes.HUSK_HAND.get(), EasyModelNPCRenderer::new);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_HUSK_HAND.get(), EasyModelNPCRenderer::new);
+    event.registerEntityRenderer(ModEntityTypes.STRAY_HAND.get(), EasyModelNPCRenderer::new);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_STRAY_HAND.get(), EasyModelNPCRenderer::new);
+    event.registerEntityRenderer(ModEntityTypes.WITHERED_HAND.get(), EasyModelNPCRenderer::new);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_WITHERED_HAND.get(), EasyModelNPCRenderer::new);
   }
 }

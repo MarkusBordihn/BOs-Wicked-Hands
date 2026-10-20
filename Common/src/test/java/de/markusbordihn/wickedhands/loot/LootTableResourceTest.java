@@ -60,7 +60,7 @@ class LootTableResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"rotten", "drowned", "bone"})
+  @ValueSource(strings = {"rotten", "drowned", "bone", "husk", "stray", "withered"})
   @DisplayName("Every hand always drops its lifeless hand")
   void handAlwaysDropsItem(String handType) {
     JsonObject pool =
@@ -71,7 +71,14 @@ class LootTableResourceTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"zombie, rotten", "drowned, drowned", "skeleton, bone"})
+  @CsvSource({
+    "zombie, rotten",
+    "drowned, drowned",
+    "skeleton, bone",
+    "husk, husk",
+    "stray, stray",
+    "wither_skeleton, withered"
+  })
   @DisplayName("Origin mobs rarely drop their lifeless hand when killed by a player")
   void originDropIsRareAndPlayerOnly(String originMob, String handType) {
     JsonObject pool = singlePool("data/wicked_hands/loot_table/injections/" + originMob + ".json");

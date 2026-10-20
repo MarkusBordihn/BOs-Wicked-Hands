@@ -50,7 +50,7 @@ public final class ModGameTests {
     register(
         "rotten_hand_uses_active_model_profile", HAND_TESTS::testRottenHandUsesActiveModelProfile);
     register("rotten_hand_despawns_when_far_away", HAND_TESTS::testRottenHandDespawnsWhenFarAway);
-    register("zombie_drops_lifeless_rotten_hand", HAND_TESTS::testZombieDropsLifelessRottenHand);
+    register("monsters_drop_their_lifeless_hand", HAND_TESTS::testMonstersDropTheirLifelessHand);
     register(
         "lifeless_rotten_hand_is_placed_on_soul_sand",
         HAND_TESTS::testLifelessRottenHandIsPlacedOnSoulSand);
@@ -73,6 +73,37 @@ public final class ModGameTests {
     register(
         "fallen_bone_hand_returns_and_revives_with_same_identity",
         HAND_TESTS::testFallenBoneHandReturnsAndRevivesWithSameIdentity);
+    register(
+        "fallen_husk_hand_returns_and_revives_with_same_identity",
+        HAND_TESTS::testFallenHuskHandReturnsAndRevivesWithSameIdentity);
+    register(
+        "fallen_stray_hand_returns_and_revives_with_same_identity",
+        HAND_TESTS::testFallenStrayHandReturnsAndRevivesWithSameIdentity);
+    register(
+        "fallen_withered_hand_returns_and_revives_with_same_identity",
+        HAND_TESTS::testFallenWitheredHandReturnsAndRevivesWithSameIdentity);
+    register(
+        "husk_hand_ritual_creates_weakening_companion",
+        HAND_TESTS::testHuskHandRitualCreatesWeakeningCompanion);
+    register(
+        "stray_hand_ritual_creates_chilling_companion",
+        HAND_TESTS::testStrayHandRitualCreatesChillingCompanion);
+    register(
+        "withered_hand_ritual_creates_withering_companion",
+        HAND_TESTS::testWitheredHandRitualCreatesWitheringCompanion);
+    register("withered_hand_is_immune_to_fire", HAND_TESTS::testWitheredHandIsImmuneToFire);
+    register(
+        "shoulder_bone_and_withered_hands_grant_passives",
+        HAND_TESTS::testShoulderBoneAndWitheredHandsGrantPassives);
+    register(
+        "shoulder_rotten_and_drowned_hands_grant_passives",
+        HAND_TESTS::testShoulderRottenAndDrownedHandsGrantPassives);
+    register(
+        "shoulder_passive_applies_on_player_tick",
+        HAND_TESTS::testShoulderPassiveAppliesOnPlayerTick);
+    register(
+        "shoulder_hands_protect_from_hunger_and_freezing",
+        HAND_TESTS::testShoulderHandsProtectFromHungerAndFreezing);
     register("drowned_hand_ritual_needs_kelp", HAND_TESTS::testDrownedHandRitualNeedsKelp);
     register("bone_hand_ritual_creates_companion", HAND_TESTS::testBoneHandRitualCreatesCompanion);
     register("drowned_hand_breathes_underwater", HAND_TESTS::testDrownedHandBreathesUnderwater);

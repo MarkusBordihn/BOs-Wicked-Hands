@@ -24,7 +24,6 @@ import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.Until;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.GameMode;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.Parameters;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.api.Entity;
-import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,7 +32,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 class RottenHandClientTest extends ClientTestBase {
 
   private static final long HINT_TICKS = 10;
-  private static final Duration ATTACK_TIMEOUT = Duration.ofSeconds(20);
   private static final long DEATH_POOF_MAX_LIFETIME_TICKS = 82;
 
   private static Entity summonRottenHandWithFinalizeSpawn() {
@@ -51,8 +49,7 @@ class RottenHandClientTest extends ClientTestBase {
       client.awaitValue(
           "player health below " + startHealth,
           client::playerHealth,
-          health -> health < startHealth,
-          ATTACK_TIMEOUT);
+          health -> health < startHealth);
       client.saveScreenshot("rotten_hand_attack");
     }
   }

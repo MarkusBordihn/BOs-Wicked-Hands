@@ -5,6 +5,14 @@
 This change log includes the summarized changes. For the full changelog, please go to
 the [GitHub History][history] instead.
 
+### 0.4.0 (beta)
+
+- Added the "Husk", "Stray" and "Withered Hand", rare drops of Husks, Strays and Wither Skeletons.
+- Added Sand, Snowball and Coal as their ritual offerings, plus spawn eggs and advancements.
+- Added their hits weakening (Husk), slowing and chilling (Stray) or withering (Withered).
+- Added fire immunity to the "Withered Hand".
+- Added a bonus for every hand riding on its owner's shoulder, shown as an effect with a hand icon.
+
 ### 0.3.0 (beta)
 
 - Fixed revived hands staying listed as a saved NPC in Easy NPC after the ritual.

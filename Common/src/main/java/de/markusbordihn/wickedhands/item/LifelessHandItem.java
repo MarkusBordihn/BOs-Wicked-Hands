@@ -87,7 +87,8 @@ public class LifelessHandItem extends Item {
         Stream.of(
                 Component.translatable(lifelessHandId.toLanguageKey("item", "tooltip")),
                 Component.translatable(RITUAL_TOOLTIP_KEY),
-                Component.translatable(lifelessHandId.toLanguageKey("item", "offering")))
+                Component.translatable(lifelessHandId.toLanguageKey("item", "offering")),
+                Component.translatable(lifelessHandId.toLanguageKey("item", "shoulder")))
             .<Component>map(
                 line ->
                     line.withStyle(style -> style.withColor(ChatFormatting.GRAY).withItalic(false)))

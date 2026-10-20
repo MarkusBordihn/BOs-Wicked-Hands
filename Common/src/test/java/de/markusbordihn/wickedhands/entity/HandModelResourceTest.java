@@ -49,7 +49,6 @@ import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -117,7 +116,13 @@ class HandModelResourceTest {
         DrownedHandEntity.ID,
         LifelessDrownedHandEntity.ID,
         BoneHandEntity.ID,
-        LifelessBoneHandEntity.ID
+        LifelessBoneHandEntity.ID,
+        HuskHandEntity.ID,
+        LifelessHuskHandEntity.ID,
+        StrayHandEntity.ID,
+        LifelessStrayHandEntity.ID,
+        WitheredHandEntity.ID,
+        LifelessWitheredHandEntity.ID
       })
   @DisplayName("Easy Model Entities accepts the server profile")
   void serverProfileIsActive(String entityId) throws IOException {
@@ -136,7 +141,13 @@ class HandModelResourceTest {
         DrownedHandEntity.ID,
         LifelessDrownedHandEntity.ID,
         BoneHandEntity.ID,
-        LifelessBoneHandEntity.ID
+        LifelessBoneHandEntity.ID,
+        HuskHandEntity.ID,
+        LifelessHuskHandEntity.ID,
+        StrayHandEntity.ID,
+        LifelessStrayHandEntity.ID,
+        WitheredHandEntity.ID,
+        LifelessWitheredHandEntity.ID
       })
   @DisplayName("Easy Model Entities accepts the render profile")
   void renderProfileIsActive(String entityId) throws IOException {
@@ -153,7 +164,13 @@ class HandModelResourceTest {
         DrownedHandEntity.ID,
         LifelessDrownedHandEntity.ID,
         BoneHandEntity.ID,
-        LifelessBoneHandEntity.ID
+        LifelessBoneHandEntity.ID,
+        HuskHandEntity.ID,
+        LifelessHuskHandEntity.ID,
+        StrayHandEntity.ID,
+        LifelessStrayHandEntity.ID,
+        WitheredHandEntity.ID,
+        LifelessWitheredHandEntity.ID
       })
   @DisplayName("Model bakes for its body type without the fallback model")
   void modelBakesWithoutFallback(String entityId) throws IOException {
@@ -170,7 +187,13 @@ class HandModelResourceTest {
         DrownedHandEntity.ID,
         LifelessDrownedHandEntity.ID,
         BoneHandEntity.ID,
-        LifelessBoneHandEntity.ID
+        LifelessBoneHandEntity.ID,
+        HuskHandEntity.ID,
+        LifelessHuskHandEntity.ID,
+        StrayHandEntity.ID,
+        LifelessStrayHandEntity.ID,
+        WitheredHandEntity.ID,
+        LifelessWitheredHandEntity.ID
       })
   @DisplayName("Server profile and render profile describe the same model version")
   void profilesMatch(String entityId) {
@@ -184,7 +207,10 @@ class HandModelResourceTest {
   @CsvSource({
     RottenHandEntity.ID + ", " + LifelessRottenHandEntity.ID,
     DrownedHandEntity.ID + ", " + LifelessDrownedHandEntity.ID,
-    BoneHandEntity.ID + ", " + LifelessBoneHandEntity.ID
+    BoneHandEntity.ID + ", " + LifelessBoneHandEntity.ID,
+    HuskHandEntity.ID + ", " + LifelessHuskHandEntity.ID,
+    StrayHandEntity.ID + ", " + LifelessStrayHandEntity.ID,
+    WitheredHandEntity.ID + ", " + LifelessWitheredHandEntity.ID
   })
   @DisplayName("Lifeless hand uses its companion model without any animation")
   void lifelessHandIsMotionless(String companionId, String lifelessHandId) throws IOException {
@@ -202,7 +228,13 @@ class HandModelResourceTest {
         DrownedHandEntity.ID,
         LifelessDrownedHandEntity.ID,
         BoneHandEntity.ID,
-        LifelessBoneHandEntity.ID
+        LifelessBoneHandEntity.ID,
+        HuskHandEntity.ID,
+        LifelessHuskHandEntity.ID,
+        StrayHandEntity.ID,
+        LifelessStrayHandEntity.ID,
+        WitheredHandEntity.ID,
+        LifelessWitheredHandEntity.ID
       })
   @DisplayName("Render profile points at an existing model and texture")
   void renderProfileResourcesExist(String entityId) {
@@ -214,7 +246,15 @@ class HandModelResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, DrownedHandEntity.ID, BoneHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        HuskHandEntity.ID,
+        StrayHandEntity.ID,
+        WitheredHandEntity.ID
+      })
   @DisplayName("Model has idle, walk, shoulder and attack animations with a variant")
   void requiredAnimationsExist(String entityId) {
     Set<String> animationNames = animationNames(entityId);
@@ -224,7 +264,15 @@ class HandModelResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, DrownedHandEntity.ID, BoneHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        HuskHandEntity.ID,
+        StrayHandEntity.ID,
+        WitheredHandEntity.ID
+      })
   @DisplayName("Model has revive, wave and point gestures")
   void gestureAnimationsExist(String entityId) {
     Set<String> animationNames = animationNames(entityId);
@@ -234,22 +282,38 @@ class HandModelResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {DrownedHandEntity.ID, BoneHandEntity.ID})
+  @ValueSource(
+      strings = {
+        DrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        HuskHandEntity.ID,
+        StrayHandEntity.ID,
+        WitheredHandEntity.ID
+      })
   @DisplayName("Model has the same animations as the rotten hand")
   void animationSetsMatch(String entityId) {
     assertEquals(animationNames(RottenHandEntity.ID), animationNames(entityId));
   }
 
-  @Test
-  @DisplayName("Bone hand texture renders from both sides")
-  void boneHandTextureIsDoubleSided() {
-    for (JsonElement texture : readModel(BoneHandEntity.ID).getAsJsonArray("textures")) {
+  @ParameterizedTest
+  @ValueSource(strings = {BoneHandEntity.ID, StrayHandEntity.ID, WitheredHandEntity.ID})
+  @DisplayName("Skeleton hand texture renders from both sides")
+  void skeletonHandTextureIsDoubleSided(String entityId) {
+    for (JsonElement texture : readModel(entityId).getAsJsonArray("textures")) {
       assertEquals("double", texture.getAsJsonObject().get("render_sides").getAsString());
     }
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {RottenHandEntity.ID, DrownedHandEntity.ID, BoneHandEntity.ID})
+  @ValueSource(
+      strings = {
+        RottenHandEntity.ID,
+        DrownedHandEntity.ID,
+        BoneHandEntity.ID,
+        HuskHandEntity.ID,
+        StrayHandEntity.ID,
+        WitheredHandEntity.ID
+      })
   @DisplayName("Every animated bone exists in the model")
   void animatorsReferenceExistingBones(String entityId) {
     JsonObject model = readModel(entityId);

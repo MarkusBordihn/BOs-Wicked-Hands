@@ -39,5 +39,11 @@ public class WickedHandsClient implements ClientModInitializer {
     EntityRenderers.register(ModEntityTypes.LIFELESS_DROWNED_HAND, EasyModelNPCRenderer::new);
     EntityRenderers.register(ModEntityTypes.BONE_HAND, EasyModelNPCRenderer::new);
     EntityRenderers.register(ModEntityTypes.LIFELESS_BONE_HAND, EasyModelNPCRenderer::new);
+    EntityRenderers.register(ModEntityTypes.HUSK_HAND, EasyModelNPCRenderer::new);
+    EntityRenderers.register(ModEntityTypes.LIFELESS_HUSK_HAND, EasyModelNPCRenderer::new);
+    EntityRenderers.register(ModEntityTypes.STRAY_HAND, EasyModelNPCRenderer::new);
+    EntityRenderers.register(ModEntityTypes.LIFELESS_STRAY_HAND, EasyModelNPCRenderer::new);
+    EntityRenderers.register(ModEntityTypes.WITHERED_HAND, EasyModelNPCRenderer::new);
+    EntityRenderers.register(ModEntityTypes.LIFELESS_WITHERED_HAND, EasyModelNPCRenderer::new);
   }
 }

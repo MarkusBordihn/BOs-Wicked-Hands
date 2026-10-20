@@ -47,6 +47,20 @@ public final class ModEntityTypes {
       ENTITY_TYPES.register(BoneHandEntity.ID, BoneHandEntity::createEntityType);
   public static final RegistryObject<EntityType<LifelessBoneHandEntity>> LIFELESS_BONE_HAND =
       ENTITY_TYPES.register(LifelessBoneHandEntity.ID, LifelessBoneHandEntity::createEntityType);
+  public static final RegistryObject<EntityType<HuskHandEntity>> HUSK_HAND =
+      ENTITY_TYPES.register(HuskHandEntity.ID, HuskHandEntity::createEntityType);
+  public static final RegistryObject<EntityType<LifelessHuskHandEntity>> LIFELESS_HUSK_HAND =
+      ENTITY_TYPES.register(LifelessHuskHandEntity.ID, LifelessHuskHandEntity::createEntityType);
+  public static final RegistryObject<EntityType<StrayHandEntity>> STRAY_HAND =
+      ENTITY_TYPES.register(StrayHandEntity.ID, StrayHandEntity::createEntityType);
+  public static final RegistryObject<EntityType<LifelessStrayHandEntity>> LIFELESS_STRAY_HAND =
+      ENTITY_TYPES.register(LifelessStrayHandEntity.ID, LifelessStrayHandEntity::createEntityType);
+  public static final RegistryObject<EntityType<WitheredHandEntity>> WITHERED_HAND =
+      ENTITY_TYPES.register(WitheredHandEntity.ID, WitheredHandEntity::createEntityType);
+  public static final RegistryObject<EntityType<LifelessWitheredHandEntity>>
+      LIFELESS_WITHERED_HAND =
+          ENTITY_TYPES.register(
+              LifelessWitheredHandEntity.ID, LifelessWitheredHandEntity::createEntityType);
 
   private ModEntityTypes() {}
 
@@ -59,11 +73,17 @@ public final class ModEntityTypes {
     event.put(ROTTEN_HAND.get(), RottenHandEntity.createAttributes().build());
     event.put(DROWNED_HAND.get(), DrownedHandEntity.createAttributes().build());
     event.put(BONE_HAND.get(), BoneHandEntity.createAttributes().build());
+    event.put(HUSK_HAND.get(), HuskHandEntity.createAttributes().build());
+    event.put(STRAY_HAND.get(), StrayHandEntity.createAttributes().build());
+    event.put(WITHERED_HAND.get(), WitheredHandEntity.createAttributes().build());
     AttributeSupplier lifelessHandAttributes =
         AbstractLifelessHandEntity.createAttributes().build();
     event.put(LIFELESS_ROTTEN_HAND.get(), lifelessHandAttributes);
     event.put(LIFELESS_DROWNED_HAND.get(), lifelessHandAttributes);
     event.put(LIFELESS_BONE_HAND.get(), lifelessHandAttributes);
+    event.put(LIFELESS_HUSK_HAND.get(), lifelessHandAttributes);
+    event.put(LIFELESS_STRAY_HAND.get(), lifelessHandAttributes);
+    event.put(LIFELESS_WITHERED_HAND.get(), lifelessHandAttributes);
   }
 
   private static void registerSpawnPlacements(SpawnPlacementRegisterEvent event) {

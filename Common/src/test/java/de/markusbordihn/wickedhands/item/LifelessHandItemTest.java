@@ -37,10 +37,16 @@ import de.markusbordihn.wickedhands.TestBootstrap;
 import de.markusbordihn.wickedhands.TestResources;
 import de.markusbordihn.wickedhands.entity.BoneHandEntity;
 import de.markusbordihn.wickedhands.entity.DrownedHandEntity;
+import de.markusbordihn.wickedhands.entity.HuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessBoneHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessDrownedHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessHuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessStrayHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessWitheredHandEntity;
 import de.markusbordihn.wickedhands.entity.RottenHandEntity;
+import de.markusbordihn.wickedhands.entity.StrayHandEntity;
+import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import java.nio.file.Files;
 import java.util.stream.Stream;
 import net.minecraft.network.chat.Component;
@@ -94,9 +100,15 @@ class LifelessHandItemTest {
         LifelessRottenHandEntity.ENTITY_ID,
         LifelessDrownedHandEntity.ENTITY_ID,
         LifelessBoneHandEntity.ENTITY_ID,
+        LifelessHuskHandEntity.ENTITY_ID,
+        LifelessStrayHandEntity.ENTITY_ID,
+        LifelessWitheredHandEntity.ENTITY_ID,
         HandSpawnEgg.itemId(RottenHandEntity.ENTITY_ID),
         HandSpawnEgg.itemId(DrownedHandEntity.ENTITY_ID),
-        HandSpawnEgg.itemId(BoneHandEntity.ENTITY_ID));
+        HandSpawnEgg.itemId(BoneHandEntity.ENTITY_ID),
+        HandSpawnEgg.itemId(HuskHandEntity.ENTITY_ID),
+        HandSpawnEgg.itemId(StrayHandEntity.ENTITY_ID),
+        HandSpawnEgg.itemId(WitheredHandEntity.ENTITY_ID));
   }
 
   @ParameterizedTest
@@ -104,7 +116,10 @@ class LifelessHandItemTest {
       strings = {
         LifelessRottenHandEntity.ID,
         LifelessDrownedHandEntity.ID,
-        LifelessBoneHandEntity.ID
+        LifelessBoneHandEntity.ID,
+        LifelessHuskHandEntity.ID,
+        LifelessStrayHandEntity.ID,
+        LifelessWitheredHandEntity.ID
       })
   @DisplayName("Using the item on the server whispers its revival hint and starts a cooldown")
   void useOnServerWhispersRevivalHint(String lifelessHandId) {
@@ -120,8 +135,7 @@ class LifelessHandItemTest {
     assertEquals(
         InteractionResult.SUCCESS,
         createItem(lifelessHandId).use(level, player, InteractionHand.MAIN_HAND));
-    verify(player)
-        .sendSystemMessage(argThat(message -> isRevivalWhisper(message, lifelessHandId)));
+    verify(player).sendSystemMessage(argThat(message -> isRevivalWhisper(message, lifelessHandId)));
     verify(cooldowns).addCooldown(eq(itemStack), anyInt());
   }
 
@@ -164,7 +178,10 @@ class LifelessHandItemTest {
       strings = {
         LifelessRottenHandEntity.ID,
         LifelessDrownedHandEntity.ID,
-        LifelessBoneHandEntity.ID
+        LifelessBoneHandEntity.ID,
+        LifelessHuskHandEntity.ID,
+        LifelessStrayHandEntity.ID,
+        LifelessWitheredHandEntity.ID
       })
   @DisplayName("Lifeless hands item and entity tags contain the hand")
   void lifelessHandsTagsContainHand(String lifelessHandId) {

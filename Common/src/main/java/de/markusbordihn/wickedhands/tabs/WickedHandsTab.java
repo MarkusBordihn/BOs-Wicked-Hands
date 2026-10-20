@@ -22,10 +22,16 @@ package de.markusbordihn.wickedhands.tabs;
 import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.entity.BoneHandEntity;
 import de.markusbordihn.wickedhands.entity.DrownedHandEntity;
+import de.markusbordihn.wickedhands.entity.HuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessBoneHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessDrownedHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessHuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessStrayHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessWitheredHandEntity;
 import de.markusbordihn.wickedhands.entity.RottenHandEntity;
+import de.markusbordihn.wickedhands.entity.StrayHandEntity;
+import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import de.markusbordihn.wickedhands.item.HandSpawnEgg;
 import java.util.List;
 import java.util.stream.Stream;
@@ -40,14 +46,23 @@ public final class WickedHandsTab {
   public static final Identifier TAB_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
   public static final Component TITLE = Component.translatable("itemGroup." + Constants.MOD_ID);
   private static final List<Identifier> SPAWN_EGG_IDS =
-      Stream.of(RottenHandEntity.ENTITY_ID, DrownedHandEntity.ENTITY_ID, BoneHandEntity.ENTITY_ID)
+      Stream.of(
+              RottenHandEntity.ENTITY_ID,
+              HuskHandEntity.ENTITY_ID,
+              DrownedHandEntity.ENTITY_ID,
+              BoneHandEntity.ENTITY_ID,
+              StrayHandEntity.ENTITY_ID,
+              WitheredHandEntity.ENTITY_ID)
           .map(HandSpawnEgg::itemId)
           .toList();
   private static final List<Identifier> LIFELESS_HAND_IDS =
       List.of(
           LifelessRottenHandEntity.ENTITY_ID,
+          LifelessHuskHandEntity.ENTITY_ID,
           LifelessDrownedHandEntity.ENTITY_ID,
-          LifelessBoneHandEntity.ENTITY_ID);
+          LifelessBoneHandEntity.ENTITY_ID,
+          LifelessStrayHandEntity.ENTITY_ID,
+          LifelessWitheredHandEntity.ENTITY_ID);
 
   private WickedHandsTab() {}
 

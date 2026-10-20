@@ -19,6 +19,7 @@
 
 package de.markusbordihn.wickedhands;
 
+import de.markusbordihn.wickedhands.effect.ModMobEffects;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.gametest.ModGameTests;
 import de.markusbordihn.wickedhands.item.ModDataComponents;
@@ -42,6 +43,7 @@ public class WickedHands {
     ModItems.ITEMS.register(modEventBus);
     ModEntityTypes.ENTITY_TYPES.register(modEventBus);
     ModTabs.CREATIVE_TABS.register(modEventBus);
+    ModMobEffects.register(modEventBus);
     ModGameTests.register(modEventBus);
   }
 }
