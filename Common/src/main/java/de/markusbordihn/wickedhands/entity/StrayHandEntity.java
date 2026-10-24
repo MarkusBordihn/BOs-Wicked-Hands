@@ -38,11 +38,8 @@ public class StrayHandEntity extends AbstractCompanionHandEntity {
   public static final String ID = "stray_hand";
   public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
   private static final double ATTACK_DAMAGE = 1.5D;
-  private static final int CHILL_COOLDOWN_TICKS = 100;
   private static final int CHILL_DURATION_TICKS = 60;
   private static final int HARMLESS_FROZEN_TICKS = 100;
-
-  private long nextChillGameTime;
 
   public StrayHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level, LifelessStrayHandEntity.ENTITY_ID);
@@ -57,12 +54,7 @@ public class StrayHandEntity extends AbstractCompanionHandEntity {
   }
 
   @Override
-  protected void onCompanionHit(ServerLevel serverLevel, LivingEntity target) {
-    if (serverLevel.getGameTime() < this.nextChillGameTime) {
-      return;
-    }
-
-    this.nextChillGameTime = serverLevel.getGameTime() + CHILL_COOLDOWN_TICKS;
+  protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, CHILL_DURATION_TICKS), this);
     if (target.canFreeze()) {
       target.setTicksFrozen(Math.max(target.getTicksFrozen(), HARMLESS_FROZEN_TICKS));

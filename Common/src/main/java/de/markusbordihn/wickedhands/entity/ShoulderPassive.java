@@ -25,18 +25,25 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.item.alchemy.PotionContents;
 
 public enum ShoulderPassive {
   FIRM_GRIP(
@@ -55,13 +62,21 @@ public enum ShoulderPassive {
       0x4FD6D6,
       Attributes.BURNING_TIME,
       -0.5D,
-      Operation.ADD_MULTIPLIED_TOTAL);
+      Operation.ADD_MULTIPLIED_TOTAL),
+  MOSSY_VEINS(BoggedHandEntity.ENTITY_ID, 0x5E7A34, owner -> owner.removeEffect(MobEffects.POISON)),
+  WITCH_SIGHT(WitchHandEntity.ENTITY_ID, 0x7E3F98, ShoulderPassive::refreshNightVision);
+
+  public static final int NIGHT_VISION_DURATION_TICKS = 400;
+  // Vanilla flickers Night Vision during its last 200 ticks, see GameRenderer.getNightVisionScale.
+  public static final int NIGHT_VISION_REFRESH_TICKS = 220;
 
   private final Identifier effectId =
       Identifier.fromNamespaceAndPath(Constants.MOD_ID, this.name().toLowerCase(Locale.ROOT));
   private final ResourceKey<MobEffect> effectKey =
       ResourceKey.create(Registries.MOB_EFFECT, this.effectId);
   private final Identifier modifierId = this.effectId.withPrefix("shoulder_passive/");
+  private final TagKey<DamageType> grippingDamage =
+      TagKey.create(Registries.DAMAGE_TYPE, this.effectId.withPrefix("shoulder_grip/"));
   private final Identifier handId;
   private final int color;
   private final Holder<Attribute> attribute;
@@ -90,6 +105,15 @@ public enum ShoulderPassive {
     this.amount = 0.0D;
     this.operation = Operation.ADD_VALUE;
     this.ownerAction = ownerAction;
+  }
+
+  private static void refreshNightVision(ServerPlayer owner) {
+    MobEffectInstance nightVision = owner.getEffect(MobEffects.NIGHT_VISION);
+    if (nightVision == null || nightVision.endsWithin(NIGHT_VISION_REFRESH_TICKS)) {
+      owner.addEffect(
+          new MobEffectInstance(
+              MobEffects.NIGHT_VISION, NIGHT_VISION_DURATION_TICKS, 0, true, false, false));
+    }
   }
 
   public static Optional<ShoulderPassive> forHand(Identifier handId) {
@@ -130,5 +154,35 @@ public enum ShoulderPassive {
 
   void remove(ServerPlayer owner) {
     owner.removeEffect(this.getEffect());
+  }
+
+  boolean holdsOnThrough(DamageSource damageSource) {
+    return damageSource.is(this.grippingDamage)
+        || (this == MOSSY_VEINS && isPoisonArrow(damageSource.getDirectEntity()));
+  }
+
+  private static boolean isPoisonArrow(Entity entity) {
+    if (!(entity instanceof Arrow arrow)) {
+      return false;
+    }
+
+    PotionContents potionContents =
+        arrow
+            .getPickupItemStackOrigin()
+            .getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+    for (MobEffectInstance mobEffectInstance : potionContents.getAllEffects()) {
+      if (mobEffectInstance.is(MobEffects.POISON)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  boolean holdsOnInSurroundingsOf(ServerPlayer owner) {
+    return switch (this) {
+      case SECOND_BREATH -> owner.isInWater();
+      case COLD_BLOOD -> owner.isInPowderSnow;
+      default -> false;
+    };
   }
 }

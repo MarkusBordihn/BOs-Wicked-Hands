@@ -24,8 +24,8 @@ This mod was created as part of the [Spooky Jam][spooky-jam].
 
 Both dependencies are **required** and must be installed alongside this mod on client and server:
 
-* **[Easy NPC: Core][easy-npc-core]** — entity base and companion behavior of the hands
-* **[Easy Model Entities][easy-model-entities]** — the animated models of the hands
+* **[Easy NPC: Core][easy-npc-core]** - entity base and companion behavior of the hands
+* **[Easy Model Entities][easy-model-entities]** - the animated models of the hands
 
 Launchers like the CurseForge App or the Modrinth App install both dependencies automatically.
 

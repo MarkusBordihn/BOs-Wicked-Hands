@@ -20,18 +20,22 @@
 package de.markusbordihn.wickedhands.item;
 
 import de.markusbordihn.wickedhands.Constants;
+import de.markusbordihn.wickedhands.entity.BoggedHandEntity;
 import de.markusbordihn.wickedhands.entity.BoneHandEntity;
 import de.markusbordihn.wickedhands.entity.DrownedHandEntity;
 import de.markusbordihn.wickedhands.entity.HuskHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessBoggedHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessBoneHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessDrownedHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessHuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessStrayHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessWitchHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessWitheredHandEntity;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.entity.RottenHandEntity;
 import de.markusbordihn.wickedhands.entity.StrayHandEntity;
+import de.markusbordihn.wickedhands.entity.WitchHandEntity;
 import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
@@ -94,6 +98,22 @@ public final class ModItems {
           () ->
               HandSpawnEgg.create(
                   WitheredHandEntity.ENTITY_ID, ModEntityTypes.WITHERED_HAND.get()));
+  public static final RegistryObject<Item> LIFELESS_BOGGED_HAND =
+      ITEMS.register(
+          LifelessBoggedHandEntity.ID,
+          () -> LifelessHandItem.create(LifelessBoggedHandEntity.ENTITY_ID));
+  public static final RegistryObject<Item> LIFELESS_WITCH_HAND =
+      ITEMS.register(
+          LifelessWitchHandEntity.ID,
+          () -> LifelessHandItem.create(LifelessWitchHandEntity.ENTITY_ID));
+  public static final RegistryObject<Item> BOGGED_HAND_SPAWN_EGG =
+      ITEMS.register(
+          HandSpawnEgg.itemId(BoggedHandEntity.ENTITY_ID).getPath(),
+          () -> HandSpawnEgg.create(BoggedHandEntity.ENTITY_ID, ModEntityTypes.BOGGED_HAND.get()));
+  public static final RegistryObject<Item> WITCH_HAND_SPAWN_EGG =
+      ITEMS.register(
+          HandSpawnEgg.itemId(WitchHandEntity.ENTITY_ID).getPath(),
+          () -> HandSpawnEgg.create(WitchHandEntity.ENTITY_ID, ModEntityTypes.WITCH_HAND.get()));
 
   private ModItems() {}
 }

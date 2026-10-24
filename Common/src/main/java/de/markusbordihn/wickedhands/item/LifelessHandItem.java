@@ -51,6 +51,8 @@ public class LifelessHandItem extends Item {
 
   private static final String RITUAL_TOOLTIP_KEY =
       "item." + Constants.MOD_ID + ".lifeless_hand.ritual";
+  private static final String FEEDING_TOOLTIP_KEY =
+      "item." + Constants.MOD_ID + ".lifeless_hand.feeding";
   private static final int WHISPER_COOLDOWN_TICKS = 60;
 
   private final Identifier lifelessHandId;
@@ -88,6 +90,7 @@ public class LifelessHandItem extends Item {
                 Component.translatable(lifelessHandId.toLanguageKey("item", "tooltip")),
                 Component.translatable(RITUAL_TOOLTIP_KEY),
                 Component.translatable(lifelessHandId.toLanguageKey("item", "offering")),
+                Component.translatable(FEEDING_TOOLTIP_KEY),
                 Component.translatable(lifelessHandId.toLanguageKey("item", "shoulder")))
             .<Component>map(
                 line ->

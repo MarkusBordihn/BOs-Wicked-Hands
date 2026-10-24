@@ -55,11 +55,8 @@ public class RottenHandEntity extends AbstractCompanionHandEntity {
   public static final SpawnPlacementType SPAWN_PLACEMENT_TYPE = SpawnPlacementTypes.ON_GROUND;
   public static final Heightmap.Types SPAWN_HEIGHTMAP = Heightmap.Types.MOTION_BLOCKING_NO_LEAVES;
   private static final double ATTACK_DAMAGE = 2.0D;
-  private static final int GRAB_COOLDOWN_TICKS = 100;
   private static final int GRAB_DURATION_TICKS = 30;
   private static final int GRAB_SLOWNESS_AMPLIFIER = 3;
-
-  private long nextGrabGameTime;
 
   public RottenHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level, LifelessRottenHandEntity.ENTITY_ID);
@@ -86,12 +83,7 @@ public class RottenHandEntity extends AbstractCompanionHandEntity {
   }
 
   @Override
-  protected void onCompanionHit(ServerLevel serverLevel, LivingEntity target) {
-    if (serverLevel.getGameTime() < this.nextGrabGameTime) {
-      return;
-    }
-
-    this.nextGrabGameTime = serverLevel.getGameTime() + GRAB_COOLDOWN_TICKS;
+  protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(
         new MobEffectInstance(MobEffects.SLOWNESS, GRAB_DURATION_TICKS, GRAB_SLOWNESS_AMPLIFIER),
         this);

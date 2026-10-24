@@ -8,6 +8,12 @@ base {
   archivesName = "${mod_name}-common-${minecraft_version}"
 }
 
+sourceSets {
+  gameTest {
+    compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+  }
+}
+
 neoForge {
   neoFormVersion = project.neo_form_version
 

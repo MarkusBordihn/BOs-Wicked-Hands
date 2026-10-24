@@ -40,10 +40,7 @@ public class HuskHandEntity extends AbstractCompanionHandEntity {
   public static final String ID = "husk_hand";
   public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
   private static final double ATTACK_DAMAGE = 2.0D;
-  private static final int PARCH_COOLDOWN_TICKS = 100;
   private static final int PARCH_DURATION_TICKS = 80;
-
-  private long nextParchGameTime;
 
   public HuskHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level, LifelessHuskHandEntity.ENTITY_ID);
@@ -58,12 +55,7 @@ public class HuskHandEntity extends AbstractCompanionHandEntity {
   }
 
   @Override
-  protected void onCompanionHit(ServerLevel serverLevel, LivingEntity target) {
-    if (serverLevel.getGameTime() < this.nextParchGameTime) {
-      return;
-    }
-
-    this.nextParchGameTime = serverLevel.getGameTime() + PARCH_COOLDOWN_TICKS;
+  protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, PARCH_DURATION_TICKS), this);
     this.playSound(SoundEvents.HUSK_AMBIENT, 0.6F, 1.4F);
     serverLevel.sendParticles(

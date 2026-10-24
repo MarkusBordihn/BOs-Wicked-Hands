@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "wicked_hands_gametest",
+  "version": "1.0.0",
+  "name": "Wicked Hands Game Tests",
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "de.markusbordihn.wickedhands.gametest.SmokeTest",
+      "de.markusbordihn.wickedhands.gametest.HandTest"
+    ]
+  },
+  "depends": {
+    "wicked_hands": "*"
+  }
+}

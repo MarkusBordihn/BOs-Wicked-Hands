@@ -35,38 +35,46 @@ import org.junit.jupiter.api.Test;
 
 class ShoulderPassiveTest {
 
-  private static final List<Identifier> COMPANION_HAND_IDS =
-      List.of(
-          RottenHandEntity.ENTITY_ID,
-          DrownedHandEntity.ENTITY_ID,
-          BoneHandEntity.ENTITY_ID,
-          HuskHandEntity.ENTITY_ID,
-          StrayHandEntity.ENTITY_ID,
-          WitheredHandEntity.ENTITY_ID);
-  private static final List<Identifier> LIFELESS_HAND_IDS =
-      List.of(
-          LifelessRottenHandEntity.ENTITY_ID,
-          LifelessDrownedHandEntity.ENTITY_ID,
-          LifelessBoneHandEntity.ENTITY_ID,
-          LifelessHuskHandEntity.ENTITY_ID,
-          LifelessStrayHandEntity.ENTITY_ID,
-          LifelessWitheredHandEntity.ENTITY_ID);
-
   @BeforeAll
   static void bootstrap() {
     TestBootstrap.bootstrap();
   }
 
+  private static List<Identifier> companionHandIds() {
+    return List.of(
+        RottenHandEntity.ENTITY_ID,
+        DrownedHandEntity.ENTITY_ID,
+        BoneHandEntity.ENTITY_ID,
+        HuskHandEntity.ENTITY_ID,
+        StrayHandEntity.ENTITY_ID,
+        WitheredHandEntity.ENTITY_ID,
+        BoggedHandEntity.ENTITY_ID,
+        WitchHandEntity.ENTITY_ID);
+  }
+
+  private static List<Identifier> lifelessHandIds() {
+    return List.of(
+        LifelessRottenHandEntity.ENTITY_ID,
+        LifelessDrownedHandEntity.ENTITY_ID,
+        LifelessBoneHandEntity.ENTITY_ID,
+        LifelessHuskHandEntity.ENTITY_ID,
+        LifelessStrayHandEntity.ENTITY_ID,
+        LifelessWitheredHandEntity.ENTITY_ID,
+        LifelessBoggedHandEntity.ENTITY_ID,
+        LifelessWitchHandEntity.ENTITY_ID);
+  }
+
   @Test
   @DisplayName("Every companion hand has its own shoulder passive")
   void everyCompanionHandHasOwnPassive() {
+    List<Identifier> companionHandIds = companionHandIds();
     List<ShoulderPassive> shoulderPassives =
-        COMPANION_HAND_IDS.stream()
+        companionHandIds.stream()
             .map(ShoulderPassive::forHand)
             .flatMap(Optional::stream)
             .distinct()
             .toList();
-    assertEquals(COMPANION_HAND_IDS.size(), shoulderPassives.size());
+    assertEquals(companionHandIds.size(), shoulderPassives.size());
     assertEquals(ShoulderPassive.values().length, shoulderPassives.size());
   }
 
@@ -74,7 +82,7 @@ class ShoulderPassiveTest {
   @DisplayName("Lifeless hands have no shoulder passive")
   void lifelessHandsHaveNoPassive() {
     assertTrue(
-        LIFELESS_HAND_IDS.stream().map(ShoulderPassive::forHand).allMatch(Optional::isEmpty));
+        lifelessHandIds().stream().map(ShoulderPassive::forHand).allMatch(Optional::isEmpty));
   }
 
   @Test

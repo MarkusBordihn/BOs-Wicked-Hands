@@ -40,7 +40,6 @@ import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.Identifier;
@@ -96,10 +95,6 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
     this.companionHandId = companionHandId;
     this.catalystItems = catalystItems(companionHandId);
     this.setNoAi(true);
-  }
-
-  private static TagKey<Item> catalystItems(Identifier companionHandId) {
-    return TagKey.create(Registries.ITEM, companionHandId.withSuffix("_catalysts"));
   }
 
   public static AttributeSupplier.Builder createAttributes() {

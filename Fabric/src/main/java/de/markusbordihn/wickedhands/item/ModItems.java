@@ -19,18 +19,22 @@
 
 package de.markusbordihn.wickedhands.item;
 
+import de.markusbordihn.wickedhands.entity.BoggedHandEntity;
 import de.markusbordihn.wickedhands.entity.BoneHandEntity;
 import de.markusbordihn.wickedhands.entity.DrownedHandEntity;
 import de.markusbordihn.wickedhands.entity.HuskHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessBoggedHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessBoneHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessDrownedHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessHuskHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessRottenHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessStrayHandEntity;
+import de.markusbordihn.wickedhands.entity.LifelessWitchHandEntity;
 import de.markusbordihn.wickedhands.entity.LifelessWitheredHandEntity;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.entity.RottenHandEntity;
 import de.markusbordihn.wickedhands.entity.StrayHandEntity;
+import de.markusbordihn.wickedhands.entity.WitchHandEntity;
 import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -63,6 +67,14 @@ public final class ModItems {
       HandSpawnEgg.create(StrayHandEntity.ENTITY_ID, ModEntityTypes.STRAY_HAND);
   public static final Item WITHERED_HAND_SPAWN_EGG =
       HandSpawnEgg.create(WitheredHandEntity.ENTITY_ID, ModEntityTypes.WITHERED_HAND);
+  public static final Item LIFELESS_BOGGED_HAND =
+      LifelessHandItem.create(LifelessBoggedHandEntity.ENTITY_ID);
+  public static final Item LIFELESS_WITCH_HAND =
+      LifelessHandItem.create(LifelessWitchHandEntity.ENTITY_ID);
+  public static final Item BOGGED_HAND_SPAWN_EGG =
+      HandSpawnEgg.create(BoggedHandEntity.ENTITY_ID, ModEntityTypes.BOGGED_HAND);
+  public static final Item WITCH_HAND_SPAWN_EGG =
+      HandSpawnEgg.create(WitchHandEntity.ENTITY_ID, ModEntityTypes.WITCH_HAND);
 
   private ModItems() {}
 
@@ -73,12 +85,16 @@ public final class ModItems {
     register(LifelessHuskHandEntity.ENTITY_ID, LIFELESS_HUSK_HAND);
     register(LifelessStrayHandEntity.ENTITY_ID, LIFELESS_STRAY_HAND);
     register(LifelessWitheredHandEntity.ENTITY_ID, LIFELESS_WITHERED_HAND);
+    register(LifelessBoggedHandEntity.ENTITY_ID, LIFELESS_BOGGED_HAND);
+    register(LifelessWitchHandEntity.ENTITY_ID, LIFELESS_WITCH_HAND);
     register(HandSpawnEgg.itemId(RottenHandEntity.ENTITY_ID), ROTTEN_HAND_SPAWN_EGG);
     register(HandSpawnEgg.itemId(DrownedHandEntity.ENTITY_ID), DROWNED_HAND_SPAWN_EGG);
     register(HandSpawnEgg.itemId(BoneHandEntity.ENTITY_ID), BONE_HAND_SPAWN_EGG);
     register(HandSpawnEgg.itemId(HuskHandEntity.ENTITY_ID), HUSK_HAND_SPAWN_EGG);
     register(HandSpawnEgg.itemId(StrayHandEntity.ENTITY_ID), STRAY_HAND_SPAWN_EGG);
     register(HandSpawnEgg.itemId(WitheredHandEntity.ENTITY_ID), WITHERED_HAND_SPAWN_EGG);
+    register(HandSpawnEgg.itemId(BoggedHandEntity.ENTITY_ID), BOGGED_HAND_SPAWN_EGG);
+    register(HandSpawnEgg.itemId(WitchHandEntity.ENTITY_ID), WITCH_HAND_SPAWN_EGG);
   }
 
   private static void register(Identifier itemId, Item item) {

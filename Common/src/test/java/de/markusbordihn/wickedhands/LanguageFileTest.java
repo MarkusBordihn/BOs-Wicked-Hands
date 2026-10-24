@@ -36,10 +36,17 @@ class LanguageFileTest {
 
   private static final String LANGUAGE_FOLDER = "assets/" + Constants.MOD_ID + "/lang/";
   private static final List<String> HAND_TYPES =
-      List.of("rotten", "drowned", "bone", "husk", "stray", "withered");
+      List.of("rotten", "drowned", "bone", "husk", "stray", "withered", "bogged", "witch");
   private static final List<String> SHOULDER_EFFECTS =
       List.of(
-          "firm_grip", "second_breath", "bone_guard", "dry_stomach", "cold_blood", "ashen_skin");
+          "firm_grip",
+          "second_breath",
+          "bone_guard",
+          "dry_stomach",
+          "cold_blood",
+          "ashen_skin",
+          "mossy_veins",
+          "witch_sight");
   private static final List<String> MESSAGE_KEYS =
       List.of(
           "message.wicked_hands.hand.follow",

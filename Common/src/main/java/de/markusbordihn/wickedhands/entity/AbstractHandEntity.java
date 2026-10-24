@@ -37,9 +37,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 
@@ -55,6 +57,10 @@ public abstract class AbstractHandEntity extends EasyModelNPC {
   public static Component createWhisper(Component speaker, Component message) {
     return Component.translatable(WHISPER_MESSAGE_KEY, speaker, message)
         .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
+  }
+
+  protected static TagKey<Item> catalystItems(Identifier companionHandId) {
+    return TagKey.create(Registries.ITEM, companionHandId.withSuffix("_catalysts"));
   }
 
   protected static <T extends AbstractHandEntity> EntityType<T> createHandEntityType(

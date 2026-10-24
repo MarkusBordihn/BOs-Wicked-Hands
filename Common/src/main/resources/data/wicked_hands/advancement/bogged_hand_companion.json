@@ -1,0 +1,25 @@
+{
+  "parent": "wicked_hands:start_ritual",
+  "criteria": {
+    "companion": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.wicked_hands.bogged_hand_companion.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "id": "minecraft:red_mushroom"
+    },
+    "title": {
+      "translate": "advancements.wicked_hands.bogged_hand_companion.title"
+    }
+  },
+  "requirements": [
+    [
+      "companion"
+    ]
+  ]
+}

@@ -31,7 +31,7 @@ side = "BOTH"
 [[dependencies.wicked_hands]]
 modId = "easy_npc"
 type = "required"
-versionRange = "[7.16.0,)"
+versionRange = "[7.17.1,)"
 ordering = "AFTER"
 side = "BOTH"
 
@@ -41,3 +41,6 @@ type = "required"
 versionRange = "[2.6.0,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[mixins]]
+config = "wicked_hands.neoforge.mixins.json"

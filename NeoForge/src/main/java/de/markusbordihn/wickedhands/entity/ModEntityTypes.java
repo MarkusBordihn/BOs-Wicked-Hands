@@ -72,6 +72,18 @@ public final class ModEntityTypes {
       LIFELESS_WITHERED_HAND =
           ENTITY_TYPES.register(
               LifelessWitheredHandEntity.ID, LifelessWitheredHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<BoggedHandEntity>> BOGGED_HAND =
+      ENTITY_TYPES.register(BoggedHandEntity.ID, BoggedHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<LifelessBoggedHandEntity>>
+      LIFELESS_BOGGED_HAND =
+          ENTITY_TYPES.register(
+              LifelessBoggedHandEntity.ID, LifelessBoggedHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<WitchHandEntity>> WITCH_HAND =
+      ENTITY_TYPES.register(WitchHandEntity.ID, WitchHandEntity::createEntityType);
+  public static final DeferredHolder<EntityType<?>, EntityType<LifelessWitchHandEntity>>
+      LIFELESS_WITCH_HAND =
+          ENTITY_TYPES.register(
+              LifelessWitchHandEntity.ID, LifelessWitchHandEntity::createEntityType);
 
   private ModEntityTypes() {}
 
@@ -83,6 +95,8 @@ public final class ModEntityTypes {
     event.put(HUSK_HAND.get(), HuskHandEntity.createAttributes().build());
     event.put(STRAY_HAND.get(), StrayHandEntity.createAttributes().build());
     event.put(WITHERED_HAND.get(), WitheredHandEntity.createAttributes().build());
+    event.put(BOGGED_HAND.get(), BoggedHandEntity.createAttributes().build());
+    event.put(WITCH_HAND.get(), WitchHandEntity.createAttributes().build());
     AttributeSupplier lifelessHandAttributes =
         AbstractLifelessHandEntity.createAttributes().build();
     event.put(LIFELESS_ROTTEN_HAND.get(), lifelessHandAttributes);
@@ -91,6 +105,8 @@ public final class ModEntityTypes {
     event.put(LIFELESS_HUSK_HAND.get(), lifelessHandAttributes);
     event.put(LIFELESS_STRAY_HAND.get(), lifelessHandAttributes);
     event.put(LIFELESS_WITHERED_HAND.get(), lifelessHandAttributes);
+    event.put(LIFELESS_BOGGED_HAND.get(), lifelessHandAttributes);
+    event.put(LIFELESS_WITCH_HAND.get(), lifelessHandAttributes);
   }
 
   @SubscribeEvent

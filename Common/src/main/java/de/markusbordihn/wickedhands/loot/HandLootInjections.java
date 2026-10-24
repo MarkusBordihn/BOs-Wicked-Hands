@@ -44,7 +44,11 @@ public final class HandLootInjections {
           vanillaEntityLootTable("stray"),
           injection("stray"),
           vanillaEntityLootTable("wither_skeleton"),
-          injection("wither_skeleton"));
+          injection("wither_skeleton"),
+          vanillaEntityLootTable("bogged"),
+          injection("bogged"),
+          vanillaEntityLootTable("witch"),
+          injection("witch"));
 
   private HandLootInjections() {}
 

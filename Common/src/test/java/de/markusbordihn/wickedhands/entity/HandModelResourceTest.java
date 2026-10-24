@@ -122,7 +122,11 @@ class HandModelResourceTest {
         StrayHandEntity.ID,
         LifelessStrayHandEntity.ID,
         WitheredHandEntity.ID,
-        LifelessWitheredHandEntity.ID
+        LifelessWitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        LifelessBoggedHandEntity.ID,
+        WitchHandEntity.ID,
+        LifelessWitchHandEntity.ID
       })
   @DisplayName("Easy Model Entities accepts the server profile")
   void serverProfileIsActive(String entityId) throws IOException {
@@ -147,7 +151,11 @@ class HandModelResourceTest {
         StrayHandEntity.ID,
         LifelessStrayHandEntity.ID,
         WitheredHandEntity.ID,
-        LifelessWitheredHandEntity.ID
+        LifelessWitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        LifelessBoggedHandEntity.ID,
+        WitchHandEntity.ID,
+        LifelessWitchHandEntity.ID
       })
   @DisplayName("Easy Model Entities accepts the render profile")
   void renderProfileIsActive(String entityId) throws IOException {
@@ -170,7 +178,11 @@ class HandModelResourceTest {
         StrayHandEntity.ID,
         LifelessStrayHandEntity.ID,
         WitheredHandEntity.ID,
-        LifelessWitheredHandEntity.ID
+        LifelessWitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        LifelessBoggedHandEntity.ID,
+        WitchHandEntity.ID,
+        LifelessWitchHandEntity.ID
       })
   @DisplayName("Model bakes for its body type without the fallback model")
   void modelBakesWithoutFallback(String entityId) throws IOException {
@@ -193,7 +205,11 @@ class HandModelResourceTest {
         StrayHandEntity.ID,
         LifelessStrayHandEntity.ID,
         WitheredHandEntity.ID,
-        LifelessWitheredHandEntity.ID
+        LifelessWitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        LifelessBoggedHandEntity.ID,
+        WitchHandEntity.ID,
+        LifelessWitchHandEntity.ID
       })
   @DisplayName("Server profile and render profile describe the same model version")
   void profilesMatch(String entityId) {
@@ -210,7 +226,9 @@ class HandModelResourceTest {
     BoneHandEntity.ID + ", " + LifelessBoneHandEntity.ID,
     HuskHandEntity.ID + ", " + LifelessHuskHandEntity.ID,
     StrayHandEntity.ID + ", " + LifelessStrayHandEntity.ID,
-    WitheredHandEntity.ID + ", " + LifelessWitheredHandEntity.ID
+    WitheredHandEntity.ID + ", " + LifelessWitheredHandEntity.ID,
+    BoggedHandEntity.ID + ", " + LifelessBoggedHandEntity.ID,
+    WitchHandEntity.ID + ", " + LifelessWitchHandEntity.ID
   })
   @DisplayName("Lifeless hand uses its companion model without any animation")
   void lifelessHandIsMotionless(String companionId, String lifelessHandId) throws IOException {
@@ -234,7 +252,11 @@ class HandModelResourceTest {
         StrayHandEntity.ID,
         LifelessStrayHandEntity.ID,
         WitheredHandEntity.ID,
-        LifelessWitheredHandEntity.ID
+        LifelessWitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        LifelessBoggedHandEntity.ID,
+        WitchHandEntity.ID,
+        LifelessWitchHandEntity.ID
       })
   @DisplayName("Render profile points at an existing model and texture")
   void renderProfileResourcesExist(String entityId) {
@@ -253,7 +275,9 @@ class HandModelResourceTest {
         BoneHandEntity.ID,
         HuskHandEntity.ID,
         StrayHandEntity.ID,
-        WitheredHandEntity.ID
+        WitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        WitchHandEntity.ID
       })
   @DisplayName("Model has idle, walk, shoulder and attack animations with a variant")
   void requiredAnimationsExist(String entityId) {
@@ -271,7 +295,9 @@ class HandModelResourceTest {
         BoneHandEntity.ID,
         HuskHandEntity.ID,
         StrayHandEntity.ID,
-        WitheredHandEntity.ID
+        WitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        WitchHandEntity.ID
       })
   @DisplayName("Model has revive, wave and point gestures")
   void gestureAnimationsExist(String entityId) {
@@ -288,7 +314,9 @@ class HandModelResourceTest {
         BoneHandEntity.ID,
         HuskHandEntity.ID,
         StrayHandEntity.ID,
-        WitheredHandEntity.ID
+        WitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        WitchHandEntity.ID
       })
   @DisplayName("Model has the same animations as the rotten hand")
   void animationSetsMatch(String entityId) {
@@ -296,7 +324,13 @@ class HandModelResourceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {BoneHandEntity.ID, StrayHandEntity.ID, WitheredHandEntity.ID})
+  @ValueSource(
+      strings = {
+        BoneHandEntity.ID,
+        StrayHandEntity.ID,
+        WitheredHandEntity.ID,
+        BoggedHandEntity.ID
+      })
   @DisplayName("Skeleton hand texture renders from both sides")
   void skeletonHandTextureIsDoubleSided(String entityId) {
     for (JsonElement texture : readModel(entityId).getAsJsonArray("textures")) {
@@ -312,7 +346,9 @@ class HandModelResourceTest {
         BoneHandEntity.ID,
         HuskHandEntity.ID,
         StrayHandEntity.ID,
-        WitheredHandEntity.ID
+        WitheredHandEntity.ID,
+        BoggedHandEntity.ID,
+        WitchHandEntity.ID
       })
   @DisplayName("Every animated bone exists in the model")
   void animatorsReferenceExistingBones(String entityId) {

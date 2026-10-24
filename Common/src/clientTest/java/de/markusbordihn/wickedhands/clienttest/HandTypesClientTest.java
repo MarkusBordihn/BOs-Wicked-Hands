@@ -30,8 +30,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class HandTypesClientTest extends ClientTestBase {
 
-  private static final long SHOULDER_PASSIVE_TICKS = 2 * RENDER_TICKS;
-
   @ParameterizedTest(name = "{0}")
   @ValueSource(
       strings = {
@@ -40,7 +38,9 @@ class HandTypesClientTest extends ClientTestBase {
         "drowned_hand",
         "bone_hand",
         "stray_hand",
-        "withered_hand"
+        "withered_hand",
+        "bogged_hand",
+        "witch_hand"
       })
   @DisplayName("Hand renders in the world")
   void handRendersInTheWorld(String handName) {
@@ -51,15 +51,25 @@ class HandTypesClientTest extends ClientTestBase {
   }
 
   @ParameterizedTest(name = "{0}")
-  @ValueSource(strings = {"husk_hand", "drowned_hand", "bone_hand", "stray_hand", "withered_hand"})
+  @ValueSource(
+      strings = {
+        "husk_hand",
+        "drowned_hand",
+        "bone_hand",
+        "stray_hand",
+        "withered_hand",
+        "bogged_hand",
+        "witch_hand"
+      })
   @DisplayName("Hand sits on the player's shoulder")
   void handSitsOnShoulder(String handName) {
     enterTestArea();
-    Entity hand = spawnStaticHand(MOD_ID + ":" + handName);
+    String handType = MOD_ID + ":" + handName;
+    Entity hand = spawnStaticHand(handType);
     client.runCommand("easy_npc shoulder sit " + hand.uuid() + " @s");
     client.renderSettings(Parameters.of().with("perspective", "front"));
     try {
-      client.await(Until.entityAbsent(Parameters.of("uuid", hand.uuid())));
+      client.await(Until.playerShoulder(handType));
       client.await(Until.ticksElapsed(RENDER_TICKS));
       client.saveScreenshot(handName + "_on_shoulder");
     } finally {
@@ -67,10 +77,16 @@ class HandTypesClientTest extends ClientTestBase {
     }
   }
 
-  @ParameterizedTest(name = "{0} and {1}")
-  @CsvSource({"rotten, drowned", "bone, husk", "stray, withered"})
+  @ParameterizedTest(name = "{0} and {2}")
+  @CsvSource({
+    "rotten, firm_grip, drowned, second_breath",
+    "bone, bone_guard, husk, dry_stomach",
+    "stray, cold_blood, withered, ashen_skin",
+    "bogged, mossy_veins, witch, witch_sight"
+  })
   @DisplayName("Hands on both shoulders show their passive effects")
-  void shoulderHandsShowPassiveEffects(String leftHandType, String rightHandType) {
+  void shoulderHandsShowPassiveEffects(
+      String leftHandType, String leftPassive, String rightHandType, String rightPassive) {
     enterTestArea();
     Entity leftHand = spawnStaticHand(MOD_ID + ":" + leftHandType + "_hand");
     Entity rightHand = spawnStaticHand(MOD_ID + ":" + rightHandType + "_hand");
@@ -80,9 +96,11 @@ class HandTypesClientTest extends ClientTestBase {
     client.renderSettings(Parameters.of().with("gui", true));
     String screenshotLabel = leftHandType + "_" + rightHandType;
     try {
-      client.await(Until.entityAbsent(Parameters.of("uuid", leftHand.uuid())));
-      client.await(Until.entityAbsent(Parameters.of("uuid", rightHand.uuid())));
-      client.await(Until.ticksElapsed(SHOULDER_PASSIVE_TICKS));
+      client.await(Until.playerShoulder(MOD_ID + ":" + leftHandType + "_hand"));
+      client.await(Until.playerShoulder(MOD_ID + ":" + rightHandType + "_hand"));
+      client.await(Until.playerEffect(MOD_ID + ":" + leftPassive));
+      client.await(Until.playerEffect(MOD_ID + ":" + rightPassive));
+      client.await(Until.ticksElapsed(RENDER_TICKS));
       client.saveScreenshot(screenshotLabel + "_hud");
       client.pressBindingAndAwaitScreen("key.inventory");
       client.await(Until.ticksElapsed(RENDER_TICKS));
@@ -101,7 +119,9 @@ class HandTypesClientTest extends ClientTestBase {
         "lifeless_drowned_hand",
         "lifeless_bone_hand",
         "lifeless_stray_hand",
-        "lifeless_withered_hand"
+        "lifeless_withered_hand",
+        "lifeless_bogged_hand",
+        "lifeless_witch_hand"
       })
   @DisplayName("Placed lifeless hand lies on its back on soul sand")
   void placedLifelessHandLiesOnItsBack(String lifelessHandName) {
@@ -124,6 +144,8 @@ class HandTypesClientTest extends ClientTestBase {
     client.setItemInSlot(3, MOD_ID + ":lifeless_bone_hand");
     client.setItemInSlot(4, MOD_ID + ":lifeless_stray_hand");
     client.setItemInSlot(5, MOD_ID + ":lifeless_withered_hand");
+    client.setItemInSlot(6, MOD_ID + ":lifeless_bogged_hand");
+    client.setItemInSlot(7, MOD_ID + ":lifeless_witch_hand");
     client.await(Until.ticksElapsed(RENDER_TICKS));
     client.saveScreenshot("lifeless_hand_icons");
   }
@@ -139,6 +161,8 @@ class HandTypesClientTest extends ClientTestBase {
     client.setItemInSlot(3, MOD_ID + ":bone_hand_spawn_egg");
     client.setItemInSlot(4, MOD_ID + ":stray_hand_spawn_egg");
     client.setItemInSlot(5, MOD_ID + ":withered_hand_spawn_egg");
+    client.setItemInSlot(6, MOD_ID + ":bogged_hand_spawn_egg");
+    client.setItemInSlot(7, MOD_ID + ":witch_hand_spawn_egg");
     client.await(Until.ticksElapsed(RENDER_TICKS));
     client.saveScreenshot("spawn_egg_icons");
   }

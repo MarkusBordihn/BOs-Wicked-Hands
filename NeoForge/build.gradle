@@ -1,4 +1,5 @@
 plugins {
+  id 'maven-publish'
   id 'net.neoforged.moddev' version '2.0.141'
   id 'net.darkhax.curseforgegradle' version '1.2.30'
   id 'nu.studer.credentials' version '3.0'
@@ -9,8 +10,26 @@ base {
   archivesName = "${mod_id}-neoforge-${minecraft_version}"
 }
 
+sourceSets {
+  gameTest {
+    compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+    runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+  }
+}
+
 neoForge {
   version = project.neoforge_version
+
+  addModdingDependenciesTo(sourceSets.gameTest)
+
+  mods {
+    "${project.mod_id}" {
+      sourceSet sourceSets.main
+    }
+    "${project.mod_id}_gametest" {
+      sourceSet sourceSets.gameTest
+    }
+  }
 
   runs {
     configureEach {
@@ -21,31 +40,29 @@ neoForge {
     client {
       client()
       gameDirectory = project.file('run/client')
+      sourceSet = sourceSets.gameTest
       systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
     }
 
     client2 {
       client()
       gameDirectory = project.file('run/client2')
+      loadedMods = [mods."${project.mod_id}"]
       programArguments.addAll '--username', 'guest_player'
     }
 
     server {
       server()
       gameDirectory = project.file('run/server')
+      sourceSet = sourceSets.gameTest
       systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
       programArgument '--nogui'
     }
 
     gameTestServer {
       type = 'gameTestServer'
+      sourceSet = sourceSets.gameTest
       systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
-  }
-
-  mods {
-    "${project.mod_id}" {
-      sourceSet sourceSets.main
     }
   }
 }
@@ -87,6 +104,14 @@ tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
   source(project(":Common").sourceSets.main.allSource)
 }
 
+tasks.named('compileGameTestJava', JavaCompile) {
+  source(project(":Common").sourceSets.gameTest.allSource)
+}
+
+tasks.named('processGameTestResources', ProcessResources) {
+  from project(":Common").sourceSets.gameTest.resources
+}
+
 tasks.withType(Javadoc).matching(notNeoTask).configureEach {
   source(project(":Common").sourceSets.main.allJava)
 }
@@ -107,6 +132,17 @@ tasks.withType(ProcessResources).matching(notNeoTask).configureEach {
 
   filesMatching("META-INF/neoforge.mods.toml") {
     expand replaceProperties
+  }
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      groupId project.group
+      artifactId base.archivesName.get()
+      version project.version
+      artifact jar
+    }
   }
 }
 

@@ -5,6 +5,23 @@
 This change log includes the summarized changes. For the full changelog, please go to
 the [GitHub History][history] instead.
 
+### 0.5.0 (beta)
+
+- Fixed shoulder hands falling off on damage their bonus protects against, like fire or poison arrows.
+- Fixed the "Drowned Hand" falling off in water and the "Stray Hand" in powder snow.
+- Changed companion hands to ignore Creepers, they no longer join a fight against them.
+- Changed the required version to Easy NPC 7.17.1.
+- Added healing a companion hand by feeding it its ritual offering, one heart per item.
+- Added slow regeneration for companion hands while they are out of combat.
+- Added companion hands ignoring the pets and companions of other players.
+- Added the `wicked_hands:companion_ignored_targets` tag for mobs that companions leave alone.
+- Added the "Bogged" and "Witch Hand", rare drops of Bogged and Witches killed by a player.
+- Added Mushrooms and Spider Eye as their ritual offerings, plus spawn eggs and advancements.
+- Added their hits poisoning (Bogged) or cursing with Poison, Slowness or Weakness (Witch).
+- Added poison immunity to the "Bogged Hand".
+- Added the "Witch Hand" mending its badly wounded owner and their hands with Regeneration.
+- Added shoulder bonuses curing Poison (Bogged) and granting Night Vision (Witch).
+
 ### 0.4.0 (beta)
 
 - Added the "Husk", "Stray" and "Withered Hand", rare drops of Husks, Strays and Wither Skeletons.

@@ -13,6 +13,13 @@ base {
   archivesName = "${mod_id}-forge-${minecraft_version}"
 }
 
+sourceSets {
+  gameTest {
+    compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+    runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+  }
+}
+
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
 // ForgeGradle 7 only inherits launch settings from the Forge metadata for runs named like one of
@@ -34,6 +41,7 @@ minecraft {
     configureEach {
       systemProperty 'forge.logging.console.level', 'debug'
       systemProperty 'eventbus.api.strictRuntimeChecks', 'true'
+      args "-mixin.config=${mod_id}.forge.mixins.json"
     }
 
     client {
@@ -127,8 +135,20 @@ dependencies {
   implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
 }
 
-tasks.withType(JavaCompile).configureEach {
+tasks.withType(JavaCompile).matching { it.name != 'compileGameTestJava' }.configureEach {
   source(project(":Common").sourceSets.main.allSource)
+}
+
+tasks.named('compileGameTestJava', JavaCompile) {
+  source(project(":Common").sourceSets.gameTest.allSource)
+}
+
+tasks.named('processGameTestResources', ProcessResources) {
+  from project(":Common").sourceSets.gameTest.resources
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+  classpath(sourceSets.gameTest.output)
 }
 
 tasks.withType(Test).configureEach {
@@ -160,9 +180,6 @@ processResources {
 
 // Example for how to get properties into the manifest for reading by the runtime..
 jar {
-  // Test instances are only needed by development game-test runs.
-  exclude 'data/*/test_instance/**'
-
   manifest {
     attributes([
         "Specification-Title"     : "${project.mod_name}",
@@ -171,7 +188,8 @@ jar {
         "Implementation-Title"    : project.name,
         "Implementation-Version"  : "${project.version}",
         "Implementation-Vendor"   : "${project.mod_author}",
-        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+        "MixinConfigs"            : "${mod_id}.forge.mixins.json"
     ])
   }
 }
@@ -179,6 +197,9 @@ jar {
 publishing {
   publications {
     mavenJava(MavenPublication) {
+      groupId project.group
+      artifactId base.archivesName.get()
+      version project.version
       artifact jar
     }
   }
@@ -191,6 +212,24 @@ sourceSets.each {
   def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
   it.output.resourcesDir = dir
   it.java.destinationDirectory = dir
+}
+
+// Development runs load this directory instead of the jar, and Mixin only picks up the mixin
+// config from a manifest. Without it every development run, including the game test server, starts
+// with no mixins applied.
+tasks.register('devManifest') {
+  def manifestFile = layout.buildDirectory.file("sourcesSets/main/META-INF/MANIFEST.MF")
+  doLast {
+    def target = manifestFile.get().asFile
+    target.parentFile.mkdirs()
+    target.text = "Manifest-Version: 1.0\nMixinConfigs: ${mod_id}.forge.mixins.json\n"
+  }
+}
+tasks.named('devManifest').configure {
+  mustRunAfter tasks.named('classes'), tasks.named('gameTestClasses')
+}
+tasks.matching { it.name.startsWith('run') }.configureEach {
+  dependsOn tasks.named('devManifest')
 }
 
 // CurseForge Publishing

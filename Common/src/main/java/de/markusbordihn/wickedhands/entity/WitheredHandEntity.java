@@ -38,10 +38,7 @@ public class WitheredHandEntity extends AbstractCompanionHandEntity {
   public static final String ID = "withered_hand";
   public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
   private static final double ATTACK_DAMAGE = 1.5D;
-  private static final int BLIGHT_COOLDOWN_TICKS = 100;
   private static final int BLIGHT_DURATION_TICKS = 80;
-
-  private long nextBlightGameTime;
 
   public WitheredHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level, LifelessWitheredHandEntity.ENTITY_ID);
@@ -61,12 +58,7 @@ public class WitheredHandEntity extends AbstractCompanionHandEntity {
   }
 
   @Override
-  protected void onCompanionHit(ServerLevel serverLevel, LivingEntity target) {
-    if (serverLevel.getGameTime() < this.nextBlightGameTime) {
-      return;
-    }
-
-    this.nextBlightGameTime = serverLevel.getGameTime() + BLIGHT_COOLDOWN_TICKS;
+  protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(new MobEffectInstance(MobEffects.WITHER, BLIGHT_DURATION_TICKS), this);
     this.playSound(SoundEvents.WITHER_SKELETON_AMBIENT, 0.6F, 1.6F);
     serverLevel.sendParticles(

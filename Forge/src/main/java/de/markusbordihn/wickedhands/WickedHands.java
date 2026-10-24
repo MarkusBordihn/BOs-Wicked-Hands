@@ -23,7 +23,6 @@ import de.markusbordihn.wickedhands.client.renderer.ModEntityRenderers;
 import de.markusbordihn.wickedhands.effect.ModMobEffects;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.entity.ModShoulderPassives;
-import de.markusbordihn.wickedhands.gametest.ModGameTests;
 import de.markusbordihn.wickedhands.item.ModDataComponents;
 import de.markusbordihn.wickedhands.item.ModItems;
 import de.markusbordihn.wickedhands.loot.ModLootTables;
@@ -54,7 +53,6 @@ public class WickedHands {
     ModShoulderPassives.registerEvents();
     ModTabs.registerEvents();
     ModLootTables.registerEvents();
-    ModGameTests.register(modBusGroup);
 
     if (FMLEnvironment.dist.isClient()) {
       ModEntityRenderers.register();

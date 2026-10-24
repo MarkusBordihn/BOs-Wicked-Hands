@@ -27,6 +27,7 @@ import de.markusbordihn.easynpc.data.attribute.InteractionAttributeType;
 import de.markusbordihn.easynpc.data.objective.ObjectiveDataEntry;
 import de.markusbordihn.easynpc.data.objective.ObjectiveType;
 import de.markusbordihn.easynpc.entity.easynpc.npc.easymodelentities.EasyModelNPC;
+import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.advancement.HandAdvancements;
 import de.markusbordihn.wickedhands.client.effect.AwakeningEffects;
 import de.markusbordihn.wickedhands.data.CompanionMode;
@@ -36,42 +37,55 @@ import de.markusbordihn.wickedhands.item.LifelessHandItem;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import net.minecraft.world.phys.Vec3;
 
 public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
 
+  public static final TagKey<EntityType<?>> COMPANION_IGNORED_TARGETS =
+      TagKey.create(
+          Registries.ENTITY_TYPE,
+          Identifier.fromNamespaceAndPath(Constants.MOD_ID, "companion_ignored_targets"));
+  public static final float FEEDING_HEAL_AMOUNT = 2.0F;
+  public static final int REGENERATION_INTERVAL_TICKS = 100;
+  public static final int REGENERATION_COMBAT_COOLDOWN_TICKS = 200;
   protected static final int COMPANION_CHECK_INTERVAL_TICKS = 20;
+  private static final float REGENERATION_AMOUNT = 1.0F;
   private static final double MAX_HEALTH = 6.0D;
   private static final double MOVEMENT_SPEED = 0.25D;
+  private static final int HIT_EFFECT_COOLDOWN_TICKS = 100;
   private static final int STRANGER_WAVE_COOLDOWN_TICKS = 1200;
   private static final double STRANGER_WAVE_RANGE = 6.0D;
   private static final double FOLLOW_SPEED_MODIFIER = 1.2D;
-  private static final int DIMENSION_FOLLOW_INTERVAL_TICKS = 40;
   private static final byte AWAKENED_EVENT = 100;
   private static final String HAND_STATE_TAG = "WickedHandState";
   private static final String REMAINS_RETURNED_MESSAGE_KEY =
@@ -80,16 +94,20 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
 
   private final AwakeningEffects awakeningEffects = new AwakeningEffects(this);
   private final Identifier lifelessHandId;
+  private final TagKey<Item> catalystItems;
   private HandState handState = HandState.EMPTY;
   private HandGesture activeGesture;
   private Entity gestureLookTarget;
   private long gestureEndGameTime;
+  private long nextHitEffectGameTime;
   private long nextStrangerWaveGameTime;
+  private long lastHurtGameTime;
 
   protected AbstractCompanionHandEntity(
       EntityType<? extends PathfinderMob> entityType, Level level, Identifier lifelessHandId) {
     super(entityType, level);
     this.lifelessHandId = lifelessHandId;
+    this.catalystItems = catalystItems(EntityType.getKey(entityType));
   }
 
   protected static AttributeSupplier.Builder createHandAttributes(double attackDamage) {
@@ -109,16 +127,45 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
 
   @Override
   public InteractionResult mobInteract(Player player, InteractionHand hand) {
-    if (player.isSecondaryUseActive()
-        && player.getItemInHand(hand).isEmpty()
-        && this.isNPCOwnedBy(player)) {
+    if (!this.isNPCOwnedBy(player)) {
+      return super.mobInteract(player, hand);
+    }
+
+    ItemStack itemStack = player.getItemInHand(hand);
+    if (player.isSecondaryUseActive() && itemStack.isEmpty()) {
       if (!this.level().isClientSide()) {
         this.toggleCompanionMode(player);
       }
       return InteractionResult.SUCCESS;
     }
+    if (itemStack.is(this.catalystItems) && this.getHealth() < this.getMaxHealth()) {
+      if (this.level() instanceof ServerLevel serverLevel) {
+        this.feed(serverLevel, player, itemStack);
+      }
+      return InteractionResult.SUCCESS;
+    }
 
     return super.mobInteract(player, hand);
+  }
+
+  private void feed(ServerLevel serverLevel, Player player, ItemStack itemStack) {
+    if (!this.isCompanion()) {
+      return;
+    }
+
+    this.heal(FEEDING_HEAL_AMOUNT);
+    itemStack.consume(1, player);
+    this.playSound(SoundEvents.GENERIC_EAT.value(), 0.8F, 1.2F);
+    serverLevel.sendParticles(
+        ParticleTypes.HEART,
+        this.getX(),
+        this.getY(0.8D),
+        this.getZ(),
+        3,
+        0.3D,
+        0.2D,
+        0.3D,
+        0.0D);
   }
 
   void awakenAsCompanion(ServerLevel serverLevel) {
@@ -167,40 +214,24 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
     } else if (this.tickCount % COMPANION_CHECK_INTERVAL_TICKS == 0) {
       this.waveAtNearbyStranger(serverLevel);
     }
-    if (this.tickCount % DIMENSION_FOLLOW_INTERVAL_TICKS == 0
-        && this.followOwnerIntoOtherDimension(serverLevel)) {
-      return;
+    if (this.tickCount % REGENERATION_INTERVAL_TICKS == 0) {
+      this.regenerateOutOfCombat(serverLevel);
     }
     this.companionTick(serverLevel);
   }
 
-  // Easy NPC 7.16.0 only follows within the NPC's own level, see its FollowLivingEntityGoal.
-  private boolean followOwnerIntoOtherDimension(ServerLevel serverLevel) {
-    if (this.handState.companionMode() != CompanionMode.FOLLOW
-        || this.isPassenger()
-        || this.isLeashed()) {
-      return false;
+  private void regenerateOutOfCombat(ServerLevel serverLevel) {
+    if (this.getTarget() == null
+        && this.getHealth() < this.getMaxHealth()
+        && serverLevel.getGameTime() - this.lastHurtGameTime
+            >= REGENERATION_COMBAT_COOLDOWN_TICKS) {
+      this.heal(REGENERATION_AMOUNT);
     }
-
-    ServerPlayer owner = this.findOnlineOwner(serverLevel);
-    if (owner == null || !owner.isAlive() || owner.isSpectator() || owner.level() == serverLevel) {
-      return false;
-    }
-
-    return this.teleport(
-            new TeleportTransition(
-                owner.level(),
-                owner.position(),
-                Vec3.ZERO,
-                owner.getYRot(),
-                0.0F,
-                TeleportTransition.DO_NOTHING))
-        != null;
   }
 
   protected void companionTick(ServerLevel serverLevel) {}
 
-  protected void onCompanionHit(ServerLevel serverLevel, LivingEntity target) {}
+  protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {}
 
   protected void applyMovementAttributes() {
     EasyNPCAttributeHandler.setEnvironmentalAttribute(
@@ -289,10 +320,39 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   @Override
   public boolean doHurtTarget(ServerLevel serverLevel, Entity target) {
     boolean hurtTarget = super.doHurtTarget(serverLevel, target);
-    if (hurtTarget && this.isCompanion() && target instanceof LivingEntity livingTarget) {
-      this.onCompanionHit(serverLevel, livingTarget);
+    if (hurtTarget
+        && this.isCompanion()
+        && target instanceof LivingEntity livingTarget
+        && serverLevel.getGameTime() >= this.nextHitEffectGameTime) {
+      this.nextHitEffectGameTime = serverLevel.getGameTime() + HIT_EFFECT_COOLDOWN_TICKS;
+      this.applyHitEffect(serverLevel, livingTarget);
     }
     return hurtTarget;
+  }
+
+  @Override
+  public boolean hurtServer(ServerLevel serverLevel, DamageSource damageSource, float damage) {
+    boolean hurt = super.hurtServer(serverLevel, damageSource, damage);
+    if (hurt) {
+      this.lastHurtGameTime = serverLevel.getGameTime();
+    }
+    return hurt;
+  }
+
+  @Override
+  public boolean canAttack(LivingEntity target) {
+    return super.canAttack(target) && !(this.isCompanion() && this.ignoresAsCompanion(target));
+  }
+
+  private boolean ignoresAsCompanion(LivingEntity target) {
+    if (target.is(COMPANION_IGNORED_TARGETS)) {
+      return true;
+    }
+
+    return target instanceof OwnableEntity ownableEntity
+        && ownableEntity.getOwnerReference()
+            instanceof EntityReference<LivingEntity> ownerReference
+        && !ownerReference.getUUID().equals(this.getOwnerUUID());
   }
 
   @Override

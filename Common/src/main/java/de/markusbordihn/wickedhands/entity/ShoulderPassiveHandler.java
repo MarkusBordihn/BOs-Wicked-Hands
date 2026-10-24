@@ -22,9 +22,12 @@ package de.markusbordihn.wickedhands.entity;
 import de.markusbordihn.easynpc.api.handler.EasyNPCShoulderHandler;
 import de.markusbordihn.easynpc.data.npc.ShoulderSide;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
 
 // Easy NPC removes a shoulder NPC from the level like a vanilla parrot, so its own tick stops.
 public final class ShoulderPassiveHandler {
@@ -45,11 +48,7 @@ public final class ShoulderPassiveHandler {
   public static void update(ServerPlayer player) {
     Set<ShoulderPassive> activeShoulderPassives = EnumSet.noneOf(ShoulderPassive.class);
     for (ShoulderSide shoulderSide : ShoulderSide.values()) {
-      EasyNPCShoulderHandler.getShoulderNPCData(player, shoulderSide)
-          .flatMap(entityTag -> entityTag.getString(ENTITY_ID_TAG))
-          .map(Identifier::tryParse)
-          .flatMap(ShoulderPassive::forHand)
-          .ifPresent(activeShoulderPassives::add);
+      getShoulderPassive(player, shoulderSide).ifPresent(activeShoulderPassives::add);
     }
     for (ShoulderPassive shoulderPassive : ShoulderPassive.values()) {
       if (activeShoulderPassives.contains(shoulderPassive)) {
@@ -58,5 +57,35 @@ public final class ShoulderPassiveHandler {
         shoulderPassive.remove(player);
       }
     }
+  }
+
+  public static Set<ShoulderSide> getSidesHoldingOnThrough(
+      ServerPlayer player, DamageSource damageSource) {
+    return getSidesHoldingOn(
+        player, shoulderPassive -> shoulderPassive.holdsOnThrough(damageSource));
+  }
+
+  public static Set<ShoulderSide> getSidesHoldingOnInSurroundings(ServerPlayer player) {
+    return getSidesHoldingOn(
+        player, shoulderPassive -> shoulderPassive.holdsOnInSurroundingsOf(player));
+  }
+
+  private static Set<ShoulderSide> getSidesHoldingOn(
+      ServerPlayer player, Predicate<ShoulderPassive> holdsOn) {
+    Set<ShoulderSide> shoulderSides = EnumSet.noneOf(ShoulderSide.class);
+    for (ShoulderSide shoulderSide : ShoulderSide.values()) {
+      if (getShoulderPassive(player, shoulderSide).filter(holdsOn).isPresent()) {
+        shoulderSides.add(shoulderSide);
+      }
+    }
+    return shoulderSides;
+  }
+
+  private static Optional<ShoulderPassive> getShoulderPassive(
+      ServerPlayer player, ShoulderSide shoulderSide) {
+    return EasyNPCShoulderHandler.getShoulderNPCData(player, shoulderSide)
+        .flatMap(entityTag -> entityTag.getString(ENTITY_ID_TAG))
+        .map(Identifier::tryParse)
+        .flatMap(ShoulderPassive::forHand);
   }
 }

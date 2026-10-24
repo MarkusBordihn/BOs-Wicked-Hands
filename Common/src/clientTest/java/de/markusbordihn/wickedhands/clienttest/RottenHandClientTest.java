@@ -75,6 +75,7 @@ class RottenHandClientTest extends ClientTestBase {
     client.equip(LIFELESS_ROTTEN_HAND);
     client.lookAtPoint(HAND_X, FLOOR_Y + 1.6D, HAND_Z);
     client.useHeldItem();
+    client.await(Until.chatMessage("and flesh"));
     client.await(Until.ticksElapsed(HINT_TICKS));
     client.saveScreenshot("revival_hint");
     client.await(Until.itemCount(LIFELESS_ROTTEN_HAND, 1));
