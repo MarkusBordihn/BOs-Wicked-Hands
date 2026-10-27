@@ -32,7 +32,7 @@ public class LifelessHuskHandEntity extends AbstractLifelessHandEntity {
   public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
 
   public LifelessHuskHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
-    super(entityType, level, HuskHandEntity.ENTITY_ID);
+    super(entityType, level, HuskHandEntity.ENTITY_ID, HuskHandEntity.SAND_DUST);
   }
 
   public static EntityType<LifelessHuskHandEntity> createEntityType() {

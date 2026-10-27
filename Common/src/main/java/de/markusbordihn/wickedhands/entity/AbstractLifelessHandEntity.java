@@ -27,6 +27,7 @@ import de.markusbordihn.easynpc.data.synched.SynchedDataIndex;
 import de.markusbordihn.easynpc.entity.easynpc.EasyNPC;
 import de.markusbordihn.easynpc.entity.easynpc.npc.easymodelentities.EasyModelNPC;
 import de.markusbordihn.easynpc.handler.OwnerHandler;
+import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.client.effect.RevivalRitualEffects;
 import de.markusbordihn.wickedhands.data.RevivalState;
 import de.markusbordihn.wickedhands.item.HandDataComponents;
@@ -39,6 +40,7 @@ import java.util.UUID;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -47,6 +49,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -59,6 +62,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -67,9 +71,12 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
 
+  private static final Logger log = LogManager.getLogger(Constants.LOG_NAME);
   private static final double MAX_HEALTH = 6.0D;
   private static final byte REVIVAL_STARTED_EVENT = 100;
   private static final byte REVIVAL_COMPLETED_EVENT = 101;
@@ -83,17 +90,21 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
   private static final String RITUAL_WHISPER_MESSAGE_KEY = MESSAGE_KEY_PREFIX + "ritual_whisper";
   private static final String FOREIGN_REMAINS_MESSAGE_KEY = MESSAGE_KEY_PREFIX + "foreign_remains";
 
-  private final RevivalRitualEffects revivalEffects = new RevivalRitualEffects(this);
+  private final RevivalRitualEffects revivalEffects;
   private final Set<UUID> whisperedPlayers = new HashSet<>();
   private final Identifier companionHandId;
   private final TagKey<Item> catalystItems;
   private RevivalState revivalState = RevivalState.EMPTY;
 
   protected AbstractLifelessHandEntity(
-      EntityType<? extends PathfinderMob> entityType, Level level, Identifier companionHandId) {
+      EntityType<? extends PathfinderMob> entityType,
+      Level level,
+      Identifier companionHandId,
+      ParticleOptions ritualParticle) {
     super(entityType, level);
     this.companionHandId = companionHandId;
     this.catalystItems = catalystItems(companionHandId);
+    this.revivalEffects = new RevivalRitualEffects(this, ritualParticle);
     this.setNoAi(true);
   }
 
@@ -175,7 +186,7 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
     }
 
     catalyst.consume(1, player);
-    this.revivalState = this.revivalState.withOwnerUUID(player.getUUID());
+    this.revivalState = this.revivalState.withOwnerUUID(Optional.of(player.getUUID()));
     if (player instanceof ServerPlayer serverPlayer) {
       CriteriaTriggers.SUMMONED_ENTITY.trigger(serverPlayer, this);
     }
@@ -244,7 +255,12 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
     RevivalRitual.extinguishCandles(serverLevel, this.getOnPos());
     serverLevel.broadcastEntityEvent(this, REVIVAL_COMPLETED_EVENT);
     this.strikeVisualLightning(serverLevel);
-    this.awakenCompanion(serverLevel, ownerUUID);
+    if (!this.awakenCompanion(serverLevel, ownerUUID)) {
+      log.warn("Unable to awaken companion of {}, the ritual can be repeated", this.getUUID());
+      this.revivalState = this.revivalState.withOwnerUUID(Optional.empty()).withElapsedTicks(0);
+      return;
+    }
+
     EasyNPCEntityHandler.delete(this);
   }
 
@@ -260,14 +276,11 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
     serverLevel.addFreshEntity(lightningBolt);
   }
 
-  private void awakenCompanion(ServerLevel serverLevel, UUID ownerUUID) {
+  private boolean awakenCompanion(ServerLevel serverLevel, UUID ownerUUID) {
     Optional<AbstractCompanionHandEntity> awakenedCompanion =
-        this.revivalState
-            .companionUUID()
-            .flatMap(companionUUID -> this.restoreKilledCompanion(serverLevel, companionUUID))
-            .or(() -> this.createCompanion(serverLevel));
+        this.restoreKilledOrCreateCompanion(serverLevel);
     if (awakenedCompanion.isEmpty()) {
-      return;
+      return false;
     }
 
     AbstractCompanionHandEntity companion = awakenedCompanion.get();
@@ -277,15 +290,18 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
       companion.setNPCOwnerUUID(ownerUUID);
     }
     companion.awakenAsCompanion(serverLevel);
+    return true;
   }
 
-  private Optional<AbstractCompanionHandEntity> restoreKilledCompanion(
-      ServerLevel serverLevel, UUID companionUUID) {
-    if (!EasyNPCEntityHandler.revive(companionUUID, serverLevel, this.position())) {
-      return Optional.empty();
+  private Optional<AbstractCompanionHandEntity> restoreKilledOrCreateCompanion(
+      ServerLevel serverLevel) {
+    Optional<UUID> companionUUID = this.revivalState.companionUUID();
+    if (companionUUID.isEmpty()
+        || !EasyNPCEntityHandler.revive(companionUUID.get(), serverLevel, this.position())) {
+      return this.createCompanion(serverLevel);
     }
 
-    return EasyNPCEntityHandler.find(companionUUID, serverLevel)
+    return EasyNPCEntityHandler.find(companionUUID.get(), serverLevel)
         .map(EasyNPC::getEntity)
         .filter(AbstractCompanionHandEntity.class::isInstance)
         .map(AbstractCompanionHandEntity.class::cast);
@@ -319,13 +335,37 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
       return;
     }
 
-    this.spawnAtLocation(
-        serverLevel,
-        LifelessHandItem.createCompanionRemains(
-            EntityType.getKey(this.getType()),
-            this.revivalState.companionUUID().get(),
-            this.revivalState.boundOwnerUUID(),
-            this.getCustomName()));
+    ItemEntity droppedRemains =
+        this.spawnAtLocation(
+            serverLevel,
+            LifelessHandItem.createCompanionRemains(
+                EntityType.getKey(this.getType()),
+                this.revivalState.companionUUID().get(),
+                this.revivalState.boundOwnerUUID(),
+                this.getCustomName()));
+    this.revivalState
+        .boundOwnerUUID()
+        .ifPresent(ownerUUID -> LifelessHandItem.protectRemains(droppedRemains, ownerUUID));
+  }
+
+  @Override
+  public boolean isInvulnerableTo(ServerLevel serverLevel, DamageSource damageSource) {
+    return super.isInvulnerableTo(serverLevel, damageSource)
+        || (!damageSource.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
+            && this.isProtectedFrom(damageSource));
+  }
+
+  private boolean isProtectedFrom(DamageSource damageSource) {
+    if (this.revivalState.ownerUUID().isPresent()) {
+      return true;
+    }
+
+    if (this.revivalState.companionUUID().isEmpty()) {
+      return false;
+    }
+
+    return !(damageSource.getEntity() instanceof Player player)
+        || (!player.isCreative() && this.revivalState.isBoundToOtherThan(player.getUUID()));
   }
 
   @Override

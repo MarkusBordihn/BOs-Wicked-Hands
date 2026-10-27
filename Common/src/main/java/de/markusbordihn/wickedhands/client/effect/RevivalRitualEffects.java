@@ -22,6 +22,7 @@ package de.markusbordihn.wickedhands.client.effect;
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -44,15 +45,18 @@ public final class RevivalRitualEffects {
 
   private final Entity hand;
   private final CandleLightingEffects candleLightingEffects;
-  private final SoulVortexEffect soulVortex = new SoulVortexEffect();
+  private final SoulVortexEffect soulVortex;
+  private final ParticleOptions ritualParticle;
   private List<BlockPos> ritualCandles = List.of();
   private int ritualTicks = -1;
   private boolean completed;
   private int nextHeartbeatTick;
 
-  public RevivalRitualEffects(Entity hand) {
+  public RevivalRitualEffects(Entity hand, ParticleOptions ritualParticle) {
     this.hand = hand;
     this.candleLightingEffects = new CandleLightingEffects(hand);
+    this.soulVortex = new SoulVortexEffect(ritualParticle);
+    this.ritualParticle = ritualParticle;
   }
 
   public void start() {
@@ -130,12 +134,10 @@ public final class RevivalRitualEffects {
 
     RandomSource random = level.getRandom();
     for (BlockPos candlePosition : this.ritualCandles) {
-      Vec3 candleFlame = EffectHelper.candleFlame(candlePosition);
-      level.addParticle(
+      EffectHelper.spawnParticle(
+          level,
           ParticleTypes.SOUL_FIRE_FLAME,
-          candleFlame.x(),
-          candleFlame.y(),
-          candleFlame.z(),
+          EffectHelper.candleFlame(candlePosition),
           random.triangle(0.0D, 0.01D),
           0.03D + random.nextDouble() * 0.05D,
           random.triangle(0.0D, 0.01D));
@@ -154,32 +156,23 @@ public final class RevivalRitualEffects {
 
   private void playClimax(Level level) {
     Vec3 handCenter = EffectHelper.handCenter(this.hand);
-    level.addParticle(
-        ParticleTypes.GUST_EMITTER_SMALL,
-        handCenter.x(),
-        handCenter.y(),
-        handCenter.z(),
-        0.0D,
-        0.0D,
-        0.0D);
+    EffectHelper.spawnParticle(
+        level, ParticleTypes.GUST_EMITTER_SMALL, handCenter, 0.0D, 0.0D, 0.0D);
     for (int i = 0; i < SHOCKWAVE_PARTICLES; i++) {
       double angle = Mth.TWO_PI * i / SHOCKWAVE_PARTICLES;
-      level.addParticle(
-          i % 2 == 0 ? ParticleTypes.SCULK_SOUL : ParticleTypes.SOUL_FIRE_FLAME,
-          handCenter.x(),
-          handCenter.y(),
-          handCenter.z(),
+      EffectHelper.spawnParticle(
+          level,
+          i % 2 == 0 ? this.ritualParticle : ParticleTypes.SOUL_FIRE_FLAME,
+          handCenter,
           Math.cos(angle) * SHOCKWAVE_SPEED,
           0.01D,
           Math.sin(angle) * SHOCKWAVE_SPEED);
     }
     for (BlockPos candlePosition : this.ritualCandles) {
-      Vec3 candleFlame = EffectHelper.candleFlame(candlePosition);
-      level.addParticle(
+      EffectHelper.spawnParticle(
+          level,
           ParticleTypes.LARGE_SMOKE,
-          candleFlame.x(),
-          candleFlame.y(),
-          candleFlame.z(),
+          EffectHelper.candleFlame(candlePosition),
           0.0D,
           0.05D,
           0.0D);

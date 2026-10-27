@@ -20,6 +20,7 @@
 package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -32,7 +33,7 @@ public class LifelessWitchHandEntity extends AbstractLifelessHandEntity {
   public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
 
   public LifelessWitchHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
-    super(entityType, level, WitchHandEntity.ENTITY_ID);
+    super(entityType, level, WitchHandEntity.ENTITY_ID, ParticleTypes.WITCH);
   }
 
   public static EntityType<LifelessWitchHandEntity> createEntityType() {

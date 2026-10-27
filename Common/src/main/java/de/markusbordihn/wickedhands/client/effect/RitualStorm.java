@@ -19,6 +19,7 @@
 
 package de.markusbordihn.wickedhands.client.effect;
 
+import java.lang.ref.WeakReference;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -29,7 +30,7 @@ final class RitualStorm {
   private static final float FADE_PER_TICK = 0.04F;
   private static final double RADIUS = 32.0D;
 
-  private static Level boundLevel;
+  private static WeakReference<Level> boundLevel = new WeakReference<>(null);
   private static long lastTickGameTime = -1;
   private static float requestedIntensity;
   private static float intensity;
@@ -83,7 +84,7 @@ final class RitualStorm {
   }
 
   static void restore(Level level) {
-    if (level != boundLevel || intensity <= 0.0F) {
+    if (level != boundLevel.get() || intensity <= 0.0F) {
       return;
     }
 
@@ -93,11 +94,11 @@ final class RitualStorm {
   }
 
   private static void bindTo(Level level) {
-    if (level == boundLevel) {
+    if (level == boundLevel.get()) {
       return;
     }
 
-    boundLevel = level;
+    boundLevel = new WeakReference<>(level);
     lastTickGameTime = -1;
     requestedIntensity = 0.0F;
     intensity = 0.0F;

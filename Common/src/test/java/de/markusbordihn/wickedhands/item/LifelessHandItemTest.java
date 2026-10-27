@@ -19,6 +19,7 @@
 
 package de.markusbordihn.wickedhands.item;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,12 +53,14 @@ import de.markusbordihn.wickedhands.entity.StrayHandEntity;
 import de.markusbordihn.wickedhands.entity.WitchHandEntity;
 import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import java.nio.file.Files;
+import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
@@ -160,6 +163,24 @@ class LifelessHandItemTest {
         InteractionResult.SUCCESS,
         createItem(LifelessRottenHandEntity.ID).use(level, player, InteractionHand.OFF_HAND));
     verify(player, never()).sendSystemMessage(any());
+  }
+
+  @Test
+  @DisplayName("Protected remains never burn, despawn or go to anyone but their owner")
+  void protectRemainsBindsDroppedItemToOwner() {
+    ItemEntity remains = mock(ItemEntity.class);
+    UUID ownerUUID = UUID.randomUUID();
+
+    LifelessHandItem.protectRemains(remains, ownerUUID);
+    verify(remains).setInvulnerable(true);
+    verify(remains).setUnlimitedLifetime();
+    verify(remains).setTarget(ownerUUID);
+  }
+
+  @Test
+  @DisplayName("Protecting remains that could not be dropped does nothing")
+  void protectRemainsIgnoresMissingItem() {
+    assertDoesNotThrow(() -> LifelessHandItem.protectRemains(null, UUID.randomUUID()));
   }
 
   @ParameterizedTest

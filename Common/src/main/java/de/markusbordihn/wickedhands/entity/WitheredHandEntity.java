@@ -61,15 +61,6 @@ public class WitheredHandEntity extends AbstractCompanionHandEntity {
   protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(new MobEffectInstance(MobEffects.WITHER, BLIGHT_DURATION_TICKS), this);
     this.playSound(SoundEvents.WITHER_SKELETON_AMBIENT, 0.6F, 1.6F);
-    serverLevel.sendParticles(
-        ParticleTypes.SOUL_FIRE_FLAME,
-        target.getX(),
-        target.getY(0.5D),
-        target.getZ(),
-        10,
-        0.25D,
-        0.3D,
-        0.25D,
-        0.01D);
+    spawnHitParticles(serverLevel, target, ParticleTypes.SOUL_FIRE_FLAME, 10, 0.01D);
   }
 }

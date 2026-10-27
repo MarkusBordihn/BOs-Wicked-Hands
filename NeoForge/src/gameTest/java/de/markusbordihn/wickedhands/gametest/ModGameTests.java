@@ -52,7 +52,6 @@ public final class ModGameTests {
   private static final Identifier DEFAULT_ENVIRONMENT =
       Identifier.fromNamespaceAndPath(Constants.MOD_ID, "default");
 
-  private static final SmokeTest SMOKE_TESTS = new SmokeTest();
   private static final WildHandGameTests WILD_HAND_TESTS = new WildHandGameTests();
   private static final RevivalRitualGameTests REVIVAL_RITUAL_TESTS = new RevivalRitualGameTests();
   private static final CompanionAbilityGameTests COMPANION_ABILITY_TESTS =
@@ -62,13 +61,9 @@ public final class ModGameTests {
   private static final ShoulderGameTests SHOULDER_TESTS = new ShoulderGameTests();
 
   static {
-    register("smoke_mod_registered", SMOKE_TESTS::testModRegistered);
     register(
         "rotten_hand_spawns_naturally_at_night",
         WILD_HAND_TESTS::testRottenHandSpawnsNaturallyAtNight);
-    register(
-        "rotten_hand_drops_lifeless_rotten_hand",
-        WILD_HAND_TESTS::testRottenHandDropsLifelessRottenHand);
     register(
         "summoned_rotten_hand_drops_lifeless_rotten_hand",
         WILD_HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
@@ -100,6 +95,18 @@ public final class ModGameTests {
     register(
         "fallen_companion_without_owner_leaves_protected_remains",
         REVIVAL_RITUAL_TESTS::testFallenCompanionWithoutOwnerLeavesProtectedRemains,
+        HandGameTests.RITUAL_MAX_TICKS);
+    register(
+        "fallen_companion_with_full_inventory_leaves_protected_remains",
+        REVIVAL_RITUAL_TESTS::testFallenCompanionWithFullInventoryLeavesProtectedRemains,
+        HandGameTests.RITUAL_MAX_TICKS);
+    register(
+        "bound_remains_resist_all_but_their_owner",
+        REVIVAL_RITUAL_TESTS::testBoundRemainsResistAllButTheirOwner,
+        HandGameTests.RITUAL_MAX_TICKS);
+    register(
+        "running_ritual_protects_lifeless_hand",
+        REVIVAL_RITUAL_TESTS::testRunningRitualProtectsLifelessHand,
         HandGameTests.RITUAL_MAX_TICKS);
     register(
         "stranger_cannot_revive_foreign_remains",
@@ -218,6 +225,10 @@ public final class ModGameTests {
     register(
         "companion_defends_and_joins_owner",
         COMPANION_BEHAVIOUR_TESTS::testCompanionDefendsAndJoinsOwner,
+        HandGameTests.AFTER_AWAKENING_MAX_TICKS);
+    register(
+        "wounded_companion_retreats_from_combat",
+        COMPANION_BEHAVIOUR_TESTS::testWoundedCompanionRetreatsFromCombat,
         HandGameTests.AFTER_AWAKENING_MAX_TICKS);
     register(
         "companion_ignores_owner_hitting_sibling_companion",

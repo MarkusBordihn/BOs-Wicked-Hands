@@ -110,15 +110,6 @@ public class WitchHandEntity extends AbstractCompanionHandEntity {
     Holder<MobEffect> hexEffect = HEX_EFFECTS.get(this.getRandom().nextInt(HEX_EFFECTS.size()));
     target.addEffect(new MobEffectInstance(hexEffect, HEX_DURATION_TICKS), this);
     this.playSound(SoundEvents.WITCH_CELEBRATE, 0.6F, 1.4F);
-    serverLevel.sendParticles(
-        ParticleTypes.WITCH,
-        target.getX(),
-        target.getY(0.5D),
-        target.getZ(),
-        12,
-        0.3D,
-        0.3D,
-        0.3D,
-        0.0D);
+    spawnHitParticles(serverLevel, target, ParticleTypes.WITCH, 12, 0.0D);
   }
 }

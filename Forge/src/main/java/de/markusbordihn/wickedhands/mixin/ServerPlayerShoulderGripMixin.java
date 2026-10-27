@@ -43,10 +43,10 @@ public abstract class ServerPlayerShoulderGripMixin implements ShoulderGripAcces
   public abstract CompoundTag getShoulderEntityLeft();
 
   @Shadow
-  public abstract CompoundTag getShoulderEntityRight();
+  protected abstract void setShoulderEntityLeft(CompoundTag entityTag);
 
   @Shadow
-  protected abstract void setShoulderEntityLeft(CompoundTag entityTag);
+  public abstract CompoundTag getShoulderEntityRight();
 
   @Shadow
   protected abstract void setShoulderEntityRight(CompoundTag entityTag);

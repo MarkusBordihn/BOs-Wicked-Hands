@@ -84,11 +84,10 @@ final class CandleLightingEffects {
     Vec3 candleFlame = EffectHelper.candleFlame(candlePosition);
     Vec3 handCenter = EffectHelper.handCenter(this.hand);
     for (int i = 0; i < 10; i++) {
-      level.addParticle(
+      EffectHelper.spawnParticle(
+          level,
           ParticleTypes.SOUL_FIRE_FLAME,
-          candleFlame.x(),
-          candleFlame.y(),
-          candleFlame.z(),
+          candleFlame,
           random.triangle(0.0D, 0.02D),
           0.05D + random.nextDouble() * 0.07D,
           random.triangle(0.0D, 0.02D));
@@ -97,11 +96,10 @@ final class CandleLightingEffects {
       EffectHelper.spawnSoulStream(level, candleFlame, handCenter);
     }
     for (int i = 0; i < 6; i++) {
-      level.addParticle(
+      EffectHelper.spawnParticle(
+          level,
           ParticleTypes.SMOKE,
-          handCenter.x() + random.triangle(0.0D, 0.3D),
-          handCenter.y(),
-          handCenter.z() + random.triangle(0.0D, 0.3D),
+          handCenter.add(random.triangle(0.0D, 0.3D), 0.0D, random.triangle(0.0D, 0.3D)),
           0.0D,
           0.02D,
           0.0D);
@@ -121,22 +119,23 @@ final class CandleLightingEffects {
   private void playRitualReady(Level level, Vec3 handCenter) {
     for (int i = 0; i < READY_RING_PARTICLES; i++) {
       double angle = Mth.TWO_PI * i / READY_RING_PARTICLES;
-      level.addParticle(
+      EffectHelper.spawnParticle(
+          level,
           ParticleTypes.SOUL_FIRE_FLAME,
-          handCenter.x() + Math.cos(angle) * READY_RING_RADIUS,
-          handCenter.y(),
-          handCenter.z() + Math.sin(angle) * READY_RING_RADIUS,
+          handCenter.add(
+              Math.cos(angle) * READY_RING_RADIUS,
+              0.0D,
+              Math.sin(angle) * READY_RING_RADIUS),
           0.0D,
           0.02D,
           0.0D);
     }
     RandomSource random = level.getRandom();
     for (int i = 0; i < 8; i++) {
-      level.addParticle(
+      EffectHelper.spawnParticle(
+          level,
           ParticleTypes.SCULK_SOUL,
-          handCenter.x(),
-          handCenter.y(),
-          handCenter.z(),
+          handCenter,
           random.triangle(0.0D, 0.03D),
           0.06D,
           random.triangle(0.0D, 0.03D));

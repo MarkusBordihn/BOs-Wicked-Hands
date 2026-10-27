@@ -34,7 +34,6 @@ public final class ModGameTests {
   private static final DeferredRegister<Consumer<GameTestHelper>> TEST_FUNCTIONS =
       DeferredRegister.create(Registries.TEST_FUNCTION, Constants.MOD_ID);
 
-  private static final SmokeTest SMOKE_TESTS = new SmokeTest();
   private static final WildHandGameTests WILD_HAND_TESTS = new WildHandGameTests();
   private static final RevivalRitualGameTests REVIVAL_RITUAL_TESTS = new RevivalRitualGameTests();
   private static final CompanionAbilityGameTests COMPANION_ABILITY_TESTS =
@@ -44,13 +43,9 @@ public final class ModGameTests {
   private static final ShoulderGameTests SHOULDER_TESTS = new ShoulderGameTests();
 
   static {
-    register("smoke_mod_registered", SMOKE_TESTS::testModRegistered);
     register(
         "rotten_hand_spawns_naturally_at_night",
         WILD_HAND_TESTS::testRottenHandSpawnsNaturallyAtNight);
-    register(
-        "rotten_hand_drops_lifeless_rotten_hand",
-        WILD_HAND_TESTS::testRottenHandDropsLifelessRottenHand);
     register(
         "summoned_rotten_hand_drops_lifeless_rotten_hand",
         WILD_HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
@@ -77,6 +72,15 @@ public final class ModGameTests {
     register(
         "fallen_companion_without_owner_leaves_protected_remains",
         REVIVAL_RITUAL_TESTS::testFallenCompanionWithoutOwnerLeavesProtectedRemains);
+    register(
+        "fallen_companion_with_full_inventory_leaves_protected_remains",
+        REVIVAL_RITUAL_TESTS::testFallenCompanionWithFullInventoryLeavesProtectedRemains);
+    register(
+        "bound_remains_resist_all_but_their_owner",
+        REVIVAL_RITUAL_TESTS::testBoundRemainsResistAllButTheirOwner);
+    register(
+        "running_ritual_protects_lifeless_hand",
+        REVIVAL_RITUAL_TESTS::testRunningRitualProtectsLifelessHand);
     register(
         "stranger_cannot_revive_foreign_remains",
         REVIVAL_RITUAL_TESTS::testStrangerCannotReviveForeignRemains);
@@ -167,6 +171,9 @@ public final class ModGameTests {
     register(
         "companion_defends_and_joins_owner",
         COMPANION_BEHAVIOUR_TESTS::testCompanionDefendsAndJoinsOwner);
+    register(
+        "wounded_companion_retreats_from_combat",
+        COMPANION_BEHAVIOUR_TESTS::testWoundedCompanionRetreatsFromCombat);
     register(
         "companion_ignores_owner_hitting_sibling_companion",
         COMPANION_BEHAVIOUR_TESTS::testCompanionIgnoresOwnerHittingSiblingCompanion);

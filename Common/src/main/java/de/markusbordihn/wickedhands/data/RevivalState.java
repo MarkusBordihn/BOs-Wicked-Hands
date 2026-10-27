@@ -51,9 +51,8 @@ public record RevivalState(
                           .forGetter(RevivalState::elapsedTicks))
                   .apply(instance, RevivalState::new));
 
-  public RevivalState withOwnerUUID(UUID ownerUUID) {
-    return new RevivalState(
-        Optional.of(ownerUUID), this.companionUUID, this.boundOwnerUUID, this.elapsedTicks);
+  public RevivalState withOwnerUUID(Optional<UUID> ownerUUID) {
+    return new RevivalState(ownerUUID, this.companionUUID, this.boundOwnerUUID, this.elapsedTicks);
   }
 
   public RevivalState withCompanionUUID(Optional<UUID> companionUUID) {

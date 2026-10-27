@@ -37,6 +37,7 @@ import de.markusbordihn.wickedhands.item.LifelessHandItem;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -60,7 +61,6 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -79,6 +79,9 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   public static final int REGENERATION_INTERVAL_TICKS = 100;
   public static final int REGENERATION_COMBAT_COOLDOWN_TICKS = 200;
   protected static final int COMPANION_CHECK_INTERVAL_TICKS = 20;
+  private static final float RETREAT_HEALTH_RATIO = 0.35F;
+  private static final double HIT_PARTICLE_SPREAD = 0.3D;
+  private static final float RECOVERED_HEALTH_RATIO = 0.5F;
   private static final float REGENERATION_AMOUNT = 1.0F;
   private static final double MAX_HEALTH = 6.0D;
   private static final double MOVEMENT_SPEED = 0.25D;
@@ -102,6 +105,7 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   private long nextHitEffectGameTime;
   private long nextStrangerWaveGameTime;
   private long lastHurtGameTime;
+  private boolean retreating;
 
   protected AbstractCompanionHandEntity(
       EntityType<? extends PathfinderMob> entityType, Level level, Identifier lifelessHandId) {
@@ -123,6 +127,10 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
 
   public HandGesture getActiveGesture() {
     return this.activeGesture;
+  }
+
+  public boolean isRetreating() {
+    return this.retreating;
   }
 
   @Override
@@ -214,10 +222,27 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
     } else if (this.tickCount % COMPANION_CHECK_INTERVAL_TICKS == 0) {
       this.waveAtNearbyStranger(serverLevel);
     }
+    if (this.tickCount % COMPANION_CHECK_INTERVAL_TICKS == 0) {
+      this.updateRetreat();
+    }
     if (this.tickCount % REGENERATION_INTERVAL_TICKS == 0) {
       this.regenerateOutOfCombat(serverLevel);
     }
     this.companionTick(serverLevel);
+  }
+
+  private void updateRetreat() {
+    float healthRatio = this.getHealth() / this.getMaxHealth();
+    if (this.retreating) {
+      this.retreating = healthRatio < RECOVERED_HEALTH_RATIO;
+      return;
+    }
+
+    if (healthRatio < RETREAT_HEALTH_RATIO) {
+      this.retreating = true;
+      this.setTarget(null);
+      this.getNavigation().stop();
+    }
   }
 
   private void regenerateOutOfCombat(ServerLevel serverLevel) {
@@ -232,6 +257,24 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   protected void companionTick(ServerLevel serverLevel) {}
 
   protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {}
+
+  protected static void spawnHitParticles(
+      ServerLevel serverLevel,
+      LivingEntity target,
+      ParticleOptions particle,
+      int count,
+      double speed) {
+    serverLevel.sendParticles(
+        particle,
+        target.getX(),
+        target.getY(0.5D),
+        target.getZ(),
+        count,
+        HIT_PARTICLE_SPREAD,
+        HIT_PARTICLE_SPREAD,
+        HIT_PARTICLE_SPREAD,
+        speed);
+  }
 
   protected void applyMovementAttributes() {
     EasyNPCAttributeHandler.setEnvironmentalAttribute(
@@ -341,7 +384,8 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
 
   @Override
   public boolean canAttack(LivingEntity target) {
-    return super.canAttack(target) && !(this.isCompanion() && this.ignoresAsCompanion(target));
+    return super.canAttack(target)
+        && !(this.isCompanion() && (this.retreating || this.ignoresAsCompanion(target)));
   }
 
   private boolean ignoresAsCompanion(LivingEntity target) {
@@ -375,21 +419,17 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
             this.getUUID(),
             Optional.ofNullable(ownerUUID),
             this.getCustomName());
-    ServerPlayer owner = this.findOnlineOwner(serverLevel);
+    ServerPlayer owner =
+        ownerUUID == null ? null : serverLevel.getServer().getPlayerList().getPlayer(ownerUUID);
     if (owner != null && owner.isAlive()) {
       if (!owner.getInventory().add(remains)) {
-        owner.drop(remains, false);
+        LifelessHandItem.protectRemains(owner.drop(remains, false), ownerUUID);
       }
       owner.sendSystemMessage(Component.translatable(REMAINS_RETURNED_MESSAGE_KEY));
       return;
     }
 
-    ItemEntity droppedRemains = this.spawnAtLocation(serverLevel, remains);
-    if (droppedRemains != null) {
-      droppedRemains.setInvulnerable(true);
-      droppedRemains.setUnlimitedLifetime();
-      droppedRemains.setTarget(ownerUUID);
-    }
+    LifelessHandItem.protectRemains(this.spawnAtLocation(serverLevel, remains), ownerUUID);
     if (owner != null) {
       BlockPos remainsPosition = this.blockPosition();
       owner.sendSystemMessage(
@@ -399,15 +439,6 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
               remainsPosition.getY(),
               remainsPosition.getZ()));
     }
-  }
-
-  private ServerPlayer findOnlineOwner(ServerLevel serverLevel) {
-    UUID ownerUUID = this.getOwnerUUID();
-    if (ownerUUID == null) {
-      return null;
-    }
-
-    return serverLevel.getServer().getPlayerList().getPlayer(ownerUUID);
   }
 
   @Override

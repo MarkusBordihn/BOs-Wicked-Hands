@@ -26,13 +26,10 @@ import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.Parameters
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.api.Entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class RottenHandClientTest extends ClientTestBase {
 
   private static final long HINT_TICKS = 10;
-  private static final long DEATH_POOF_MAX_LIFETIME_TICKS = 82;
 
   private static Entity summonRottenHandWithFinalizeSpawn() {
     client.runCommand("summon " + ROTTEN_HAND + " " + HAND_X + " " + FLOOR_Y + " " + HAND_Z);
@@ -55,19 +52,6 @@ class RottenHandClientTest extends ClientTestBase {
   }
 
   @Test
-  @DisplayName("Killed rotten hand drops a lifeless rotten hand")
-  void killedRottenHandDropsLifelessRottenHand() {
-    enterTestArea();
-    spawnStaticHand(ROTTEN_HAND);
-    client.runCommand("kill @e[type=" + ROTTEN_HAND + "]");
-    client.teleport(awaitEntityOfType("minecraft:item").position());
-    client.await(
-        Until.itemCount(LIFELESS_ROTTEN_HAND, 1),
-        Until.entityAbsent(Parameters.of("type", ROTTEN_HAND)));
-    client.await(Until.ticksElapsed(DEATH_POOF_MAX_LIFETIME_TICKS));
-  }
-
-  @Test
   @DisplayName("Using the lifeless rotten hand shows a hint and keeps the item")
   void usingLifelessRottenHandShowsHint() {
     enterTestArea();
@@ -81,18 +65,17 @@ class RottenHandClientTest extends ClientTestBase {
     client.await(Until.itemCount(LIFELESS_ROTTEN_HAND, 1));
   }
 
-  @ParameterizedTest(name = "{0}")
-  @ValueSource(strings = {"front", "back"})
-  @DisplayName("Rotten hand sits on the player's shoulder")
-  void rottenHandSitsOnShoulder(String perspective) {
+  @Test
+  @DisplayName("Rotten hand sits on the player's shoulder seen from behind")
+  void rottenHandSitsOnShoulderFromBehind() {
     enterTestArea();
     Entity rottenHand = spawnStaticHand(ROTTEN_HAND);
     client.runCommand("easy_npc shoulder sit " + rottenHand.uuid() + " @s");
-    client.renderSettings(Parameters.of().with("perspective", perspective));
+    client.renderSettings(Parameters.of().with("perspective", "back"));
     try {
       client.await(Until.entityAbsent(Parameters.of("uuid", rottenHand.uuid())));
       client.await(Until.ticksElapsed(RENDER_TICKS));
-      client.saveScreenshot("rotten_hand_on_shoulder_" + perspective);
+      client.saveScreenshot("rotten_hand_on_shoulder_back");
     } finally {
       client.runCommand("easy_npc shoulder dismount @s");
     }

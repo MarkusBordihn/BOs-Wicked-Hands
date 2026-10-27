@@ -20,6 +20,7 @@
 package de.markusbordihn.wickedhands.client.effect;
 
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -36,7 +37,12 @@ final class SoulVortexEffect {
   private static final float SLOWEST_SPIN = 0.15F;
   private static final float FASTEST_SPIN = 0.6F;
 
+  private final ParticleOptions armParticle;
   private float angle;
+
+  SoulVortexEffect(ParticleOptions armParticle) {
+    this.armParticle = armParticle;
+  }
 
   void reset() {
     this.angle = 0.0F;
@@ -63,11 +69,13 @@ final class SoulVortexEffect {
         double armAngle = this.angle + Mth.TWO_PI * arm / ARMS + layer * 0.4D;
         double relativeHeight = (ritualTick * 0.05D + layer * 0.5D + (double) arm / ARMS) % 1.0D;
         double layerRadius = radius * (1.0D - relativeHeight * 0.3D);
-        level.addParticle(
-            arm == 0 ? ParticleTypes.SOUL : ParticleTypes.SCULK_SOUL,
-            center.x() + Math.cos(armAngle) * layerRadius,
-            center.y() + relativeHeight * maxHeight,
-            center.z() + Math.sin(armAngle) * layerRadius,
+        EffectHelper.spawnParticle(
+            level,
+            arm == 0 ? this.armParticle : ParticleTypes.SCULK_SOUL,
+            center.add(
+                Math.cos(armAngle) * layerRadius,
+                relativeHeight * maxHeight,
+                Math.sin(armAngle) * layerRadius),
             -Math.sin(armAngle) * 0.05D,
             0.02D,
             Math.cos(armAngle) * 0.05D);
@@ -79,20 +87,24 @@ final class SoulVortexEffect {
     RandomSource random = level.getRandom();
     if (ritualTick % 2 == 0) {
       double smokeAngle = random.nextDouble() * Mth.TWO_PI;
-      level.addParticle(
+      EffectHelper.spawnParticle(
+          level,
           ParticleTypes.LARGE_SMOKE,
-          center.x() + Math.cos(smokeAngle) * START_RADIUS,
-          center.y(),
-          center.z() + Math.sin(smokeAngle) * START_RADIUS,
+          center.add(
+              Math.cos(smokeAngle) * START_RADIUS,
+              0.0D,
+              Math.sin(smokeAngle) * START_RADIUS),
           0.0D,
           0.03D,
           0.0D);
     }
-    level.addParticle(
+    EffectHelper.spawnParticle(
+        level,
         ParticleTypes.ASH,
-        center.x() + random.triangle(0.0D, 3.0D),
-        center.y() + random.nextDouble() * 2.0D,
-        center.z() + random.triangle(0.0D, 3.0D),
+        center.add(
+            random.triangle(0.0D, 3.0D),
+            random.nextDouble() * 2.0D,
+            random.triangle(0.0D, 3.0D)),
         0.0D,
         0.0D,
         0.0D);

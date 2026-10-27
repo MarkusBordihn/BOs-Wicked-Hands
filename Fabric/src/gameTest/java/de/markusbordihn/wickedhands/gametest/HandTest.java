@@ -38,11 +38,6 @@ public class HandTest {
   }
 
   @GameTest(structure = "wicked_hands:gametest.1x1x1")
-  public void testRottenHandDropsLifelessRottenHand(GameTestHelper helper) {
-    this.wildHandGameTests.testRottenHandDropsLifelessRottenHand(helper);
-  }
-
-  @GameTest(structure = "wicked_hands:gametest.1x1x1")
   public void testSummonedRottenHandDropsLifelessRottenHand(GameTestHelper helper) {
     this.wildHandGameTests.testSummonedRottenHandDropsLifelessRottenHand(helper);
   }
@@ -100,6 +95,21 @@ public class HandTest {
   @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = HandGameTests.RITUAL_MAX_TICKS)
   public void testFallenCompanionWithoutOwnerLeavesProtectedRemains(GameTestHelper helper) {
     this.revivalRitualGameTests.testFallenCompanionWithoutOwnerLeavesProtectedRemains(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1", maxTicks = HandGameTests.RITUAL_MAX_TICKS)
+  public void testFallenCompanionWithFullInventoryLeavesProtectedRemains(GameTestHelper helper) {
+    this.revivalRitualGameTests.testFallenCompanionWithFullInventoryLeavesProtectedRemains(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testBoundRemainsResistAllButTheirOwner(GameTestHelper helper) {
+    this.revivalRitualGameTests.testBoundRemainsResistAllButTheirOwner(helper);
+  }
+
+  @GameTest(structure = "wicked_hands:gametest.1x1x1")
+  public void testRunningRitualProtectsLifelessHand(GameTestHelper helper) {
+    this.revivalRitualGameTests.testRunningRitualProtectsLifelessHand(helper);
   }
 
   @GameTest(structure = "wicked_hands:gametest.1x1x1")
@@ -292,6 +302,13 @@ public class HandTest {
       maxTicks = HandGameTests.AFTER_AWAKENING_MAX_TICKS)
   public void testCompanionDefendsAndJoinsOwner(GameTestHelper helper) {
     this.companionBehaviourGameTests.testCompanionDefendsAndJoinsOwner(helper);
+  }
+
+  @GameTest(
+      structure = "wicked_hands:gametest.1x1x1",
+      maxTicks = HandGameTests.AFTER_AWAKENING_MAX_TICKS)
+  public void testWoundedCompanionRetreatsFromCombat(GameTestHelper helper) {
+    this.companionBehaviourGameTests.testWoundedCompanionRetreatsFromCombat(helper);
   }
 
   @GameTest(

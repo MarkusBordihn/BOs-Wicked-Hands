@@ -74,12 +74,12 @@ public class RottenHandEntity extends AbstractCompanionHandEntity {
       EntityType<RottenHandEntity> entityType,
       ServerLevelAccessor level,
       EntitySpawnReason spawnReason,
-      BlockPos blockPos,
+      BlockPos spawnPosition,
       RandomSource random) {
     return level.getDifficulty() != Difficulty.PEACEFUL
         && level.getLevel().isDarkOutside()
-        && Monster.isDarkEnoughToSpawn(level, blockPos, random)
-        && Mob.checkMobSpawnRules(entityType, level, spawnReason, blockPos, random);
+        && Monster.isDarkEnoughToSpawn(level, spawnPosition, random)
+        && Mob.checkMobSpawnRules(entityType, level, spawnReason, spawnPosition, random);
   }
 
   @Override

@@ -189,6 +189,48 @@ public class CompanionBehaviourGameTests extends HandGameTests {
         .thenSucceed();
   }
 
+  public void testWoundedCompanionRetreatsFromCombat(GameTestHelper helper) {
+    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    placeBesideRitual(helper, owner);
+    startRottenHandRitual(helper, owner);
+
+    AtomicReference<RottenHandEntity> companion = new AtomicReference<>();
+    AtomicReference<Mob> attacker = new AtomicReference<>();
+    helper
+        .startSequence()
+        .thenIdle(AFTER_RITUAL_TICKS)
+        .thenExecute(
+            () -> {
+              companion.set(findEntityNearTestPosition(helper, RottenHandEntity.class));
+              attacker.set(spawnMobWithoutAi(helper, EntityType.ZOMBIE, MONSTER_POSITION));
+              owner.setLastHurtByMob(attacker.get());
+            })
+        .thenWaitUntil(
+            () ->
+                helper.assertTrue(
+                    companion.get().getTarget() == attacker.get(),
+                    Component.literal("Companion did not defend its owner")))
+        .thenExecute(() -> companion.get().setHealth(WOUNDED_COMPANION_HEALTH))
+        .thenWaitUntil(
+            () ->
+                helper.assertTrue(
+                    companion.get().isRetreating() && companion.get().getTarget() == null,
+                    Component.literal("Wounded companion kept fighting")))
+        .thenExecute(
+            () ->
+                helper.assertFalse(
+                    companion.get().canAttack(attacker.get()),
+                    Component.literal("Retreating companion may still attack")))
+        .thenExecute(() -> companion.get().setHealth(companion.get().getMaxHealth()))
+        .thenWaitUntil(
+            () ->
+                helper.assertTrue(
+                    !companion.get().isRetreating()
+                        && companion.get().canAttack(attacker.get()),
+                    Component.literal("Recovered companion did not return to combat")))
+        .thenSucceed();
+  }
+
   public void testCompanionIgnoresOwnerHittingSiblingCompanion(GameTestHelper helper) {
     ServerPlayer owner = helper.makeMockServerPlayerInLevel();
     placeBesideRitual(helper, owner);

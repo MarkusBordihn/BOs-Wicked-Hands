@@ -202,8 +202,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
                     owner.hasEffect(MobEffects.REGENERATION),
                     Component.literal("Witch hand mended a healthy owner")))
         .thenExecute(
-            () ->
-                owner.setHealth(owner.getMaxHealth() * WitchHandEntity.MENDING_HEALTH_RATIO / 2))
+            () -> owner.setHealth(owner.getMaxHealth() * WitchHandEntity.MENDING_HEALTH_RATIO / 2))
         .thenWaitUntil(
             () ->
                 helper.assertTrue(

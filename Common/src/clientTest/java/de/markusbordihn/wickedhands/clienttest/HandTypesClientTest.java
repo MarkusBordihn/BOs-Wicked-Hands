@@ -53,6 +53,7 @@ class HandTypesClientTest extends ClientTestBase {
   @ParameterizedTest(name = "{0}")
   @ValueSource(
       strings = {
+        "rotten_hand",
         "husk_hand",
         "drowned_hand",
         "bone_hand",

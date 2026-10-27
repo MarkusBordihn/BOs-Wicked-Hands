@@ -67,19 +67,17 @@ public final class AwakeningEffects {
   private void spawnAftermath(Level level) {
     RandomSource random = level.getRandom();
     Vec3 handCenter = EffectHelper.handCenter(this.hand);
-    level.addParticle(
+    EffectHelper.spawnParticle(
+        level,
         ParticleTypes.SMOKE,
-        handCenter.x() + random.triangle(0.0D, 0.3D),
-        handCenter.y(),
-        handCenter.z() + random.triangle(0.0D, 0.3D),
+        handCenter.add(random.triangle(0.0D, 0.3D), 0.0D, random.triangle(0.0D, 0.3D)),
         0.0D,
         0.03D,
         0.0D);
-    level.addParticle(
+    EffectHelper.spawnParticle(
+        level,
         ParticleTypes.SOUL,
-        handCenter.x() + random.triangle(0.0D, 1.0D),
-        handCenter.y() + 0.5D,
-        handCenter.z() + random.triangle(0.0D, 1.0D),
+        handCenter.add(random.triangle(0.0D, 1.0D), 0.5D, random.triangle(0.0D, 1.0D)),
         0.0D,
         0.05D,
         0.0D);

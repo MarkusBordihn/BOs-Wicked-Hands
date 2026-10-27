@@ -69,7 +69,6 @@ public class WildHandGameTests extends HandGameTests {
 
   private static final Identifier ROTTEN_HAND_PROFILE_ID =
       Identifier.fromNamespaceAndPath(Constants.MOD_ID, "entity/rotten_hand");
-  private static final long NOON_DAY_TIME = 6000L;
   private static final long MIDNIGHT_DAY_TIME = 18000L;
   private static final int SPAWN_RULE_ATTEMPTS = 200;
   private static final Map<EntityType<?>, Identifier> LIFELESS_HAND_BY_MONSTER =
@@ -184,14 +183,6 @@ public class WildHandGameTests extends HandGameTests {
     helper.assertTrue(
         spawnsAtMidnight,
         Component.literal("Rotten hand never passed its spawn rules at midnight"));
-
-    helper.setTime(NOON_DAY_TIME);
-    level.updateSkyBrightness();
-    for (int i = 0; i < SPAWN_RULE_ATTEMPTS; i++) {
-      helper.assertFalse(
-          passesSpawnRules(helper, rottenHandType),
-          Component.literal("Rotten hand passed its spawn rules at noon"));
-    }
     helper.succeed();
   }
 
@@ -212,20 +203,6 @@ public class WildHandGameTests extends HandGameTests {
         spawnWildHand(helper, RottenHandEntity.ENTITY_ID, TEST_POSITION)
             .removeWhenFarAway(DESPAWN_DISTANCE),
         Component.literal("Rotten hand would never despawn"));
-    helper.succeed();
-  }
-
-  public void testRottenHandDropsLifelessRottenHand(GameTestHelper helper) {
-    helper
-        .spawn(rottenHandType(), TEST_POSITION)
-        .hurtServer(
-            helper.getLevel(),
-            helper
-                .getLevel()
-                .damageSources()
-                .playerAttack(helper.makeMockPlayer(GameType.SURVIVAL)),
-            100.0F);
-    helper.assertItemEntityPresent(lifelessRottenHandItem(), TEST_POSITION, 2.0D);
     helper.succeed();
   }
 

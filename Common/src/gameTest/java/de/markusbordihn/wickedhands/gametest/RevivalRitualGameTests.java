@@ -61,6 +61,8 @@ import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -455,6 +457,94 @@ public class RevivalRitualGameTests extends HandGameTests {
               Component.literal("The owner could not pick up the protected remains"));
           helper.succeed();
         });
+  }
+
+  public void testFallenCompanionWithFullInventoryLeavesProtectedRemains(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    owner.setGameMode(GameType.SURVIVAL);
+    placeBesideRitual(helper, owner);
+    startRottenHandRitual(helper, owner);
+
+    helper.runAfterDelay(
+        AFTER_RITUAL_TICKS,
+        () -> {
+          for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
+            owner
+                .getInventory()
+                .setItem(slot, new ItemStack(Items.STONE, Item.DEFAULT_MAX_STACK_SIZE));
+          }
+          RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
+          companion.hurtServer(level, level.damageSources().magic(), 100.0F);
+
+          List<ItemEntity> remains =
+              level.getEntitiesOfClass(
+                  ItemEntity.class,
+                  owner.getBoundingBox().inflate(3.0D),
+                  itemEntity -> itemEntity.getItem().is(lifelessRottenHandItem()));
+          helper.assertTrue(
+              remains.size() == 1,
+              Component.literal("Expected the remains beside the owner, found " + remains.size()));
+          ItemEntity droppedRemains = remains.getFirst();
+          helper.assertTrue(
+              droppedRemains.isInvulnerable() && droppedRemains.getAge() < 0,
+              Component.literal("Remains beside a full inventory could burn or despawn"));
+
+          droppedRemains.setNoPickUpDelay();
+          Player stranger = helper.makeMockPlayer(GameType.SURVIVAL);
+          droppedRemains.playerTouch(stranger);
+          helper.assertTrue(
+              !droppedRemains.isRemoved()
+                  && findInInventory(stranger, lifelessRottenHandItem()).isEmpty(),
+              Component.literal("A stranger picked up the remains beside the owner"));
+          helper.succeed();
+        });
+  }
+
+  public void testBoundRemainsResistAllButTheirOwner(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    Player owner = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player stranger = helper.makeMockPlayer(GameType.SURVIVAL);
+    ItemStack boundRemains =
+        LifelessHandItem.createCompanionRemains(
+            LifelessRottenHandEntity.ENTITY_ID,
+            UUID.randomUUID(),
+            Optional.of(owner.getUUID()),
+            null);
+    LifelessRottenHandEntity lifelessHand =
+        placeLifelessHand(helper, owner, boundRemains, LifelessRottenHandEntity.class);
+    Mob zombie = spawnMobWithoutAi(helper, EntityType.ZOMBIE, MONSTER_POSITION);
+
+    helper.assertFalse(
+        lifelessHand.hurtServer(level, level.damageSources().lava(), 100.0F)
+            || lifelessHand.hurtServer(level, level.damageSources().mobAttack(zombie), 100.0F)
+            || lifelessHand.hurtServer(
+                level, level.damageSources().playerAttack(stranger), 100.0F),
+        Component.literal("Bound remains were hurt by lava, a monster or a stranger"));
+    helper.assertTrue(
+        lifelessHand.hurtServer(level, level.damageSources().playerAttack(owner), 100.0F)
+            && lifelessHand.isDeadOrDying(),
+        Component.literal("The owner could not break their placed remains"));
+
+    List<ItemEntity> remains = findItemEntities(helper, lifelessRottenHandItem());
+    helper.assertTrue(
+        remains.size() == 1
+            && remains.getFirst().isInvulnerable()
+            && remains.getFirst().getAge() < 0,
+        Component.literal("Broken bound remains did not drop as protected remains"));
+    helper.succeed();
+  }
+
+  public void testRunningRitualProtectsLifelessHand(GameTestHelper helper) {
+    ServerLevel level = helper.getLevel();
+    Player owner = helper.makeMockPlayer(GameType.SURVIVAL);
+    AbstractLifelessHandEntity lifelessHand = startRottenHandRitual(helper, owner);
+
+    helper.assertFalse(
+        lifelessHand.hurtServer(level, level.damageSources().playerAttack(owner), 100.0F)
+            || lifelessHand.hurtServer(level, level.damageSources().lava(), 100.0F),
+        Component.literal("The lifeless hand was hurt during its ritual"));
+    helper.succeed();
   }
 
   public void testFallenCompanionReturnsAndRevivesWithSameIdentity(GameTestHelper helper) {

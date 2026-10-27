@@ -325,12 +325,7 @@ class HandModelResourceTest {
 
   @ParameterizedTest
   @ValueSource(
-      strings = {
-        BoneHandEntity.ID,
-        StrayHandEntity.ID,
-        WitheredHandEntity.ID,
-        BoggedHandEntity.ID
-      })
+      strings = {BoneHandEntity.ID, StrayHandEntity.ID, WitheredHandEntity.ID, BoggedHandEntity.ID})
   @DisplayName("Skeleton hand texture renders from both sides")
   void skeletonHandTextureIsDoubleSided(String entityId) {
     for (JsonElement texture : readModel(entityId).getAsJsonArray("textures")) {

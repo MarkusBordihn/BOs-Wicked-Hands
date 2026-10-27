@@ -60,15 +60,6 @@ public class StrayHandEntity extends AbstractCompanionHandEntity {
       target.setTicksFrozen(Math.max(target.getTicksFrozen(), HARMLESS_FROZEN_TICKS));
     }
     this.playSound(SoundEvents.POWDER_SNOW_BREAK, 1.0F, 1.2F);
-    serverLevel.sendParticles(
-        ParticleTypes.SNOWFLAKE,
-        target.getX(),
-        target.getY(0.5D),
-        target.getZ(),
-        16,
-        0.3D,
-        0.3D,
-        0.3D,
-        0.02D);
+    spawnHitParticles(serverLevel, target, ParticleTypes.SNOWFLAKE, 16, 0.02D);
   }
 }

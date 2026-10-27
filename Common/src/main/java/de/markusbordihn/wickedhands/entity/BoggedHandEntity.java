@@ -60,15 +60,6 @@ public class BoggedHandEntity extends AbstractCompanionHandEntity {
   protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(new MobEffectInstance(MobEffects.POISON, POISON_DURATION_TICKS), this);
     this.playSound(SoundEvents.BOGGED_AMBIENT, 0.6F, 1.6F);
-    serverLevel.sendParticles(
-        ParticleTypes.ITEM_SLIME,
-        target.getX(),
-        target.getY(0.5D),
-        target.getZ(),
-        12,
-        0.3D,
-        0.3D,
-        0.3D,
-        0.0D);
+    spawnHitParticles(serverLevel, target, ParticleTypes.ITEM_SLIME, 12, 0.0D);
   }
 }

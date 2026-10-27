@@ -5,9 +5,19 @@
 This change log includes the summarized changes. For the full changelog, please go to
 the [GitHub History][history] instead.
 
+### 1.0.0
+
+- Fixed companion remains beside a full inventory burning, despawning or being taken by others.
+- Fixed placed companion remains being destroyed by mobs, lava or other players.
+- Fixed a lifeless hand being destroyed while its ritual is running.
+- Fixed a failed revival removing the lifeless hand or waking a second copy of the companion.
+- Added wounded companion hands retreating from combat until they are healed to half health.
+- Added a look of its own to the ritual of every hand, from snowflakes to witch sparkles.
+
 ### 0.5.0 (beta)
 
-- Fixed shoulder hands falling off on damage their bonus protects against, like fire or poison arrows.
+- Fixed shoulder hands falling off on damage their bonus protects against, like fire or poison
+  arrows.
 - Fixed the "Drowned Hand" falling off in water and the "Stray Hand" in powder snow.
 - Changed companion hands to ignore Creepers, they no longer join a fight against them.
 - Changed the required version to Easy NPC 7.17.1.

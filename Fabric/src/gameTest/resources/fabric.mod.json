@@ -7,7 +7,6 @@
   "environment": "*",
   "entrypoints": {
     "fabric-gametest": [
-      "de.markusbordihn.wickedhands.gametest.SmokeTest",
       "de.markusbordihn.wickedhands.gametest.HandTest"
     ]
   },

@@ -22,6 +22,8 @@ package de.markusbordihn.wickedhands.loot;
 import de.markusbordihn.wickedhands.Constants;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -32,23 +34,18 @@ import net.minecraft.world.level.storage.loot.entries.NestedLootTable;
 public final class HandLootInjections {
 
   private static final Map<ResourceKey<LootTable>, ResourceKey<LootTable>> INJECTIONS =
-      Map.of(
-          vanillaEntityLootTable("zombie"),
-          injection("zombie"),
-          vanillaEntityLootTable("drowned"),
-          injection("drowned"),
-          vanillaEntityLootTable("skeleton"),
-          injection("skeleton"),
-          vanillaEntityLootTable("husk"),
-          injection("husk"),
-          vanillaEntityLootTable("stray"),
-          injection("stray"),
-          vanillaEntityLootTable("wither_skeleton"),
-          injection("wither_skeleton"),
-          vanillaEntityLootTable("bogged"),
-          injection("bogged"),
-          vanillaEntityLootTable("witch"),
-          injection("witch"));
+      Stream.of(
+              "zombie",
+              "drowned",
+              "skeleton",
+              "husk",
+              "stray",
+              "wither_skeleton",
+              "bogged",
+              "witch")
+          .collect(
+              Collectors.toUnmodifiableMap(
+                  HandLootInjections::vanillaEntityLootTable, HandLootInjections::injection));
 
   private HandLootInjections() {}
 

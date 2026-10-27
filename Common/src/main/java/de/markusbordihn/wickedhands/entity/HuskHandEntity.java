@@ -21,6 +21,7 @@ package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
 import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -38,6 +39,8 @@ import net.minecraft.world.level.block.Blocks;
 public class HuskHandEntity extends AbstractCompanionHandEntity {
 
   public static final String ID = "husk_hand";
+  public static final ParticleOptions SAND_DUST =
+      new BlockParticleOption(ParticleTypes.FALLING_DUST, Blocks.SAND.defaultBlockState());
   public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
   private static final double ATTACK_DAMAGE = 2.0D;
   private static final int PARCH_DURATION_TICKS = 80;
@@ -58,15 +61,6 @@ public class HuskHandEntity extends AbstractCompanionHandEntity {
   protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, PARCH_DURATION_TICKS), this);
     this.playSound(SoundEvents.HUSK_AMBIENT, 0.6F, 1.4F);
-    serverLevel.sendParticles(
-        new BlockParticleOption(ParticleTypes.FALLING_DUST, Blocks.SAND.defaultBlockState()),
-        target.getX(),
-        target.getY(0.5D),
-        target.getZ(),
-        16,
-        0.3D,
-        0.3D,
-        0.3D,
-        0.0D);
+    spawnHitParticles(serverLevel, target, SAND_DUST, 16, 0.0D);
   }
 }

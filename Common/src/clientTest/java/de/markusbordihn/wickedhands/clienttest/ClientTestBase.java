@@ -107,10 +107,12 @@ abstract class ClientTestBase {
   }
 
   static void lookAtCenterOf(Entity entity) {
-    Position min = entity.boundingBox().min();
-    Position max = entity.boundingBox().max();
+    Position lowerCorner = entity.boundingBox().min();
+    Position upperCorner = entity.boundingBox().max();
     client.lookAtPoint(
-        (min.x() + max.x()) / 2D, (min.y() + max.y()) / 2D, (min.z() + max.z()) / 2D);
+        (lowerCorner.x() + upperCorner.x()) / 2D,
+        (lowerCorner.y() + upperCorner.y()) / 2D,
+        (lowerCorner.z() + upperCorner.z()) / 2D);
     client.await(Until.ticksElapsed(LOOK_TICKS));
   }
 

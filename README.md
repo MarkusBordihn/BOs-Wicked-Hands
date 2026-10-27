@@ -29,6 +29,12 @@ Both dependencies are **required** and must be installed alongside this mod on c
 
 Launchers like the CurseForge App or the Modrinth App install both dependencies automatically.
 
+## 💀 Remains of fallen companions
+
+The remains of a fallen companion stay bound to its owner. Mobs, lava, fire and other players
+cannot destroy them, and as a dropped item they never despawn and only their owner can pick them
+up. Only the owner, a player in Creative mode, the void or `/kill` can remove them.
+
 [curseforge]: https://www.curseforge.com/minecraft/mc-mods/wicked-hands
 
 [modrinth]: https://modrinth.com/project/wicked-hands

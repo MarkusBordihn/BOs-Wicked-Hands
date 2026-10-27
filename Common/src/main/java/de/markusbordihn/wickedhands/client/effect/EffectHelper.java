@@ -20,6 +20,7 @@
 package de.markusbordihn.wickedhands.client.effect;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -43,14 +44,18 @@ final class EffectHelper {
 
   static void spawnSoulStream(Level level, Vec3 from, Vec3 to) {
     Vec3 velocity = to.subtract(from).scale(SOUL_STREAM_SPEED);
+    spawnParticle(level, ParticleTypes.SCULK_SOUL, from, velocity.x(), velocity.y(), velocity.z());
+  }
+
+  static void spawnParticle(
+      Level level,
+      ParticleOptions particle,
+      Vec3 position,
+      double velocityX,
+      double velocityY,
+      double velocityZ) {
     level.addParticle(
-        ParticleTypes.SCULK_SOUL,
-        from.x(),
-        from.y(),
-        from.z(),
-        velocity.x(),
-        velocity.y(),
-        velocity.z());
+        particle, position.x(), position.y(), position.z(), velocityX, velocityY, velocityZ);
   }
 
   static void playSound(

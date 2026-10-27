@@ -122,6 +122,23 @@ public enum ShoulderPassive {
         .findFirst();
   }
 
+  private static boolean isPoisonArrow(Entity entity) {
+    if (!(entity instanceof Arrow arrow)) {
+      return false;
+    }
+
+    PotionContents potionContents =
+        arrow
+            .getPickupItemStackOrigin()
+            .getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+    for (MobEffectInstance mobEffectInstance : potionContents.getAllEffects()) {
+      if (mobEffectInstance.is(MobEffects.POISON)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public Identifier getEffectId() {
     return this.effectId;
   }
@@ -159,23 +176,6 @@ public enum ShoulderPassive {
   boolean holdsOnThrough(DamageSource damageSource) {
     return damageSource.is(this.grippingDamage)
         || (this == MOSSY_VEINS && isPoisonArrow(damageSource.getDirectEntity()));
-  }
-
-  private static boolean isPoisonArrow(Entity entity) {
-    if (!(entity instanceof Arrow arrow)) {
-      return false;
-    }
-
-    PotionContents potionContents =
-        arrow
-            .getPickupItemStackOrigin()
-            .getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
-    for (MobEffectInstance mobEffectInstance : potionContents.getAllEffects()) {
-      if (mobEffectInstance.is(MobEffects.POISON)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   boolean holdsOnInSurroundingsOf(ServerPlayer owner) {

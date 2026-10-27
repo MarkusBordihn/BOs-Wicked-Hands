@@ -23,34 +23,48 @@ import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.Until;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.Parameters;
 import de.markusbordihn.clientruntimeinterfacetoolkit.testrunner.data.api.Entity;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class RevivalRitualClientTest extends ClientTestBase {
 
-  private static final String LIT_CANDLE = "minecraft:candle[lit=true]";
+  private static final String CANDLE = "minecraft:candle";
+  private static final int[] CANDLE_OFFSETS = {-1, 1};
   private static final long VORTEX_TICKS = 60;
 
-  @Test
-  @DisplayName("Revival ritual wakes a lifeless rotten hand as companion")
-  void revivalRitualWakesCompanion() {
+  @ParameterizedTest(name = "{0}_hand")
+  @CsvSource({
+    "rotten, rotten_flesh",
+    "husk, sand",
+    "drowned, kelp",
+    "bone, bone_meal",
+    "stray, snowball",
+    "withered, coal",
+    "bogged, red_mushroom",
+    "witch, spider_eye"
+  })
+  @DisplayName("Revival ritual wakes a lifeless hand as companion despite damage")
+  void revivalRitualWakesCompanion(String handType, String ritualOffering) {
     enterTestArea();
-    Entity lifelessHand = placeLifelessHand(LIFELESS_ROTTEN_HAND);
-    for (int offsetX : new int[] {-1, 1}) {
-      for (int offsetZ : new int[] {-1, 1}) {
-        client.setBlock(HAND_BLOCK_X + offsetX, FLOOR_Y, HAND_BLOCK_Z + offsetZ, LIT_CANDLE);
+    Entity lifelessHand = placeLifelessHand(MOD_ID + ":lifeless_" + handType + "_hand");
+    for (int offsetX : CANDLE_OFFSETS) {
+      for (int offsetZ : CANDLE_OFFSETS) {
+        client.setBlock(
+            HAND_BLOCK_X + offsetX, FLOOR_Y, HAND_BLOCK_Z + offsetZ, CANDLE + "[lit=true]");
       }
     }
-    client.equip("minecraft:rotten_flesh");
+    client.renderSettings(Parameters.of().with("particles", "all"));
+    client.equip("minecraft:" + ritualOffering);
     lookAtCenterOf(lifelessHand);
     client.useHeldItem();
-    client.await(Until.ticksElapsed(VORTEX_TICKS));
-    client.saveScreenshot("revival_ritual");
+    client.await(Until.ticksElapsed(RENDER_TICKS + VORTEX_TICKS));
+    client.saveScreenshot(handType + "_revival_ritual");
 
-    Entity companion = removeAfterTest(awaitEntityOfType(ROTTEN_HAND));
+    Entity companion = removeAfterTest(awaitEntityOfType(MOD_ID + ":" + handType + "_hand"));
     client.await(Until.entityAbsent(Parameters.of("uuid", lifelessHand.uuid())));
     lookAtCenterOf(companion);
     client.await(Until.ticksElapsed(RENDER_TICKS));
-    client.saveScreenshot("revived_companion");
+    client.saveScreenshot(handType + "_revived_companion");
     client.runCommand("effect clear @s minecraft:darkness");
     client.runCommand("advancement revoke @s from " + MOD_ID + ":root");
   }
