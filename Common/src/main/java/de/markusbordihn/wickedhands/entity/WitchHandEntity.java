@@ -34,6 +34,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.level.Level;
 
 public class WitchHandEntity extends AbstractCompanionHandEntity {
@@ -87,7 +88,7 @@ public class WitchHandEntity extends AbstractCompanionHandEntity {
             owner.getBoundingBox().inflate(MENDING_RANGE),
             hand -> hand.isCompanion() && owner.getUUID().equals(hand.getOwnerUUID()))
         .forEach(hand -> hand.addEffect(createMendingEffect(), this));
-    this.swing(InteractionHand.MAIN_HAND);
+    this.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
     this.playSound(SoundEvents.WITCH_DRINK, 0.7F, 1.4F);
     serverLevel.sendParticles(
         ParticleTypes.HAPPY_VILLAGER,

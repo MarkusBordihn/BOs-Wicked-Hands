@@ -90,7 +90,7 @@ public class LifelessHandItem extends Item {
       return;
     }
 
-    remains.setInvulnerable(true);
+    remains.setPermanentlyInvulnerable(true);
     remains.setUnlimitedLifetime();
     remains.setTarget(ownerUUID);
   }

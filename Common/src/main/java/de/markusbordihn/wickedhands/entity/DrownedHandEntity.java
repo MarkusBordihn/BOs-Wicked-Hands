@@ -34,6 +34,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.level.Level;
 
 public class DrownedHandEntity extends AbstractCompanionHandEntity {
@@ -96,7 +97,7 @@ public class DrownedHandEntity extends AbstractCompanionHandEntity {
   private void extinguish(ServerLevel serverLevel, LivingEntity owner) {
     this.nextExtinguishGameTime = serverLevel.getGameTime() + EXTINGUISH_COOLDOWN_TICKS;
     owner.clearFire();
-    this.swing(InteractionHand.MAIN_HAND);
+    this.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
     this.playSound(SoundEvents.GENERIC_EXTINGUISH_FIRE, 0.7F, 1.6F);
     serverLevel.sendParticles(
         ParticleTypes.SPLASH,

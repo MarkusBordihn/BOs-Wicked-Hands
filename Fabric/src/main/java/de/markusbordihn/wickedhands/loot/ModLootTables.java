@@ -28,6 +28,7 @@ public final class ModLootTables {
   public static void register() {
     LootTableEvents.MODIFY.register(
         (lootTableKey, lootTableBuilder, lootTableSource, registries) ->
-            HandLootInjections.createDropPool(lootTableKey).ifPresent(lootTableBuilder::withPool));
+            HandLootInjections.createDropPool(lootTableKey, registries)
+                .ifPresent(lootTableBuilder::withPool));
   }
 }

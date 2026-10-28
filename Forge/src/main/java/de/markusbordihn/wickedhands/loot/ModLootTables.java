@@ -19,20 +19,24 @@
 
 package de.markusbordihn.wickedhands.loot;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraftforge.event.LootTableLoadEvent;
+import com.mojang.serialization.MapCodec;
+import de.markusbordihn.wickedhands.Constants;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public final class ModLootTables {
 
+  private static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>>
+      LOOT_MODIFIER_SERIALIZERS =
+          DeferredRegister.create(
+              ForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Constants.MOD_ID);
+
   private ModLootTables() {}
 
-  public static void registerEvents() {
-    LootTableLoadEvent.BUS.addListener(ModLootTables::onLootTableLoad);
-  }
-
-  private static void onLootTableLoad(LootTableLoadEvent event) {
-    HandLootInjections.createDropPool(ResourceKey.create(Registries.LOOT_TABLE, event.getName()))
-        .ifPresent(dropPool -> event.getTable().addPool(dropPool.build()));
+  public static void register(BusGroup modBusGroup) {
+    LOOT_MODIFIER_SERIALIZERS.register("hand_drops", () -> HandDropsLootModifier.CODEC);
+    LOOT_MODIFIER_SERIALIZERS.register(modBusGroup);
   }
 }

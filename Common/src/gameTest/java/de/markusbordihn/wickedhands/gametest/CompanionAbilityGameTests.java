@@ -48,6 +48,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.item.Item;
@@ -87,7 +88,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
                   && owner.getAdvancements().getOrStartProgress(companionAdvancement).isDone(),
               Component.literal("Reviving the companion did not grant its advancement"));
 
-          Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION.east(2));
+          Pig pig = helper.spawn(EntityTypes.PIG, TEST_POSITION.east(2));
           helper.assertTrue(
               companion.doHurtTarget(helper.getLevel(), pig) && hitAbilityApplied.test(pig),
               Component.literal("Companion hit did not apply its ability"));
@@ -116,20 +117,20 @@ public class CompanionAbilityGameTests extends HandGameTests {
         AFTER_RITUAL_TICKS,
         () -> {
           RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
-          Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION.east(2));
+          Pig pig = helper.spawn(EntityTypes.PIG, TEST_POSITION.east(2));
           helper.assertTrue(
               companion.doHurtTarget(level, pig) && pig.hasEffect(MobEffects.SLOWNESS),
               Component.literal("Companion did not grab its target"));
 
           pig.removeEffect(MobEffects.SLOWNESS);
-          pig.invulnerableTime = 0;
+          pig.damageCooldownTime = 0;
           helper.assertTrue(
               companion.doHurtTarget(level, pig) && !pig.hasEffect(MobEffects.SLOWNESS),
               Component.literal("Companion grabbed again during the cooldown"));
 
           AbstractHandEntity wildRottenHand =
               spawnWildHand(helper, RottenHandEntity.ENTITY_ID, TEST_POSITION.west(2));
-          pig.invulnerableTime = 0;
+          pig.damageCooldownTime = 0;
           helper.assertTrue(
               wildRottenHand.doHurtTarget(level, pig) && !pig.hasEffect(MobEffects.SLOWNESS),
               Component.literal("Wild rotten hand grabbed its target"));
@@ -250,7 +251,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
         .thenWaitUntil(
             () -> assertActiveGesture(helper, boneHand.get(), null, "Bone hand is still awakening"))
         .thenExecute(
-            () -> zombie.set(spawnMobWithoutAi(helper, EntityType.ZOMBIE, MONSTER_POSITION)))
+            () -> zombie.set(spawnMobWithoutAi(helper, EntityTypes.ZOMBIE, MONSTER_POSITION)))
         .thenWaitUntil(
             () -> {
               keepApproaching(helper, zombie.get(), owner);

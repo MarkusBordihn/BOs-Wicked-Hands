@@ -40,16 +40,17 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.animal.pig.Pig;
@@ -57,7 +58,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -73,14 +74,14 @@ public class WildHandGameTests extends HandGameTests {
   private static final int SPAWN_RULE_ATTEMPTS = 200;
   private static final Map<EntityType<?>, Identifier> LIFELESS_HAND_BY_MONSTER =
       Map.of(
-          EntityType.ZOMBIE, LifelessRottenHandEntity.ENTITY_ID,
-          EntityType.DROWNED, LifelessDrownedHandEntity.ENTITY_ID,
-          EntityType.SKELETON, LifelessBoneHandEntity.ENTITY_ID,
-          EntityType.HUSK, LifelessHuskHandEntity.ENTITY_ID,
-          EntityType.STRAY, LifelessStrayHandEntity.ENTITY_ID,
-          EntityType.WITHER_SKELETON, LifelessWitheredHandEntity.ENTITY_ID,
-          EntityType.BOGGED, LifelessBoggedHandEntity.ENTITY_ID,
-          EntityType.WITCH, LifelessWitchHandEntity.ENTITY_ID);
+          EntityTypes.ZOMBIE, LifelessRottenHandEntity.ENTITY_ID,
+          EntityTypes.DROWNED, LifelessDrownedHandEntity.ENTITY_ID,
+          EntityTypes.SKELETON, LifelessBoneHandEntity.ENTITY_ID,
+          EntityTypes.HUSK, LifelessHuskHandEntity.ENTITY_ID,
+          EntityTypes.STRAY, LifelessStrayHandEntity.ENTITY_ID,
+          EntityTypes.WITHER_SKELETON, LifelessWitheredHandEntity.ENTITY_ID,
+          EntityTypes.BOGGED, LifelessBoggedHandEntity.ENTITY_ID,
+          EntityTypes.WITCH, LifelessWitchHandEntity.ENTITY_ID);
   private static final int LOOT_ROLLS_PER_MONSTER = 2000;
   private static final float FIRE_DAMAGE = 4.0F;
   private static final int MINIMUM_EXPECTED_HAND_DROPS = 20;
@@ -156,23 +157,22 @@ public class WildHandGameTests extends HandGameTests {
 
   public void testRottenHandSpawnsNaturallyAtNight(GameTestHelper helper) {
     EntityType<?> rottenHandType = rottenHandType();
+    ServerLevel level = helper.getLevel();
     helper.assertTrue(
-        helper
-            .getLevel()
-            .registryAccess()
-            .lookupOrThrow(Registries.BIOME)
-            .getValueOrThrow(Biomes.PLAINS)
-            .getMobSettings()
-            .getMobs(MobCategory.MONSTER)
+        level
+            .getBiome(helper.absolutePos(TEST_POSITION))
+            .value()
+            .getAttributes()
+            .applyModifier(EnvironmentAttributes.NATURAL_MOB_SPAWNS, MobSpawnSettings.EMPTY)
+            .getMobsInCategory(MobCategory.MONSTER)
             .unwrap()
             .stream()
             .anyMatch(spawner -> spawner.value().type() == rottenHandType),
-        Component.literal("Rotten hand is missing from the plains monster spawns"));
+        Component.literal("Rotten hand is missing from the monster spawns of the test biome"));
     helper.assertTrue(
         SpawnPlacements.getPlacementType(rottenHandType) == RottenHandEntity.SPAWN_PLACEMENT_TYPE,
         Component.literal("Rotten hand has no registered spawn placement"));
 
-    ServerLevel level = helper.getLevel();
     helper.setBlock(TEST_POSITION.below(), Blocks.STONE);
     helper.setTime(MIDNIGHT_DAY_TIME);
     level.updateSkyBrightness();
@@ -241,7 +241,7 @@ public class WildHandGameTests extends HandGameTests {
   }
 
   public void testRottenHandAttacksAnimals(GameTestHelper helper) {
-    Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION);
+    Pig pig = helper.spawn(EntityTypes.PIG, TEST_POSITION);
     spawnWildHand(helper, RottenHandEntity.ENTITY_ID, TEST_POSITION);
     helper.succeedWhen(
         () ->

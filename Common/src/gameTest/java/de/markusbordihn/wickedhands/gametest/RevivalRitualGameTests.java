@@ -62,6 +62,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -513,7 +514,7 @@ public class RevivalRitualGameTests extends HandGameTests {
             null);
     LifelessRottenHandEntity lifelessHand =
         placeLifelessHand(helper, owner, boundRemains, LifelessRottenHandEntity.class);
-    Mob zombie = spawnMobWithoutAi(helper, EntityType.ZOMBIE, MONSTER_POSITION);
+    Mob zombie = spawnMobWithoutAi(helper, EntityTypes.ZOMBIE, MONSTER_POSITION);
 
     helper.assertFalse(
         lifelessHand.hurtServer(level, level.damageSources().lava(), 100.0F)

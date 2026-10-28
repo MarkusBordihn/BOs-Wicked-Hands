@@ -88,7 +88,7 @@ public class RottenHandEntity extends AbstractCompanionHandEntity {
         new MobEffectInstance(MobEffects.SLOWNESS, GRAB_DURATION_TICKS, GRAB_SLOWNESS_AMPLIFIER),
         this);
     target.setDeltaMovement(Vec3.ZERO);
-    target.hurtMarked = true;
+    target.syncVelocity = true;
     this.playSound(SoundEvents.SLIME_SQUISH_SMALL, 1.0F, 0.6F);
     BlockState groundState = target.getBlockStateOn();
     if (!groundState.isAir()) {

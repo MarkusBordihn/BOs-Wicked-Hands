@@ -172,7 +172,7 @@ class LifelessHandItemTest {
     UUID ownerUUID = UUID.randomUUID();
 
     LifelessHandItem.protectRemains(remains, ownerUUID);
-    verify(remains).setInvulnerable(true);
+    verify(remains).setPermanentlyInvulnerable(true);
     verify(remains).setUnlimitedLifetime();
     verify(remains).setTarget(ownerUUID);
   }

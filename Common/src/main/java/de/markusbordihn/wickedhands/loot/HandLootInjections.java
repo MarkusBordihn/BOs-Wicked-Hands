@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -60,8 +61,16 @@ public final class HandLootInjections {
         Identifier.fromNamespaceAndPath(Constants.MOD_ID, "injections/" + entityName));
   }
 
-  public static Optional<LootPool.Builder> createDropPool(ResourceKey<LootTable> lootTable) {
-    return Optional.ofNullable(INJECTIONS.get(lootTable))
-        .map(injection -> LootPool.lootPool().add(NestedLootTable.lootTableReference(injection)));
+  public static Optional<ResourceKey<LootTable>> injectionFor(ResourceKey<LootTable> lootTable) {
+    return Optional.ofNullable(INJECTIONS.get(lootTable));
+  }
+
+  public static Optional<LootPool.Builder> createDropPool(
+      ResourceKey<LootTable> lootTable, HolderGetter.Provider registries) {
+    return injectionFor(lootTable)
+        .map(
+            injection ->
+                LootPool.lootPool()
+                    .add(NestedLootTable.lootTableReference(registries.getOrThrow(injection))));
   }
 }

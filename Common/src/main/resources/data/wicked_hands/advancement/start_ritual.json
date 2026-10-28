@@ -3,15 +3,13 @@
   "criteria": {
     "ritual_started": {
       "conditions": {
-        "entity": [
-          {
-            "condition": "minecraft:entity_properties",
-            "entity": "this",
-            "predicate": {
-              "type": "#wicked_hands:lifeless_hands"
-            }
+        "entity": {
+          "type": "minecraft:entity_properties",
+          "entity": "this",
+          "predicate": {
+            "minecraft:entity_type": "#wicked_hands:lifeless_hands"
           }
-        ]
+        }
       },
       "trigger": "minecraft:summoned_entity"
     }

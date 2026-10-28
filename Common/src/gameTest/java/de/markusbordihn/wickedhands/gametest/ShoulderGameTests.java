@@ -56,8 +56,15 @@ public class ShoulderGameTests extends HandGameTests {
   // ServerPlayer.removeEntitiesOnShoulder ignores the first 20 ticks after a hand sat down.
   private static final int AFTER_SHOULDER_GRACE_TICKS = 25;
 
-  private static ServerPlayer makeVulnerableOwner(GameTestHelper helper) {
+  private static ServerPlayer makeOwnerInTestArea(GameTestHelper helper) {
     ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    // TestInstanceBlockEntity.encaseStructure puts a barrier at TEST_POSITION, hands cannot get off.
+    owner.snapTo(helper.absoluteVec(Vec3.atBottomCenterOf(TEST_POSITION.above())));
+    return owner;
+  }
+
+  private static ServerPlayer makeVulnerableOwner(GameTestHelper helper) {
+    ServerPlayer owner = makeOwnerInTestArea(helper);
     owner.getAbilities().invulnerable = false;
     // ServerPlayer.isInvulnerableTo spares every player whose client has not loaded yet.
     owner.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
@@ -112,7 +119,7 @@ public class ShoulderGameTests extends HandGameTests {
       Identifier rightHandId,
       Holder<Attribute> rightAttribute,
       ShoulderPassive rightPassive) {
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeOwnerInTestArea(helper);
     sitOnShoulder(helper, owner, leftHandId);
     sitOnShoulder(helper, owner, rightHandId);
     ShoulderPassiveHandler.update(owner);

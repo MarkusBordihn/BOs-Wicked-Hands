@@ -49,10 +49,10 @@ public class WickedHands {
     ModEntityTypes.ENTITY_TYPES.register(modBusGroup);
     ModTabs.CREATIVE_TABS.register(modBusGroup);
     ModMobEffects.register(modBusGroup);
+    ModLootTables.register(modBusGroup);
     ModEntityTypes.registerEvents();
     ModShoulderPassives.registerEvents();
     ModTabs.registerEvents();
-    ModLootTables.registerEvents();
 
     if (FMLEnvironment.dist.isClient()) {
       ModEntityRenderers.register();

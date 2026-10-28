@@ -30,7 +30,7 @@ public final class ModLootTables {
 
   @SubscribeEvent
   public static void onLootTableLoad(LootTableLoadEvent event) {
-    HandLootInjections.createDropPool(event.getKey())
+    HandLootInjections.createDropPool(event.getKey(), event.getRegistries())
         .ifPresent(dropPool -> event.getTable().addPool(dropPool.build()));
   }
 }

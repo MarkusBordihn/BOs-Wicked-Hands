@@ -52,9 +52,9 @@ class LootTableResourceTest {
   }
 
   private static JsonObject condition(JsonObject pool, String conditionType) {
-    return pool.getAsJsonArray("conditions").asList().stream()
+    return pool.getAsJsonObject("condition").getAsJsonArray("terms").asList().stream()
         .map(JsonElement::getAsJsonObject)
-        .filter(condition -> condition.get("condition").getAsString().equals(conditionType))
+        .filter(condition -> condition.get("type").getAsString().equals(conditionType))
         .findFirst()
         .orElseThrow(() -> new AssertionError("Missing condition " + conditionType));
   }
@@ -65,7 +65,7 @@ class LootTableResourceTest {
   void handAlwaysDropsItem(String handType) {
     JsonObject pool =
         singlePool("data/wicked_hands/loot_table/entities/" + handType + "_hand.json");
-    assertFalse(pool.has("conditions"), "Hand drop must not depend on conditions");
+    assertFalse(pool.has("condition"), "Hand drop must not depend on conditions");
     assertEquals(1.0D, pool.get("rolls").getAsDouble());
     assertDropsLifelessHand(pool, handType);
   }
