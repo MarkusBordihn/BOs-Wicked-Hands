@@ -20,28 +20,32 @@
 package de.markusbordihn.wickedhands.advancement;
 
 import de.markusbordihn.wickedhands.Constants;
-import net.minecraft.advancements.AdvancementHolder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class HandAdvancements {
 
-  public static final Identifier ROOT_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "root");
-  public static final Identifier START_RITUAL_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "start_ritual");
+  public static final ResourceLocation ROOT_ID =
+      new ResourceLocation(Constants.MOD_ID, "root");
+  public static final ResourceLocation START_RITUAL_ID =
+      new ResourceLocation(Constants.MOD_ID, "start_ritual");
 
   private static final String COMPANION_CRITERION = "companion";
 
   private HandAdvancements() {}
 
-  public static Identifier companionAdvancementId(Identifier handId) {
+  public static ResourceLocation companionAdvancementId(ResourceLocation handId) {
     return handId.withSuffix("_companion");
   }
 
-  public static void awardCompanion(ServerPlayer serverPlayer, Identifier handId) {
-    AdvancementHolder advancement =
-        serverPlayer.level().getServer().getAdvancements().get(companionAdvancementId(handId));
+  public static void awardCompanion(ServerPlayer serverPlayer, ResourceLocation handId) {
+    Advancement advancement =
+        serverPlayer
+            .level()
+            .getServer()
+            .getAdvancements()
+            .getAdvancement(companionAdvancementId(handId));
     if (advancement == null) {
       return;
     }

@@ -13,7 +13,6 @@ credits = ""
 authors = "Markus Bordihn"
 description = '''Wicked Hands adds severed hands that can be found from different mobs and revived through a ritual.
 Once revived, they become small companions that can follow you, warn you about nearby danger, help in combat, or sit on your shoulder.'''
-features = { java_version = "${java_version_range}" }
 
 [[dependencies.wicked_hands]]
 modId = "forge"
@@ -43,5 +42,3 @@ versionRange = "[2.6.0,)"
 ordering = "AFTER"
 side = "BOTH"
 
-[[mixins]]
-config = "wicked_hands.forge.mixins.json"

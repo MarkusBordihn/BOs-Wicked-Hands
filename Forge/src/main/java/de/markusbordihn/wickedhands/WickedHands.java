@@ -23,11 +23,10 @@ import de.markusbordihn.wickedhands.client.renderer.ModEntityRenderers;
 import de.markusbordihn.wickedhands.effect.ModMobEffects;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import de.markusbordihn.wickedhands.entity.ModShoulderPassives;
-import de.markusbordihn.wickedhands.item.ModDataComponents;
 import de.markusbordihn.wickedhands.item.ModItems;
 import de.markusbordihn.wickedhands.loot.ModLootTables;
 import de.markusbordihn.wickedhands.tabs.ModTabs;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -43,19 +42,18 @@ public class WickedHands {
   public WickedHands(FMLJavaModLoadingContext context) {
     log.info("Initializing {} (Forge) ...", Constants.MOD_NAME);
 
-    BusGroup modBusGroup = context.getModBusGroup();
-    ModDataComponents.DATA_COMPONENT_TYPES.register(modBusGroup);
-    ModItems.ITEMS.register(modBusGroup);
-    ModEntityTypes.ENTITY_TYPES.register(modBusGroup);
-    ModTabs.CREATIVE_TABS.register(modBusGroup);
-    ModMobEffects.register(modBusGroup);
-    ModEntityTypes.registerEvents();
+    IEventBus modEventBus = context.getModEventBus();
+    ModItems.ITEMS.register(modEventBus);
+    ModEntityTypes.ENTITY_TYPES.register(modEventBus);
+    ModTabs.CREATIVE_TABS.register(modEventBus);
+    ModMobEffects.register(modEventBus);
+    ModEntityTypes.registerEvents(modEventBus);
     ModShoulderPassives.registerEvents();
-    ModTabs.registerEvents();
+    ModTabs.registerEvents(modEventBus);
     ModLootTables.registerEvents();
 
     if (FMLEnvironment.dist.isClient()) {
-      ModEntityRenderers.register();
+      ModEntityRenderers.register(modEventBus);
     }
   }
 }

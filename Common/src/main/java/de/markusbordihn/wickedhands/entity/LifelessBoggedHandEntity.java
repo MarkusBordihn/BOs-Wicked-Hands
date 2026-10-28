@@ -21,7 +21,7 @@ package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
@@ -30,7 +30,8 @@ import net.minecraft.world.level.Level;
 public class LifelessBoggedHandEntity extends AbstractLifelessHandEntity {
 
   public static final String ID = "lifeless_bogged_hand";
-  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation ENTITY_ID =
+      new ResourceLocation(Constants.MOD_ID, ID);
 
   public LifelessBoggedHandEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
     super(entityType, level, BoggedHandEntity.ENTITY_ID, ParticleTypes.ITEM_SLIME);

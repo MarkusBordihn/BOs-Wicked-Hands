@@ -20,181 +20,30 @@
 package de.markusbordihn.wickedhands.gametest;
 
 import de.markusbordihn.wickedhands.Constants;
-import java.util.function.Consumer;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.GameTestHelper;
+import java.util.Collection;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.GameTestGenerator;
+import net.minecraft.gametest.framework.TestFunction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.gametest.GameTestHolder;
 
-@Mod(ModGameTests.GAME_TEST_MOD_ID)
+@GameTestHolder(Constants.MOD_ID)
+@Mod(Constants.MOD_ID + "_gametest")
 public final class ModGameTests {
 
-  static final String GAME_TEST_MOD_ID = Constants.MOD_ID + "_gametest";
-  private static final DeferredRegister<Consumer<GameTestHelper>> TEST_FUNCTIONS =
-      DeferredRegister.create(Registries.TEST_FUNCTION, Constants.MOD_ID);
-
-  private static final WildHandGameTests WILD_HAND_TESTS = new WildHandGameTests();
-  private static final RevivalRitualGameTests REVIVAL_RITUAL_TESTS = new RevivalRitualGameTests();
-  private static final CompanionAbilityGameTests COMPANION_ABILITY_TESTS =
-      new CompanionAbilityGameTests();
-  private static final CompanionBehaviourGameTests COMPANION_BEHAVIOUR_TESTS =
-      new CompanionBehaviourGameTests();
-  private static final ShoulderGameTests SHOULDER_TESTS = new ShoulderGameTests();
-
-  static {
-    register(
-        "rotten_hand_spawns_naturally_at_night",
-        WILD_HAND_TESTS::testRottenHandSpawnsNaturallyAtNight);
-    register(
-        "summoned_rotten_hand_drops_lifeless_rotten_hand",
-        WILD_HAND_TESTS::testSummonedRottenHandDropsLifelessRottenHand);
-    register("rotten_hand_attacks_animals", WILD_HAND_TESTS::testRottenHandAttacksAnimals);
-    register("rotten_hand_swims_to_surface", WILD_HAND_TESTS::testRottenHandSwimsToSurface);
-    register(
-        "rotten_hand_uses_active_model_profile",
-        WILD_HAND_TESTS::testRottenHandUsesActiveModelProfile);
-    register(
-        "rotten_hand_despawns_when_far_away", WILD_HAND_TESTS::testRottenHandDespawnsWhenFarAway);
-    register(
-        "monsters_drop_their_lifeless_hand", WILD_HAND_TESTS::testMonstersDropTheirLifelessHand);
-    register(
-        "lifeless_rotten_hand_is_placed_on_soul_sand",
-        REVIVAL_RITUAL_TESTS::testLifelessRottenHandIsPlacedOnSoulSand);
-    register("revival_ritual_needs_candles", REVIVAL_RITUAL_TESTS::testRevivalRitualNeedsCandles);
-    register(
-        "revival_ritual_creates_companion",
-        REVIVAL_RITUAL_TESTS::testRevivalRitualCreatesCompanion);
-    register(
-        "revival_ritual_grants_advancements",
-        REVIVAL_RITUAL_TESTS::testRevivalRitualGrantsAdvancements);
-    register("only_companion_grabs_target", COMPANION_ABILITY_TESTS::testOnlyCompanionGrabsTarget);
-    register(
-        "fallen_companion_without_owner_leaves_protected_remains",
-        REVIVAL_RITUAL_TESTS::testFallenCompanionWithoutOwnerLeavesProtectedRemains);
-    register(
-        "fallen_companion_with_full_inventory_leaves_protected_remains",
-        REVIVAL_RITUAL_TESTS::testFallenCompanionWithFullInventoryLeavesProtectedRemains);
-    register(
-        "bound_remains_resist_all_but_their_owner",
-        REVIVAL_RITUAL_TESTS::testBoundRemainsResistAllButTheirOwner);
-    register(
-        "running_ritual_protects_lifeless_hand",
-        REVIVAL_RITUAL_TESTS::testRunningRitualProtectsLifelessHand);
-    register(
-        "stranger_cannot_revive_foreign_remains",
-        REVIVAL_RITUAL_TESTS::testStrangerCannotReviveForeignRemains);
-    register(
-        "fallen_companion_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenCompanionReturnsAndRevivesWithSameIdentity);
-    register(
-        "fallen_drowned_hand_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenDrownedHandReturnsAndRevivesWithSameIdentity);
-    register(
-        "fallen_bone_hand_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenBoneHandReturnsAndRevivesWithSameIdentity);
-    register(
-        "fallen_husk_hand_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenHuskHandReturnsAndRevivesWithSameIdentity);
-    register(
-        "fallen_stray_hand_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenStrayHandReturnsAndRevivesWithSameIdentity);
-    register(
-        "fallen_withered_hand_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenWitheredHandReturnsAndRevivesWithSameIdentity);
-    register(
-        "fallen_bogged_hand_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenBoggedHandReturnsAndRevivesWithSameIdentity);
-    register(
-        "fallen_witch_hand_returns_and_revives_with_same_identity",
-        REVIVAL_RITUAL_TESTS::testFallenWitchHandReturnsAndRevivesWithSameIdentity);
-    register(
-        "husk_hand_ritual_creates_weakening_companion",
-        COMPANION_ABILITY_TESTS::testHuskHandRitualCreatesWeakeningCompanion);
-    register(
-        "stray_hand_ritual_creates_chilling_companion",
-        COMPANION_ABILITY_TESTS::testStrayHandRitualCreatesChillingCompanion);
-    register(
-        "withered_hand_ritual_creates_withering_companion",
-        COMPANION_ABILITY_TESTS::testWitheredHandRitualCreatesWitheringCompanion);
-    register("withered_hand_is_immune_to_fire", WILD_HAND_TESTS::testWitheredHandIsImmuneToFire);
-    register(
-        "bogged_hand_ritual_creates_poisoning_companion",
-        COMPANION_ABILITY_TESTS::testBoggedHandRitualCreatesPoisoningCompanion);
-    register("bogged_hand_is_immune_to_poison", WILD_HAND_TESTS::testBoggedHandIsImmuneToPoison);
-    register(
-        "witch_hand_ritual_creates_hexing_companion",
-        COMPANION_ABILITY_TESTS::testWitchHandRitualCreatesHexingCompanion);
-    register(
-        "witch_hand_mends_wounded_owner_and_companions",
-        COMPANION_ABILITY_TESTS::testWitchHandMendsWoundedOwnerAndCompanions);
-    register(
-        "shoulder_bone_and_withered_hands_grant_passives",
-        SHOULDER_TESTS::testShoulderBoneAndWitheredHandsGrantPassives);
-    register(
-        "shoulder_rotten_and_drowned_hands_grant_passives",
-        SHOULDER_TESTS::testShoulderRottenAndDrownedHandsGrantPassives);
-    register(
-        "shoulder_passive_applies_on_player_tick",
-        SHOULDER_TESTS::testShoulderPassiveAppliesOnPlayerTick);
-    register(
-        "shoulder_hands_protect_from_hunger_and_freezing",
-        SHOULDER_TESTS::testShoulderHandsProtectFromHungerAndFreezing);
-    register(
-        "shoulder_hands_cure_poison_and_grant_night_vision",
-        SHOULDER_TESTS::testShoulderHandsCurePoisonAndGrantNightVision);
-    register(
-        "shoulder_hands_hold_on_through_their_damage",
-        SHOULDER_TESTS::testShoulderHandsHoldOnThroughTheirDamage);
-    register(
-        "shoulder_hands_stay_in_their_environment",
-        SHOULDER_TESTS::testShoulderHandsStayInTheirEnvironment);
-    register(
-        "drowned_hand_ritual_needs_kelp", REVIVAL_RITUAL_TESTS::testDrownedHandRitualNeedsKelp);
-    register(
-        "bone_hand_ritual_creates_companion",
-        REVIVAL_RITUAL_TESTS::testBoneHandRitualCreatesCompanion);
-    register(
-        "drowned_hand_breathes_underwater", WILD_HAND_TESTS::testDrownedHandBreathesUnderwater);
-    register(
-        "drowned_hand_extinguishes_burning_owner",
-        COMPANION_ABILITY_TESTS::testDrownedHandExtinguishesBurningOwner);
-    register(
-        "bone_hand_warns_about_monster_once",
-        COMPANION_ABILITY_TESTS::testBoneHandWarnsAboutMonsterOnce);
-    register(
-        "companion_waves_at_stranger_once",
-        COMPANION_BEHAVIOUR_TESTS::testCompanionWavesAtStrangerOnce);
-    register(
-        "companion_keeps_bond_after_reload",
-        COMPANION_BEHAVIOUR_TESTS::testCompanionKeepsBondAfterReload);
-    register(
-        "companion_defends_and_joins_owner",
-        COMPANION_BEHAVIOUR_TESTS::testCompanionDefendsAndJoinsOwner);
-    register(
-        "wounded_companion_retreats_from_combat",
-        COMPANION_BEHAVIOUR_TESTS::testWoundedCompanionRetreatsFromCombat);
-    register(
-        "companion_ignores_owner_hitting_sibling_companion",
-        COMPANION_BEHAVIOUR_TESTS::testCompanionIgnoresOwnerHittingSiblingCompanion);
-    register(
-        "companion_ignores_creepers_and_foreign_pets",
-        COMPANION_BEHAVIOUR_TESTS::testCompanionIgnoresCreepersAndForeignPets);
-    register(
-        "companion_heals_from_offering", COMPANION_BEHAVIOUR_TESTS::testCompanionHealsFromOffering);
-    register(
-        "companion_regenerates_only_out_of_combat",
-        COMPANION_BEHAVIOUR_TESTS::testCompanionRegeneratesOnlyOutOfCombat);
-    register(
-        "following_companion_joins_owner_in_other_dimension",
-        COMPANION_BEHAVIOUR_TESTS::testFollowingCompanionJoinsOwnerInOtherDimension);
+  @GameTestGenerator
+  public static Collection<TestFunction> gameTests() {
+    return GameTestFunctions.create();
   }
 
-  public ModGameTests(FMLJavaModLoadingContext context) {
-    TEST_FUNCTIONS.register(context.getModBusGroup());
+  @AfterBatch(batch = GameTestFunctions.DEFAULT_BATCH)
+  public static void afterDefaultBatch(ServerLevel serverLevel) {
+    GameTestFunctions.discardHandsLeftByFinishedBatch(serverLevel);
   }
 
-  private static void register(String name, Consumer<GameTestHelper> testFunction) {
-    TEST_FUNCTIONS.register(name, () -> testFunction);
+  @AfterBatch(batch = GameTestFunctions.ROAMING_WILD_HAND_BATCH)
+  public static void afterRoamingWildHandBatch(ServerLevel serverLevel) {
+    GameTestFunctions.discardHandsLeftByFinishedBatch(serverLevel);
   }
 }

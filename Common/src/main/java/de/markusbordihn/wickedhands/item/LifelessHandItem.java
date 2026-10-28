@@ -23,26 +23,25 @@ import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.entity.AbstractHandEntity;
 import de.markusbordihn.wickedhands.entity.AbstractLifelessHandEntity;
 import de.markusbordihn.wickedhands.ritual.RevivalRitual;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -56,31 +55,29 @@ public class LifelessHandItem extends Item {
       "item." + Constants.MOD_ID + ".lifeless_hand.feeding";
   private static final int WHISPER_COOLDOWN_TICKS = 60;
 
-  private final Identifier lifelessHandId;
+  private final ResourceLocation lifelessHandId;
+  private final List<Component> tooltip;
 
-  private LifelessHandItem(Item.Properties properties, Identifier lifelessHandId) {
+  private LifelessHandItem(Item.Properties properties, ResourceLocation lifelessHandId) {
     super(properties);
     this.lifelessHandId = lifelessHandId;
+    this.tooltip = createTooltip(lifelessHandId);
   }
 
-  public static Item create(Identifier lifelessHandId) {
-    return new LifelessHandItem(
-        new Item.Properties()
-            .setId(ResourceKey.create(Registries.ITEM, lifelessHandId))
-            .component(DataComponents.LORE, createTooltip(lifelessHandId)),
-        lifelessHandId);
+  public static Item create(ResourceLocation lifelessHandId) {
+    return new LifelessHandItem(new Item.Properties(), lifelessHandId);
   }
 
   public static ItemStack createCompanionRemains(
-      Identifier lifelessHandId,
+      ResourceLocation lifelessHandId,
       UUID companionUUID,
       Optional<UUID> ownerUUID,
       Component customName) {
-    ItemStack remains = new ItemStack(BuiltInRegistries.ITEM.getValue(lifelessHandId));
-    remains.set(HandDataComponents.COMPANION_UUID, companionUUID);
-    ownerUUID.ifPresent(uuid -> remains.set(HandDataComponents.OWNER_UUID, uuid));
+    ItemStack remains = new ItemStack(BuiltInRegistries.ITEM.get(lifelessHandId));
+    HandItemData.setCompanionUUID(remains, companionUUID);
+    ownerUUID.ifPresent(uuid -> HandItemData.setOwnerUUID(remains, uuid));
     if (customName != null) {
-      remains.set(DataComponents.CUSTOM_NAME, customName);
+      remains.setHoverName(customName);
     }
     return remains;
   }
@@ -95,18 +92,21 @@ public class LifelessHandItem extends Item {
     remains.setTarget(ownerUUID);
   }
 
-  private static ItemLore createTooltip(Identifier lifelessHandId) {
-    return new ItemLore(
-        Stream.of(
-                Component.translatable(lifelessHandId.toLanguageKey("item", "tooltip")),
-                Component.translatable(RITUAL_TOOLTIP_KEY),
-                Component.translatable(lifelessHandId.toLanguageKey("item", "offering")),
-                Component.translatable(FEEDING_TOOLTIP_KEY),
-                Component.translatable(lifelessHandId.toLanguageKey("item", "shoulder")))
-            .<Component>map(
-                line ->
-                    line.withStyle(style -> style.withColor(ChatFormatting.GRAY).withItalic(false)))
-            .toList());
+  private static List<Component> createTooltip(ResourceLocation lifelessHandId) {
+    return Stream.of(
+            Component.translatable(lifelessHandId.toLanguageKey("item", "tooltip")),
+            Component.translatable(RITUAL_TOOLTIP_KEY),
+            Component.translatable(lifelessHandId.toLanguageKey("item", "offering")),
+            Component.translatable(FEEDING_TOOLTIP_KEY),
+            Component.translatable(lifelessHandId.toLanguageKey("item", "shoulder")))
+        .<Component>map(line -> line.withStyle(ChatFormatting.GRAY))
+        .toList();
+  }
+
+  @Override
+  public void appendHoverText(
+      ItemStack itemStack, Level level, List<Component> tooltipLines, TooltipFlag tooltipFlag) {
+    tooltipLines.addAll(this.tooltip);
   }
 
   @Override
@@ -134,21 +134,25 @@ public class LifelessHandItem extends Item {
         return InteractionResult.FAIL;
       }
 
-      itemStack.consume(1, context.getPlayer());
+      Player player = context.getPlayer();
+      if (player == null || !player.getAbilities().instabuild) {
+        itemStack.shrink(1);
+      }
     }
     return InteractionResult.SUCCESS;
   }
 
   @Override
-  public InteractionResult use(Level level, Player player, InteractionHand hand) {
+  public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
     if (!level.isClientSide()) {
       ItemStack itemStack = player.getItemInHand(hand);
-      player.sendSystemMessage(
+      player.displayClientMessage(
           AbstractHandEntity.createWhisper(
               itemStack.getHoverName(),
-              Component.translatable(this.getDescriptionId() + ".revival_hint")));
-      player.getCooldowns().addCooldown(itemStack, WHISPER_COOLDOWN_TICKS);
+              Component.translatable(this.getDescriptionId() + ".revival_hint")),
+          false);
+      player.getCooldowns().addCooldown(this, WHISPER_COOLDOWN_TICKS);
     }
-    return InteractionResult.SUCCESS;
+    return InteractionResultHolder.success(player.getItemInHand(hand));
   }
 }

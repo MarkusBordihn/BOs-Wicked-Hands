@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -57,7 +58,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -80,8 +81,8 @@ class LifelessHandItemTest {
     TestBootstrap.bootstrap();
   }
 
-  private static Identifier itemId(String lifelessHandId) {
-    return Identifier.fromNamespaceAndPath(Constants.MOD_ID, lifelessHandId);
+  private static ResourceLocation itemId(String lifelessHandId) {
+    return new ResourceLocation(Constants.MOD_ID, lifelessHandId);
   }
 
   // Item's constructor needs an unfrozen item registry, so the real use() runs on a mock.
@@ -102,7 +103,7 @@ class LifelessHandItemTest {
             .equals(itemId(lifelessHandId).toLanguageKey("item", "revival_hint"));
   }
 
-  private static Stream<Identifier> itemIds() {
+  private static Stream<ResourceLocation> itemIds() {
     return Stream.of(
         LifelessRottenHandEntity.ENTITY_ID,
         LifelessDrownedHandEntity.ENTITY_ID,
@@ -144,12 +145,15 @@ class LifelessHandItemTest {
     Player player = mock(Player.class);
     when(player.getItemInHand(InteractionHand.MAIN_HAND)).thenReturn(itemStack);
     when(player.getCooldowns()).thenReturn(cooldowns);
+    LifelessHandItem item = createItem(lifelessHandId);
 
     assertEquals(
         InteractionResult.SUCCESS,
-        createItem(lifelessHandId).use(level, player, InteractionHand.MAIN_HAND));
-    verify(player).sendSystemMessage(argThat(message -> isRevivalWhisper(message, lifelessHandId)));
-    verify(cooldowns).addCooldown(eq(itemStack), anyInt());
+        item.use(level, player, InteractionHand.MAIN_HAND).getResult());
+    verify(player)
+        .displayClientMessage(
+            argThat(message -> isRevivalWhisper(message, lifelessHandId)), eq(false));
+    verify(cooldowns).addCooldown(eq(item), anyInt());
   }
 
   @Test
@@ -161,8 +165,10 @@ class LifelessHandItemTest {
 
     assertEquals(
         InteractionResult.SUCCESS,
-        createItem(LifelessRottenHandEntity.ID).use(level, player, InteractionHand.OFF_HAND));
-    verify(player, never()).sendSystemMessage(any());
+        createItem(LifelessRottenHandEntity.ID)
+            .use(level, player, InteractionHand.OFF_HAND)
+            .getResult());
+    verify(player, never()).displayClientMessage(any(), anyBoolean());
   }
 
   @Test
@@ -185,14 +191,10 @@ class LifelessHandItemTest {
 
   @ParameterizedTest
   @MethodSource("itemIds")
-  @DisplayName("Item definition, model and texture exist")
-  void itemModelResourcesExist(Identifier itemId) {
-    String modelId =
-        TestResources.readJson(TestResources.assetPath(itemId.toString(), "items/", ".json"))
-            .getAsJsonObject("model")
-            .get("model")
-            .getAsString();
-    TestResources.readJson(TestResources.assetPath(modelId, "models/", ".json"))
+  @DisplayName("Item model and texture exist")
+  void itemModelResourcesExist(ResourceLocation itemId) {
+    TestResources.readJson(
+            TestResources.assetPath(itemId.withPrefix("item/").toString(), "models/", ".json"))
         .getAsJsonObject("textures")
         .asMap()
         .values()
@@ -218,7 +220,7 @@ class LifelessHandItemTest {
       })
   @DisplayName("Lifeless hands item and entity tags contain the hand")
   void lifelessHandsTagsContainHand(String lifelessHandId) {
-    for (String tagType : new String[] {"item", "entity_type"}) {
+    for (String tagType : new String[] {"items", "entity_types"}) {
       assertTrue(
           TestResources.readJson("data/wicked_hands/tags/" + tagType + "/lifeless_hands.json")
               .getAsJsonArray("values")

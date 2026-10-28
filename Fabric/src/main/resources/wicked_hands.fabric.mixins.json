@@ -2,10 +2,11 @@
   "required": true,
   "minVersion": "0.8",
   "package": "de.markusbordihn.wickedhands.mixin",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "wicked_hands.refmap.json",
   "mixins": [
-    "PlayerShoulderGripMixin",
-    "ServerPlayerShoulderGripMixin"
+    "DrownedHandDepthStriderMixin",
+    "PlayerShoulderGripMixin"
   ],
   "injectors": {
     "defaultRequire": 1

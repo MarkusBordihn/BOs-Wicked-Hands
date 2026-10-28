@@ -41,15 +41,16 @@ import java.util.List;
 import java.util.stream.Stream;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 public final class WickedHandsTab {
 
   public static final String ID = Constants.MOD_ID;
-  public static final Identifier TAB_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation TAB_ID =
+      new ResourceLocation(Constants.MOD_ID, ID);
   public static final Component TITLE = Component.translatable("itemGroup." + Constants.MOD_ID);
-  private static final List<Identifier> SPAWN_EGG_IDS =
+  private static final List<ResourceLocation> SPAWN_EGG_IDS =
       Stream.of(
               RottenHandEntity.ENTITY_ID,
               HuskHandEntity.ENTITY_ID,
@@ -61,7 +62,7 @@ public final class WickedHandsTab {
               WitchHandEntity.ENTITY_ID)
           .map(HandSpawnEgg::itemId)
           .toList();
-  private static final List<Identifier> LIFELESS_HAND_IDS =
+  private static final List<ResourceLocation> LIFELESS_HAND_IDS =
       List.of(
           LifelessRottenHandEntity.ENTITY_ID,
           LifelessHuskHandEntity.ENTITY_ID,
@@ -75,12 +76,12 @@ public final class WickedHandsTab {
   private WickedHandsTab() {}
 
   public static List<Item> spawnEggs() {
-    return SPAWN_EGG_IDS.stream().map(BuiltInRegistries.ITEM::getValue).toList();
+    return SPAWN_EGG_IDS.stream().map(BuiltInRegistries.ITEM::get).toList();
   }
 
   public static List<Item> displayItems() {
     return Stream.concat(SPAWN_EGG_IDS.stream(), LIFELESS_HAND_IDS.stream())
-        .map(BuiltInRegistries.ITEM::getValue)
+        .map(BuiltInRegistries.ITEM::get)
         .toList();
   }
 }

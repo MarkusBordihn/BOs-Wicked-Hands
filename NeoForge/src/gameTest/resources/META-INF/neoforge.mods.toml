@@ -1,8 +1,0 @@
-modLoader = "javafml"
-loaderVersion = "[5,)"
-license = "MIT"
-
-[[mods]]
-modId = "wicked_hands_gametest"
-version = "1.0.0"
-displayName = "Wicked Hands Game Tests"

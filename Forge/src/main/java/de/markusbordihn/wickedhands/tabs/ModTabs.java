@@ -25,6 +25,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -47,8 +48,8 @@ public final class ModTabs {
 
   private ModTabs() {}
 
-  public static void registerEvents() {
-    BuildCreativeModeTabContentsEvent.BUS.addListener(ModTabs::addToVanillaTabs);
+  public static void registerEvents(IEventBus modEventBus) {
+    modEventBus.addListener(ModTabs::addToVanillaTabs);
   }
 
   private static void addToVanillaTabs(BuildCreativeModeTabContentsEvent event) {

@@ -19,26 +19,43 @@
 
 package de.markusbordihn.wickedhands.item;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import java.util.function.Supplier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 
-public final class HandSpawnEgg {
+public final class HandSpawnEgg extends SpawnEggItem {
 
-  private HandSpawnEgg() {}
+  private static final int UNTINTED_COLOR = 0xFFFFFF;
 
-  public static Identifier itemId(Identifier handId) {
+  private final Supplier<? extends EntityType<? extends Mob>> handType;
+
+  // Forge 1.20.1 registers items before entity types, so the type is resolved lazily.
+  private HandSpawnEgg(Supplier<? extends EntityType<? extends Mob>> handType) {
+    super(null, UNTINTED_COLOR, UNTINTED_COLOR, new Item.Properties());
+    this.handType = handType;
+  }
+
+  public static ResourceLocation itemId(ResourceLocation handId) {
     return handId.withSuffix("_spawn_egg");
   }
 
-  public static Item create(Identifier handId, EntityType<? extends Mob> handType) {
-    return new SpawnEggItem(
-        new Item.Properties()
-            .setId(ResourceKey.create(Registries.ITEM, itemId(handId)))
-            .spawnEgg(handType));
+  public static Item create(Supplier<? extends EntityType<? extends Mob>> handType) {
+    return new HandSpawnEgg(handType);
+  }
+
+  @Override
+  public EntityType<?> getType(CompoundTag itemTag) {
+    EntityType<?> storedType = super.getType(itemTag);
+    return storedType != null ? storedType : this.handType.get();
+  }
+
+  @Override
+  public FeatureFlagSet requiredFeatures() {
+    return this.handType.get().requiredFeatures();
   }
 }

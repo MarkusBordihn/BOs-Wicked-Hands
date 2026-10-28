@@ -65,8 +65,8 @@ abstract class ClientTestBase {
         .withWorld(
             WorldSetup.creative()
                 .withDifficulty(Difficulty.NORMAL)
-                .withGameRule("spawn_mobs", false)
-                .withGameRule("send_command_feedback", false))
+                .withGameRule("doMobSpawning", false)
+                .withGameRule("sendCommandFeedback", false))
         .withRenderProfile(
             Parameters.of("preset", "deterministic").with("dayTime", NOON).with("weather", "clear"))
         .withRenderSettings(

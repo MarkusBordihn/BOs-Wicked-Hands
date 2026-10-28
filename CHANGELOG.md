@@ -25,7 +25,7 @@ the [GitHub History][history] instead.
 - Added slow regeneration for companion hands while they are out of combat.
 - Added companion hands ignoring the pets and companions of other players.
 - Added the `wicked_hands:companion_ignored_targets` tag for mobs that companions leave alone.
-- Added the "Bogged" and "Witch Hand", rare drops of Bogged and Witches killed by a player.
+- Added the "Bogged" and "Witch Hand", rare drops of swamp Skeletons and Witches killed by a player.
 - Added Mushrooms and Spider Eye as their ritual offerings, plus spawn eggs and advancements.
 - Added their hits poisoning (Bogged) or cursing with Poison, Slowness or Weakness (Witch).
 - Added poison immunity to the "Bogged Hand".

@@ -28,7 +28,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.ServerLevelAccessor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -43,7 +43,7 @@ class RottenHandEntityTest {
 
   private static ServerLevelAccessor mockLevel(Difficulty difficulty, boolean darkOutside) {
     ServerLevel serverLevel = mock(ServerLevel.class);
-    when(serverLevel.isDarkOutside()).thenReturn(darkOutside);
+    when(serverLevel.isNight()).thenReturn(darkOutside);
     ServerLevelAccessor levelAccessor = mock(ServerLevelAccessor.class);
     when(levelAccessor.getDifficulty()).thenReturn(difficulty);
     when(levelAccessor.getLevel()).thenReturn(serverLevel);
@@ -52,7 +52,7 @@ class RottenHandEntityTest {
 
   private static boolean checkSpawnRules(ServerLevelAccessor levelAccessor) {
     return RottenHandEntity.checkRottenHandSpawnRules(
-        null, levelAccessor, EntitySpawnReason.NATURAL, BlockPos.ZERO, RandomSource.create());
+        null, levelAccessor, MobSpawnType.NATURAL, BlockPos.ZERO, RandomSource.create());
   }
 
   @Test

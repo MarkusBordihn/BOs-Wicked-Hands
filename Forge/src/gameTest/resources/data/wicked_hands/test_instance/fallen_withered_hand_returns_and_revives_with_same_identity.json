@@ -1,7 +1,0 @@
-{
-  "type": "minecraft:function",
-  "function": "wicked_hands:fallen_withered_hand_returns_and_revives_with_same_identity",
-  "environment": "minecraft:default",
-  "structure": "wicked_hands:gametest.1x1x1",
-  "max_ticks": 400
-}

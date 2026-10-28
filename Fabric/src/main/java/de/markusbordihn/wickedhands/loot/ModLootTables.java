@@ -19,7 +19,7 @@
 
 package de.markusbordihn.wickedhands.loot;
 
-import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
+import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 
 public final class ModLootTables {
 
@@ -27,7 +27,7 @@ public final class ModLootTables {
 
   public static void register() {
     LootTableEvents.MODIFY.register(
-        (lootTableKey, lootTableBuilder, lootTableSource, registries) ->
-            HandLootInjections.createDropPool(lootTableKey).ifPresent(lootTableBuilder::withPool));
+        (resourceManager, lootDataManager, lootTableId, lootTableBuilder, lootTableSource) ->
+            HandLootInjections.createDropPool(lootTableId).ifPresent(lootTableBuilder::withPool));
   }
 }

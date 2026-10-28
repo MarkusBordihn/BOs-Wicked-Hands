@@ -20,5 +20,5 @@ pluginManagement {
   }
 }
 
-rootProject.name = 'Wicked Hands 26.1.2'
-include("Common", "Fabric", "Forge", "NeoForge")
+rootProject.name = 'Wicked Hands 1.20.1'
+include("Common", "Fabric", "Forge")

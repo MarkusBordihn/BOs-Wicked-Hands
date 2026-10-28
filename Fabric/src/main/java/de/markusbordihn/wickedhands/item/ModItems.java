@@ -38,7 +38,7 @@ import de.markusbordihn.wickedhands.entity.WitchHandEntity;
 import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 public final class ModItems {
@@ -50,11 +50,11 @@ public final class ModItems {
   public static final Item LIFELESS_BONE_HAND =
       LifelessHandItem.create(LifelessBoneHandEntity.ENTITY_ID);
   public static final Item ROTTEN_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(RottenHandEntity.ENTITY_ID, ModEntityTypes.ROTTEN_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.ROTTEN_HAND);
   public static final Item DROWNED_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(DrownedHandEntity.ENTITY_ID, ModEntityTypes.DROWNED_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.DROWNED_HAND);
   public static final Item BONE_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(BoneHandEntity.ENTITY_ID, ModEntityTypes.BONE_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.BONE_HAND);
   public static final Item LIFELESS_HUSK_HAND =
       LifelessHandItem.create(LifelessHuskHandEntity.ENTITY_ID);
   public static final Item LIFELESS_STRAY_HAND =
@@ -62,19 +62,19 @@ public final class ModItems {
   public static final Item LIFELESS_WITHERED_HAND =
       LifelessHandItem.create(LifelessWitheredHandEntity.ENTITY_ID);
   public static final Item HUSK_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(HuskHandEntity.ENTITY_ID, ModEntityTypes.HUSK_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.HUSK_HAND);
   public static final Item STRAY_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(StrayHandEntity.ENTITY_ID, ModEntityTypes.STRAY_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.STRAY_HAND);
   public static final Item WITHERED_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(WitheredHandEntity.ENTITY_ID, ModEntityTypes.WITHERED_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.WITHERED_HAND);
   public static final Item LIFELESS_BOGGED_HAND =
       LifelessHandItem.create(LifelessBoggedHandEntity.ENTITY_ID);
   public static final Item LIFELESS_WITCH_HAND =
       LifelessHandItem.create(LifelessWitchHandEntity.ENTITY_ID);
   public static final Item BOGGED_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(BoggedHandEntity.ENTITY_ID, ModEntityTypes.BOGGED_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.BOGGED_HAND);
   public static final Item WITCH_HAND_SPAWN_EGG =
-      HandSpawnEgg.create(WitchHandEntity.ENTITY_ID, ModEntityTypes.WITCH_HAND);
+      HandSpawnEgg.create(() -> ModEntityTypes.WITCH_HAND);
 
   private ModItems() {}
 
@@ -97,7 +97,7 @@ public final class ModItems {
     register(HandSpawnEgg.itemId(WitchHandEntity.ENTITY_ID), WITCH_HAND_SPAWN_EGG);
   }
 
-  private static void register(Identifier itemId, Item item) {
+  private static void register(ResourceLocation itemId, Item item) {
     Registry.register(BuiltInRegistries.ITEM, itemId, item);
   }
 }

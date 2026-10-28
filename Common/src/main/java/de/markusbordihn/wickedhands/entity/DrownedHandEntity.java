@@ -24,7 +24,7 @@ import de.markusbordihn.easynpc.data.attribute.EnvironmentalAttributeType;
 import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.data.CompanionMode;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -33,16 +33,16 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
 public class DrownedHandEntity extends AbstractCompanionHandEntity {
 
   public static final String ID = "drowned_hand";
-  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation ENTITY_ID =
+      new ResourceLocation(Constants.MOD_ID, ID);
+  public static final int DEPTH_STRIDER_LEVEL = 3;
   private static final int EXTINGUISH_COOLDOWN_TICKS = 200;
   private static final double ATTACK_DAMAGE = 2.0D;
-  private static final double WATER_MOVEMENT_EFFICIENCY = 1.0D;
   private static final int EXTINGUISH_CHECK_INTERVAL_TICKS = 5;
   private static final double EXTINGUISH_RANGE = 16.0D;
   private static final double EXTINGUISH_REACH = 2.5D;
@@ -55,8 +55,7 @@ public class DrownedHandEntity extends AbstractCompanionHandEntity {
   }
 
   public static AttributeSupplier.Builder createAttributes() {
-    return createHandAttributes(ATTACK_DAMAGE)
-        .add(Attributes.WATER_MOVEMENT_EFFICIENCY, WATER_MOVEMENT_EFFICIENCY);
+    return createHandAttributes(ATTACK_DAMAGE);
   }
 
   public static EntityType<DrownedHandEntity> createEntityType() {
@@ -71,9 +70,10 @@ public class DrownedHandEntity extends AbstractCompanionHandEntity {
 
   @Override
   protected void companionTick(ServerLevel serverLevel) {
+    LivingEntity owner = this.getOwner();
     if (this.tickCount % EXTINGUISH_CHECK_INTERVAL_TICKS != 0
         || serverLevel.getGameTime() < this.nextExtinguishGameTime
-        || !(this.getOwner() instanceof LivingEntity owner)
+        || owner == null
         || !owner.isOnFire()) {
       return;
     }

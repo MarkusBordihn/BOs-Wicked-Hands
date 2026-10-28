@@ -21,7 +21,7 @@ package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
 import java.util.Comparator;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
@@ -36,7 +36,8 @@ import net.minecraft.world.phys.Vec3;
 public class BoneHandEntity extends AbstractCompanionHandEntity {
 
   public static final String ID = "bone_hand";
-  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation ENTITY_ID =
+      new ResourceLocation(Constants.MOD_ID, ID);
   public static final int WARNING_COOLDOWN_TICKS = 200;
   private static final double ATTACK_DAMAGE = 1.5D;
   private static final double WARNING_RANGE = 12.0D;
@@ -68,11 +69,12 @@ public class BoneHandEntity extends AbstractCompanionHandEntity {
 
   @Override
   protected void companionTick(ServerLevel serverLevel) {
+    LivingEntity owner = this.getOwner();
     if (this.tickCount % COMPANION_CHECK_INTERVAL_TICKS != 0
         || this.getActiveGesture() != null
         || this.getTarget() != null
         || serverLevel.getGameTime() < this.nextWarningGameTime
-        || !(this.getOwner() instanceof LivingEntity owner)) {
+        || owner == null) {
       return;
     }
 

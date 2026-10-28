@@ -32,18 +32,14 @@ import de.markusbordihn.easynpc.entity.easynpc.npc.easymodelentities.EasyModelNP
 import de.markusbordihn.wickedhands.Constants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
 
 public abstract class AbstractHandEntity extends EasyModelNPC {
 
@@ -59,39 +55,35 @@ public abstract class AbstractHandEntity extends EasyModelNPC {
         .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
   }
 
-  protected static TagKey<Item> catalystItems(Identifier companionHandId) {
+  protected static TagKey<Item> catalystItems(ResourceLocation companionHandId) {
     return TagKey.create(Registries.ITEM, companionHandId.withSuffix("_catalysts"));
   }
 
   protected static <T extends AbstractHandEntity> EntityType<T> createHandEntityType(
-      EntityType.EntityFactory<T> entityFactory, MobCategory mobCategory, Identifier entityId) {
+      EntityType.EntityFactory<T> entityFactory,
+      MobCategory mobCategory,
+      ResourceLocation entityId) {
     return EntityType.Builder.of(entityFactory, mobCategory)
         .sized(0.75F, 0.375F)
         .clientTrackingRange(8)
-        .build(ResourceKey.create(Registries.ENTITY_TYPE, entityId));
-  }
-
-  private static boolean hasSavedEntityAttributes(ValueInput valueInput) {
-    return valueInput.read(EntityAttributes.ENTITY_ATTRIBUTE_TAG, CompoundTag.CODEC).isPresent();
+        .build(entityId.toString());
   }
 
   private String getModelId() {
-    Identifier entityId = EntityType.getKey(this.getType());
+    ResourceLocation entityId = EntityType.getKey(this.getType());
     return entityId.getNamespace() + ":entity/" + entityId.getPath();
   }
 
   @Override
-  public void defineSynchedRenderData(SynchedEntityData.Builder builder) {
+  public void defineSynchedRenderData() {
     this.defineSynchedEntityData(
-        builder,
         SynchedDataIndex.RENDER_DATA,
         new RenderDataEntry(RenderType.EASY_MODEL_ENTITY, null, this.getModelId()));
   }
 
   @Override
-  public void defineSynchedDisplayAttributeData(SynchedEntityData.Builder builder) {
+  public void defineSynchedDisplayAttributeData() {
     this.defineSynchedEntityData(
-        builder,
         SynchedDataIndex.DISPLAY_ATTRIBUTE_SET,
         DisplayAttributeDataSet.createDefault()
             .withAttribute(
@@ -100,22 +92,13 @@ public abstract class AbstractHandEntity extends EasyModelNPC {
   }
 
   @Override
-  public void defineSynchedAttributeData(SynchedEntityData.Builder builder) {
+  public void defineSynchedAttributeData() {
     EntityAttributes entityAttributes = new EntityAttributes();
     entityAttributes.setCombatAttributes(
         new CombatAttributes()
             .withIsInvulnerable(false)
             .withIsAttackableByPlayers(true)
             .withIsAttackableByMonsters(true));
-    this.defineSynchedEntityData(builder, SynchedDataIndex.ENTITY_ATTRIBUTES, entityAttributes);
-  }
-
-  @Override
-  public void readAdditionalAttributeData(ValueInput valueInput) {
-    if (!hasSavedEntityAttributes(valueInput)) {
-      return;
-    }
-
-    super.readAdditionalAttributeData(valueInput);
+    this.defineSynchedEntityData(SynchedDataIndex.ENTITY_ATTRIBUTES, entityAttributes);
   }
 }

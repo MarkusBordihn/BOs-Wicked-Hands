@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -59,8 +59,8 @@ class HandModelResourceTest {
       List.of("idle", "walk", "attack", "attack_2", "shoulder");
   private static final List<String> GESTURE_ANIMATIONS = List.of("revive", "wave", "point");
 
-  private static Identifier profileId(String entityId) {
-    return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "entity/" + entityId);
+  private static ResourceLocation profileId(String entityId) {
+    return new ResourceLocation(Constants.MOD_ID, "entity/" + entityId);
   }
 
   private static String profile(String entityId) {
@@ -93,7 +93,7 @@ class HandModelResourceTest {
     return resourceManager;
   }
 
-  private static Optional<Resource> assetResource(Identifier resourceId) {
+  private static Optional<Resource> assetResource(ResourceLocation resourceId) {
     Path path = TestResources.assetPath(resourceId.toString(), "", "");
     if (!Files.exists(path)) {
       return Optional.empty();

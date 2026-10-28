@@ -70,8 +70,8 @@ class RevivalStateTest {
   @DisplayName("Revival state survives saving and loading")
   void codecRoundTrip() {
     RevivalState state = runningRitualOfBoundRemains();
-    Tag tag = RevivalState.CODEC.encodeStart(NbtOps.INSTANCE, state).getOrThrow();
+    Tag tag = RevivalState.CODEC.encodeStart(NbtOps.INSTANCE, state).result().orElseThrow();
 
-    assertEquals(state, RevivalState.CODEC.parse(NbtOps.INSTANCE, tag).getOrThrow());
+    assertEquals(state, RevivalState.CODEC.parse(NbtOps.INSTANCE, tag).result().orElseThrow());
   }
 }

@@ -109,8 +109,8 @@ final class CandleLightingEffects {
     EffectHelper.playSound(
         level, candleFlame, SoundEvents.WARDEN_HEARTBEAT, 1.0F, 0.5F + 0.15F * candleStep);
     EffectHelper.playSound(
-        level, handCenter, SoundEvents.SOUL_ESCAPE.value(), 0.8F, 0.4F + 0.1F * candleStep);
-    EffectHelper.playSound(level, handCenter, SoundEvents.CREAKING_TWITCH, 0.6F, 0.8F);
+        level, handCenter, SoundEvents.SOUL_ESCAPE, 0.8F, 0.4F + 0.1F * candleStep);
+    EffectHelper.playSound(level, handCenter, SoundEvents.BONE_BLOCK_BREAK, 0.6F, 0.8F);
     if (litCandleCount == RevivalRitual.REQUIRED_LIT_CANDLES) {
       this.playRitualReady(level, handCenter);
     }
@@ -140,7 +140,6 @@ final class CandleLightingEffects {
           0.06D,
           random.triangle(0.0D, 0.03D));
     }
-    EffectHelper.playSound(
-        level, handCenter, SoundEvents.TRIAL_SPAWNER_OMINOUS_ACTIVATE, 1.0F, 0.6F);
+    EffectHelper.playSound(level, handCenter, SoundEvents.BEACON_ACTIVATE, 1.0F, 0.6F);
   }
 }

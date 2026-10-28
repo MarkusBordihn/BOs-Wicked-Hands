@@ -24,6 +24,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -73,9 +74,9 @@ public final class ModEntityTypes {
 
   private ModEntityTypes() {}
 
-  public static void registerEvents() {
-    EntityAttributeCreationEvent.BUS.addListener(ModEntityTypes::registerEntityAttributes);
-    SpawnPlacementRegisterEvent.BUS.addListener(ModEntityTypes::registerSpawnPlacements);
+  public static void registerEvents(IEventBus modEventBus) {
+    modEventBus.addListener(ModEntityTypes::registerEntityAttributes);
+    modEventBus.addListener(ModEntityTypes::registerSpawnPlacements);
   }
 
   private static void registerEntityAttributes(EntityAttributeCreationEvent event) {

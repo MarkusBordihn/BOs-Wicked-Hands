@@ -20,7 +20,7 @@ package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -35,7 +35,8 @@ import net.minecraft.world.level.Level;
 public class BoggedHandEntity extends AbstractCompanionHandEntity {
 
   public static final String ID = "bogged_hand";
-  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation ENTITY_ID =
+      new ResourceLocation(Constants.MOD_ID, ID);
   private static final double ATTACK_DAMAGE = 1.5D;
   private static final int POISON_DURATION_TICKS = 80;
 
@@ -53,13 +54,14 @@ public class BoggedHandEntity extends AbstractCompanionHandEntity {
 
   @Override
   public boolean canBeAffected(MobEffectInstance mobEffectInstance) {
-    return !mobEffectInstance.is(MobEffects.POISON) && super.canBeAffected(mobEffectInstance);
+    return mobEffectInstance.getEffect() != MobEffects.POISON
+        && super.canBeAffected(mobEffectInstance);
   }
 
   @Override
   protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(new MobEffectInstance(MobEffects.POISON, POISON_DURATION_TICKS), this);
-    this.playSound(SoundEvents.BOGGED_AMBIENT, 0.6F, 1.6F);
+    this.playSound(SoundEvents.SLIME_SQUISH_SMALL, 0.6F, 1.6F);
     spawnHitParticles(serverLevel, target, ParticleTypes.ITEM_SLIME, 12, 0.0D);
   }
 }

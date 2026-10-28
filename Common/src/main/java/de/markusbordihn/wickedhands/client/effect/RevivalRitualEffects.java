@@ -101,12 +101,12 @@ public final class RevivalRitualEffects {
 
   private void playRitualSounds(Level level, Vec3 handCenter, int tick) {
     if (tick == 0) {
-      EffectHelper.playSound(level, handCenter, SoundEvents.SOUL_ESCAPE.value(), 1.5F, 0.6F);
+      EffectHelper.playSound(level, handCenter, SoundEvents.SOUL_ESCAPE, 1.5F, 0.6F);
       EffectHelper.playSound(level, handCenter, SoundEvents.AMBIENT_CAVE.value(), 1.0F, 0.7F);
     }
     for (int windTick : WIND_TICKS) {
       if (tick == windTick) {
-        EffectHelper.playSound(level, handCenter, SoundEvents.BREEZE_WHIRL, 1.0F, 0.5F);
+        EffectHelper.playSound(level, handCenter, SoundEvents.ENDER_DRAGON_FLAP, 1.0F, 0.5F);
       }
     }
     if (tick > 0 && tick % WHISPER_INTERVAL == 0) {
@@ -157,7 +157,7 @@ public final class RevivalRitualEffects {
   private void playClimax(Level level) {
     Vec3 handCenter = EffectHelper.handCenter(this.hand);
     EffectHelper.spawnParticle(
-        level, ParticleTypes.GUST_EMITTER_SMALL, handCenter, 0.0D, 0.0D, 0.0D);
+        level, ParticleTypes.EXPLOSION, handCenter, 0.0D, 0.0D, 0.0D);
     for (int i = 0; i < SHOCKWAVE_PARTICLES; i++) {
       double angle = Mth.TWO_PI * i / SHOCKWAVE_PARTICLES;
       EffectHelper.spawnParticle(
@@ -177,9 +177,8 @@ public final class RevivalRitualEffects {
           0.05D,
           0.0D);
     }
-    EffectHelper.playSound(
-        level, handCenter, SoundEvents.BREEZE_WIND_CHARGE_BURST.value(), 1.0F, 0.6F);
+    EffectHelper.playSound(level, handCenter, SoundEvents.EVOKER_CAST_SPELL, 1.0F, 0.6F);
     EffectHelper.playSound(level, handCenter, SoundEvents.GHAST_SCREAM, 0.6F, 0.5F);
-    EffectHelper.playSound(level, handCenter, SoundEvents.CREAKING_TWITCH, 1.0F, 1.0F);
+    EffectHelper.playSound(level, handCenter, SoundEvents.BONE_BLOCK_BREAK, 1.0F, 1.0F);
   }
 }

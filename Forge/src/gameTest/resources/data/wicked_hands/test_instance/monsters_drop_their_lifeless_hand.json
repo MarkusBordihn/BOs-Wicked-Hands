@@ -1,7 +1,0 @@
-{
-  "type": "minecraft:function",
-  "function": "wicked_hands:monsters_drop_their_lifeless_hand",
-  "environment": "minecraft:default",
-  "structure": "wicked_hands:gametest.1x1x1",
-  "max_ticks": 100
-}

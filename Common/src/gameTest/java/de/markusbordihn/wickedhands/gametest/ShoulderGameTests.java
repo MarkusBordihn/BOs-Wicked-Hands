@@ -35,150 +35,181 @@ import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 public class ShoulderGameTests extends HandGameTests {
 
   private static final int OWNER_HUNGER_TICKS = 200;
-  // ServerPlayer.removeEntitiesOnShoulder ignores the first 20 ticks after a hand sat down.
+  private static final int OWNER_BURNING_TICKS = 200;
+  private static final int PASSIVE_MEASURE_TICKS = 40;
+  // Player.removeEntitiesOnShoulder ignores the first 20 ticks after a hand sat down.
   private static final int AFTER_SHOULDER_GRACE_TICKS = 25;
+  // ServerPlayer ignores most damage during the first 60 ticks after joining.
+  private static final int AFTER_SPAWN_INVULNERABILITY_TICKS = 65;
 
   private static ServerPlayer makeVulnerableOwner(GameTestHelper helper) {
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
     owner.getAbilities().invulnerable = false;
-    // ServerPlayer.isInvulnerableTo spares every player whose client has not loaded yet.
-    owner.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
+    placeBesideRitual(helper, owner);
     return owner;
   }
 
-  private static ServerPlayer sitBesideRottenHand(GameTestHelper helper, Identifier handId) {
+  private static ServerPlayer sitBesideRottenHand(GameTestHelper helper, ResourceLocation handId) {
     ServerPlayer owner = makeVulnerableOwner(helper);
     sitOnShoulder(helper, owner, handId);
     sitOnShoulder(helper, owner, RottenHandEntity.ENTITY_ID);
     return owner;
   }
 
-  private static boolean isOnShoulder(ServerPlayer owner, ShoulderSide side, Identifier handId) {
+  private static boolean isOnShoulder(
+      ServerPlayer owner, ShoulderSide side, ResourceLocation handId) {
     return EasyNPCShoulderHandler.getShoulderNPCData(owner, side)
-        .flatMap(entityTag -> entityTag.getString("id"))
-        .map(Identifier::tryParse)
+        .map(entityTag -> entityTag.getString("id"))
+        .map(ResourceLocation::tryParse)
         .filter(handId::equals)
         .isPresent();
   }
 
   private static void assertOnlyGrippingHandStayed(
-      GameTestHelper helper, ServerPlayer owner, Identifier handId, String cause) {
+      GameTestHelper helper, ServerPlayer owner, ResourceLocation handId, String cause) {
     helper.assertTrue(
         isOnShoulder(owner, ShoulderSide.LEFT, handId),
-        Component.literal(handId + " was thrown off the shoulder by " + cause));
+        handId + " was thrown off the shoulder by " + cause);
     helper.assertFalse(
         isOnShoulder(owner, ShoulderSide.RIGHT, RottenHandEntity.ENTITY_ID),
-        Component.literal("The Rotten hand held on through " + cause));
+        "The Rotten hand held on through " + cause);
   }
 
-  private static void sitOnShoulder(GameTestHelper helper, ServerPlayer owner, Identifier handId) {
+  private static void sitOnShoulder(
+      GameTestHelper helper, ServerPlayer owner, ResourceLocation handId) {
     AbstractHandEntity hand = spawnWildHand(helper, handId, TEST_POSITION);
     // Player.setEntityOnShoulder rejects players that are not on the ground.
     owner.setOnGround(true);
     helper.assertTrue(
         EasyNPCShoulderHandler.sitOnShoulder(hand, owner),
-        Component.literal("Hand could not sit on the shoulder"));
+        "Hand could not sit on the shoulder");
   }
 
-  private static boolean hasShoulderPassive(
-      ServerPlayer owner, Holder<Attribute> attribute, ShoulderPassive shoulderPassive) {
+  private static boolean hasShoulderPassive(ServerPlayer owner, ShoulderPassive shoulderPassive) {
     return owner.hasEffect(shoulderPassive.getEffect())
-        && owner.getAttribute(attribute).hasModifier(shoulderPassive.getModifierId());
+        && shoulderPassive
+            .getAttribute()
+            .map(
+                attribute ->
+                    owner.getAttribute(attribute).getModifier(shoulderPassive.getModifierUUID())
+                        != null)
+            .orElse(true);
   }
 
-  private static void assertShoulderHandsGrantAttributePassives(
+  private static void assertShoulderHandsGrantPassives(
       GameTestHelper helper,
-      Identifier leftHandId,
-      Holder<Attribute> leftAttribute,
+      ResourceLocation leftHandId,
       ShoulderPassive leftPassive,
-      Identifier rightHandId,
-      Holder<Attribute> rightAttribute,
+      ResourceLocation rightHandId,
       ShoulderPassive rightPassive) {
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
     sitOnShoulder(helper, owner, leftHandId);
     sitOnShoulder(helper, owner, rightHandId);
     ShoulderPassiveHandler.update(owner);
     helper.assertTrue(
-        hasShoulderPassive(owner, leftAttribute, leftPassive)
-            && hasShoulderPassive(owner, rightAttribute, rightPassive),
-        Component.literal("Hands on the shoulder did not grant their passives"));
+        hasShoulderPassive(owner, leftPassive) && hasShoulderPassive(owner, rightPassive),
+        "Hands on the shoulder did not grant their passives");
 
     owner.removeAllEffects();
     ShoulderPassiveHandler.update(owner);
     helper.assertTrue(
-        hasShoulderPassive(owner, leftAttribute, leftPassive)
-            && hasShoulderPassive(owner, rightAttribute, rightPassive),
-        Component.literal("Passives did not return after drinking milk"));
+        hasShoulderPassive(owner, leftPassive) && hasShoulderPassive(owner, rightPassive),
+        "Passives did not return after drinking milk");
 
     EasyNPCShoulderHandler.dismount(owner, ShoulderSide.LEFT);
     ShoulderPassiveHandler.update(owner);
     helper.assertTrue(
-        !hasShoulderPassive(owner, leftAttribute, leftPassive)
-            && hasShoulderPassive(owner, rightAttribute, rightPassive),
-        Component.literal("Dismounting one hand did not remove only its passive"));
+        !hasShoulderPassive(owner, leftPassive) && hasShoulderPassive(owner, rightPassive),
+        "Dismounting one hand did not remove only its passive");
 
     EasyNPCShoulderHandler.dismount(owner, ShoulderSide.RIGHT);
     ShoulderPassiveHandler.update(owner);
     helper.assertFalse(
-        hasShoulderPassive(owner, rightAttribute, rightPassive),
-        Component.literal("Passive stayed after the hand left the shoulder"));
+        hasShoulderPassive(owner, rightPassive), "Passive stayed after the hand left the shoulder");
     helper.succeed();
   }
 
   public void testShoulderBoneAndWitheredHandsGrantPassives(GameTestHelper helper) {
-    assertShoulderHandsGrantAttributePassives(
+    assertShoulderHandsGrantPassives(
         helper,
         BoneHandEntity.ENTITY_ID,
-        Attributes.ARMOR,
         ShoulderPassive.BONE_GUARD,
         WitheredHandEntity.ENTITY_ID,
-        Attributes.BURNING_TIME,
         ShoulderPassive.ASHEN_SKIN);
   }
 
   public void testShoulderRottenAndDrownedHandsGrantPassives(GameTestHelper helper) {
-    assertShoulderHandsGrantAttributePassives(
+    assertShoulderHandsGrantPassives(
         helper,
         RottenHandEntity.ENTITY_ID,
-        Attributes.KNOCKBACK_RESISTANCE,
         ShoulderPassive.FIRM_GRIP,
         DrownedHandEntity.ENTITY_ID,
-        Attributes.OXYGEN_BONUS,
         ShoulderPassive.SECOND_BREATH);
   }
 
+  public void testShoulderWitheredHandShortensBurning(GameTestHelper helper) {
+    ServerPlayer owner = makeVulnerableOwner(helper);
+    sitOnShoulder(helper, owner, WitheredHandEntity.ENTITY_ID);
+    ShoulderPassiveHandler.update(owner);
+    owner.setRemainingFireTicks(OWNER_BURNING_TICKS);
+    helper.onEachTick(owner::doTick);
+    helper.runAfterDelay(
+        PASSIVE_MEASURE_TICKS,
+        () -> {
+          helper.assertTrue(
+              owner.getRemainingFireTicks()
+                  <= OWNER_BURNING_TICKS - PASSIVE_MEASURE_TICKS * 3 / 2,
+              "Withered hand on the shoulder did not shorten the burning");
+          helper.succeed();
+        });
+  }
+
+  public void testShoulderDrownedHandSlowsDrowning(GameTestHelper helper) {
+    ServerPlayer owner = makeVulnerableOwner(helper);
+    sitOnShoulder(helper, owner, DrownedHandEntity.ENTITY_ID);
+    helper.setBlock(TEST_POSITION, Blocks.WATER);
+    helper.setBlock(TEST_POSITION.above(), Blocks.WATER);
+    owner.moveTo(helper.absoluteVec(Vec3.atBottomCenterOf(TEST_POSITION)));
+    ShoulderPassiveHandler.update(owner);
+    helper.onEachTick(owner::doTick);
+    helper.runAfterDelay(
+        PASSIVE_MEASURE_TICKS,
+        () -> {
+          int lostAir = owner.getMaxAirSupply() - owner.getAirSupply();
+          helper.assertTrue(
+              lostAir > 0 && lostAir < PASSIVE_MEASURE_TICKS * 3 / 4,
+              "Drowned hand on the shoulder did not slow down drowning, lost " + lostAir + " air");
+          helper.succeed();
+        });
+  }
+
   public void testShoulderPassiveAppliesOnPlayerTick(GameTestHelper helper) {
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
     sitOnShoulder(helper, owner, BoneHandEntity.ENTITY_ID);
     // The mock player has no ticking connection, so NeoForge and Forge never fire its tick event.
     helper.onEachTick(owner::doTick);
     helper.succeedWhen(
         () ->
             helper.assertTrue(
-                hasShoulderPassive(owner, Attributes.ARMOR, ShoulderPassive.BONE_GUARD),
-                Component.literal("The player tick did not apply the shoulder passive")));
+                hasShoulderPassive(owner, ShoulderPassive.BONE_GUARD),
+                "The player tick did not apply the shoulder passive"));
   }
 
   public void testShoulderHandsProtectFromHungerAndFreezing(GameTestHelper helper) {
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
     sitOnShoulder(helper, owner, HuskHandEntity.ENTITY_ID);
     sitOnShoulder(helper, owner, StrayHandEntity.ENTITY_ID);
     owner.addEffect(new MobEffectInstance(MobEffects.HUNGER, OWNER_HUNGER_TICKS));
@@ -187,18 +218,18 @@ public class ShoulderGameTests extends HandGameTests {
     helper.assertTrue(
         owner.hasEffect(ShoulderPassive.DRY_STOMACH.getEffect())
             && owner.hasEffect(ShoulderPassive.COLD_BLOOD.getEffect()),
-        Component.literal("Husk and Stray hands did not show their passive effects"));
+        "Husk and Stray hands did not show their passive effects");
     helper.assertFalse(
         owner.hasEffect(MobEffects.HUNGER),
-        Component.literal("Husk hand on the shoulder did not remove hunger"));
+        "Husk hand on the shoulder did not remove hunger");
     helper.assertTrue(
         owner.getTicksFrozen() == 0,
-        Component.literal("Stray hand on the shoulder did not stop freezing"));
+        "Stray hand on the shoulder did not stop freezing");
     helper.succeed();
   }
 
   public void testShoulderHandsCurePoisonAndGrantNightVision(GameTestHelper helper) {
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
     sitOnShoulder(helper, owner, BoggedHandEntity.ENTITY_ID);
     sitOnShoulder(helper, owner, WitchHandEntity.ENTITY_ID);
     owner.addEffect(new MobEffectInstance(MobEffects.POISON, OWNER_POISON_TICKS));
@@ -206,43 +237,43 @@ public class ShoulderGameTests extends HandGameTests {
     helper.assertTrue(
         owner.hasEffect(ShoulderPassive.MOSSY_VEINS.getEffect())
             && owner.hasEffect(ShoulderPassive.WITCH_SIGHT.getEffect()),
-        Component.literal("Bogged and Witch hands did not show their passive effects"));
+        "Bogged and Witch hands did not show their passive effects");
     helper.assertFalse(
         owner.hasEffect(MobEffects.POISON),
-        Component.literal("Bogged hand on the shoulder did not remove poison"));
+        "Bogged hand on the shoulder did not remove poison");
     helper.assertTrue(
         owner.hasEffect(MobEffects.NIGHT_VISION),
-        Component.literal("Witch hand on the shoulder did not grant night vision"));
+        "Witch hand on the shoulder did not grant night vision");
     helper.succeed();
   }
 
   public void testShoulderHandsHoldOnThroughTheirDamage(GameTestHelper helper) {
-    Map<Identifier, Function<DamageSources, DamageSource>> grippingDamage =
+    Map<ResourceLocation, Function<DamageSources, DamageSource>> grippingDamage =
         Map.of(
             WitheredHandEntity.ENTITY_ID, DamageSources::onFire,
             StrayHandEntity.ENTITY_ID, DamageSources::freeze,
             BoggedHandEntity.ENTITY_ID, DamageSources::magic,
             DrownedHandEntity.ENTITY_ID, DamageSources::drown,
             HuskHandEntity.ENTITY_ID, DamageSources::starve);
-    Map<Identifier, ServerPlayer> owners = new HashMap<>();
+    Map<ResourceLocation, ServerPlayer> owners = new HashMap<>();
     grippingDamage
         .keySet()
         .forEach(handId -> owners.put(handId, sitBesideRottenHand(helper, handId)));
     helper.runAfterDelay(
-        AFTER_SHOULDER_GRACE_TICKS,
+        AFTER_SPAWN_INVULNERABILITY_TICKS,
         () -> {
           grippingDamage.forEach(
               (handId, damage) -> {
                 ServerPlayer owner = owners.get(handId);
                 DamageSource damageSource = damage.apply(owner.damageSources());
-                owner.hurtServer(helper.getLevel(), damageSource, 1.0F);
+                owner.hurt(damageSource, 1.0F);
                 assertOnlyGrippingHandStayed(
                     helper, owner, handId, damageSource.getMsgId() + " damage");
 
-                owner.hurtServer(helper.getLevel(), owner.damageSources().generic(), 1.0F);
+                owner.hurt(owner.damageSources().generic(), 1.0F);
                 helper.assertFalse(
                     isOnShoulder(owner, ShoulderSide.LEFT, handId),
-                    Component.literal(handId + " held on through generic damage"));
+                    handId + " held on through generic damage");
               });
           helper.succeed();
         });
@@ -255,15 +286,15 @@ public class ShoulderGameTests extends HandGameTests {
         AFTER_SHOULDER_GRACE_TICKS,
         () -> {
           helper.setBlock(TEST_POSITION, Blocks.WATER);
-          drownedOwner.snapTo(helper.absoluteVec(Vec3.atBottomCenterOf(TEST_POSITION)));
+          drownedOwner.moveTo(helper.absoluteVec(Vec3.atBottomCenterOf(TEST_POSITION)));
           drownedOwner.doTick();
           helper.assertTrue(
-              drownedOwner.isInWater(), Component.literal("The owner did not enter the water"));
+              drownedOwner.isInWater(), "The owner did not enter the water");
           assertOnlyGrippingHandStayed(helper, drownedOwner, DrownedHandEntity.ENTITY_ID, "water");
 
-          // Entity.baseTick resets isInPowderSnow before the shoulder check of the same tick.
+          // Entity.baseTick resets isInPowderSnow before Player.aiStep checks the shoulders.
           strayOwner.setIsInPowderSnow(true);
-          strayOwner.handleShoulderEntities();
+          strayOwner.aiStep();
           assertOnlyGrippingHandStayed(
               helper, strayOwner, StrayHandEntity.ENTITY_ID, "powder snow");
           helper.succeed();

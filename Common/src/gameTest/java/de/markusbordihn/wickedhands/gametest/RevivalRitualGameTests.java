@@ -46,17 +46,17 @@ import de.markusbordihn.wickedhands.entity.RottenHandEntity;
 import de.markusbordihn.wickedhands.entity.StrayHandEntity;
 import de.markusbordihn.wickedhands.entity.WitchHandEntity;
 import de.markusbordihn.wickedhands.entity.WitheredHandEntity;
-import de.markusbordihn.wickedhands.item.HandDataComponents;
+import de.markusbordihn.wickedhands.item.HandItemData;
 import de.markusbordihn.wickedhands.item.LifelessHandItem;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.Advancement;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -74,8 +74,8 @@ import net.minecraft.world.level.block.CandleBlock;
 
 public class RevivalRitualGameTests extends HandGameTests {
 
-  private static final Identifier LIFELESS_ROTTEN_HAND_PROFILE_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "entity/lifeless_rotten_hand");
+  private static final ResourceLocation LIFELESS_ROTTEN_HAND_PROFILE_ID =
+      new ResourceLocation(Constants.MOD_ID, "entity/lifeless_rotten_hand");
   private static final int DEATH_ANIMATION_TICKS = 20;
 
   private static LifelessRottenHandEntity placeLifelessRottenHand(
@@ -115,7 +115,8 @@ public class RevivalRitualGameTests extends HandGameTests {
       Item catalyst,
       Class<? extends AbstractCompanionHandEntity> companionClass) {
     ServerLevel level = helper.getLevel();
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
+    placeBesideRitual(helper, owner);
     startRevivalRitual(helper, owner, new ItemStack(lifelessHandItem), catalyst);
 
     helper.runAfterDelay(
@@ -126,17 +127,17 @@ public class RevivalRitualGameTests extends HandGameTests {
           UUID companionUUID = companion.getUUID();
           Component companionName = Component.literal("Grabby");
           companion.setCustomName(companionName);
-          companion.hurtServer(level, level.damageSources().magic(), 100.0F);
+          companion.hurt(level.damageSources().magic(), 100.0F);
 
           ItemStack returnedRemains = findInInventory(owner, lifelessHandItem);
           helper.assertTrue(
-              companionUUID.equals(returnedRemains.get(HandDataComponents.COMPANION_UUID))
-                  && owner.getUUID().equals(returnedRemains.get(HandDataComponents.OWNER_UUID))
-                  && companionName.equals(returnedRemains.getCustomName()),
-              Component.literal("Remains did not return to the owner with name and identity"));
+              Optional.of(companionUUID).equals(HandItemData.getCompanionUUID(returnedRemains))
+                  && Optional.of(owner.getUUID()).equals(HandItemData.getOwnerUUID(returnedRemains))
+                  && companionName.equals(returnedRemains.getHoverName()),
+              "Remains did not return to the owner with name and identity");
           helper.assertTrue(
               findItemEntities(helper, lifelessHandItem).isEmpty(),
-              Component.literal("Fallen companion also dropped its loot table"));
+              "Fallen companion also dropped its loot table");
 
           helper.runAfterDelay(
               DEATH_ANIMATION_TICKS + 5,
@@ -147,7 +148,7 @@ public class RevivalRitualGameTests extends HandGameTests {
                             savedEntry ->
                                 savedEntry.metadata().removalReason() == NPCRemovalReason.KILLED)
                         .isPresent(),
-                    Component.literal("Easy NPC did not keep the fallen companion as killed"));
+                    "Easy NPC did not keep the fallen companion as killed");
                 ItemStack remainsToPlace = returnedRemains.copy();
                 returnedRemains.setCount(0);
                 UUID lifelessHandUUID =
@@ -182,86 +183,85 @@ public class RevivalRitualGameTests extends HandGameTests {
                 companion -> companion.isNPCOwnedBy(owner));
     helper.assertTrue(
         revivedHandsOfOwner.size() == 1,
-        Component.literal(
-            "Expected one revived hand of the owner, found " + revivedHandsOfOwner.size()));
-    AbstractCompanionHandEntity revivedCompanion = revivedHandsOfOwner.getFirst();
+        "Expected one revived hand of the owner, found " + revivedHandsOfOwner.size());
+    AbstractCompanionHandEntity revivedCompanion = revivedHandsOfOwner.get(0);
     helper.assertTrue(
         companionUUID.equals(revivedCompanion.getUUID())
             && companionName.equals(revivedCompanion.getCustomName()),
-        Component.literal("Revival did not bring back the same companion"));
+        "Revival did not bring back the same companion");
     helper.assertTrue(
         revivedCompanion.getHandState().lifecycle() == HandLifecycle.COMPANION
             && revivedCompanion.getHealth() == revivedCompanion.getMaxHealth(),
-        Component.literal("Revived companion is not a healthy companion"));
+        "Revived companion is not a healthy companion");
     helper.assertTrue(
         findSavedNPCEntry(lifelessHandUUID).isEmpty(),
-        Component.literal("Easy NPC still lists the consumed lifeless hand"));
+        "Easy NPC still lists the consumed lifeless hand");
     helper.succeed();
   }
 
   public void testLifelessRottenHandIsPlacedOnSoulSand(GameTestHelper helper) {
-    Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player player = makeSurvivalPlayer(helper);
     LifelessRottenHandEntity lifelessRottenHand = placeLifelessRottenHand(helper, player);
     helper.assertTrue(
         lifelessRottenHand.isNoAi() && lifelessRottenHand.getRevivalState().ownerUUID().isEmpty(),
-        Component.literal("Placed rotten hand is not lifeless"));
+        "Placed rotten hand is not lifeless");
     helper.assertTrue(
         player.getMainHandItem().isEmpty(),
-        Component.literal("Placing did not consume the lifeless rotten hand"));
+        "Placing did not consume the lifeless rotten hand");
     helper.assertTrue(
         lifelessRottenHand.requiresCustomPersistence()
             && !lifelessRottenHand.removeWhenFarAway(DESPAWN_DISTANCE),
-        Component.literal("Placed rotten hand would despawn"));
+        "Placed rotten hand would despawn");
     helper.assertTrue(
         lifelessRottenHand.getModelRootData().rotation().x() == (float) Math.PI,
-        Component.literal("Placed rotten hand does not lie on its back"));
+        "Placed rotten hand does not lie on its back");
     assertActiveModelProfile(helper, lifelessRottenHand, LIFELESS_ROTTEN_HAND_PROFILE_ID);
     helper.succeed();
   }
 
   public void testRevivalRitualNeedsCandles(GameTestHelper helper) {
-    Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player player = makeSurvivalPlayer(helper);
     LifelessRottenHandEntity lifelessRottenHand = placeLifelessRottenHand(helper, player);
     player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.ROTTEN_FLESH));
     lifelessRottenHand.mobInteract(player, InteractionHand.MAIN_HAND);
     helper.assertTrue(
         lifelessRottenHand.getRevivalState().ownerUUID().isEmpty(),
-        Component.literal("Rotten hand was revived without candles"));
+        "Rotten hand was revived without candles");
     helper.assertTrue(
         player.getMainHandItem().is(Items.ROTTEN_FLESH),
-        Component.literal("Catalyst was consumed without candles"));
+        "Catalyst was consumed without candles");
     helper.succeed();
   }
 
   public void testRevivalRitualCreatesCompanion(GameTestHelper helper) {
-    Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player player = makeSurvivalPlayer(helper);
     AbstractLifelessHandEntity lifelessRottenHand = startRottenHandRitual(helper, player);
     helper.assertTrue(
         lifelessRottenHand.getRevivalState().ownerUUID().equals(Optional.of(player.getUUID())),
-        Component.literal("Revival ritual did not start for the ritual player"));
+        "Revival ritual did not start for the ritual player");
     helper.assertTrue(
-        player.getMainHandItem().isEmpty(), Component.literal("Catalyst was not consumed"));
+        player.getMainHandItem().isEmpty(), "Catalyst was not consumed");
 
     helper.runAfterDelay(
         AFTER_RITUAL_TICKS,
         () -> {
           helper.assertTrue(
               lifelessRottenHand.isRemoved(),
-              Component.literal("Lifeless rotten hand was not replaced"));
+              "Lifeless rotten hand was not replaced");
           RottenHandEntity rottenHand = findEntityNearTestPosition(helper, RottenHandEntity.class);
           helper.assertTrue(
-              rottenHand.isNPCOwnedBy(player), Component.literal("Ritual player is not the owner"));
+              rottenHand.isNPCOwnedBy(player), "Ritual player is not the owner");
           helper.assertTrue(
               rottenHand.getHandState().lifecycle() == HandLifecycle.COMPANION
                   && !rottenHand.isNoAi(),
-              Component.literal("Rotten hand did not become a companion"));
+              "Rotten hand did not become a companion");
           helper.assertTrue(
               rottenHand.hasObjective(ObjectiveType.FLOAT),
-              Component.literal("Companion rotten hand cannot swim"));
+              "Companion rotten hand cannot swim");
           for (BlockPos candlePosition : CANDLE_POSITIONS) {
             helper.assertFalse(
                 helper.getBlockState(candlePosition).getValue(CandleBlock.LIT),
-                Component.literal("Ritual candle at " + candlePosition + " is still burning"));
+                "Ritual candle at " + candlePosition + " is still burning");
           }
 
           player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
@@ -269,21 +269,21 @@ public class RevivalRitualGameTests extends HandGameTests {
           rottenHand.mobInteract(player, InteractionHand.MAIN_HAND);
           helper.assertTrue(
               rottenHand.getHandState().companionMode() == CompanionMode.FOLLOW,
-              Component.literal("Sneak interaction with an item switched the companion mode"));
+              "Sneak interaction with an item switched the companion mode");
 
           player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
           rottenHand.mobInteract(player, InteractionHand.MAIN_HAND);
           helper.assertTrue(
               rottenHand.getHandState().companionMode() == CompanionMode.SHOULDER
                   && rottenHand.hasObjective(ObjectiveType.SIT_ON_OWNER_SHOULDER),
-              Component.literal("Sneak interaction did not send the companion to the shoulder"));
+              "Sneak interaction did not send the companion to the shoulder");
 
           rottenHand.mobInteract(player, InteractionHand.MAIN_HAND);
           helper.assertTrue(
               rottenHand.getHandState().companionMode() == CompanionMode.STAY
                   && rottenHand.hasObjective(ObjectiveType.MOVE_BACK_TO_HOME)
                   && !rottenHand.hasObjective(ObjectiveType.SIT_ON_OWNER_SHOULDER),
-              Component.literal("Sneak interaction did not make the companion stay"));
+              "Sneak interaction did not make the companion stay");
           helper.succeed();
         });
   }
@@ -291,34 +291,34 @@ public class RevivalRitualGameTests extends HandGameTests {
   public void testRevivalRitualGrantsAdvancements(GameTestHelper helper) {
     ServerAdvancementManager advancementManager = helper.getLevel().getServer().getAdvancements();
     helper.assertTrue(
-        advancementManager.get(HandAdvancements.ROOT_ID) != null,
-        Component.literal("Root advancement is not loaded"));
-    AdvancementHolder ritualAdvancement = advancementManager.get(HandAdvancements.START_RITUAL_ID);
-    AdvancementHolder companionAdvancement =
-        advancementManager.get(HandAdvancements.companionAdvancementId(RottenHandEntity.ENTITY_ID));
+        advancementManager.getAdvancement(HandAdvancements.ROOT_ID) != null,
+        "Root advancement is not loaded");
+    Advancement ritualAdvancement = advancementManager.getAdvancement(HandAdvancements.START_RITUAL_ID);
+    Advancement companionAdvancement =
+        advancementManager.getAdvancement(HandAdvancements.companionAdvancementId(RottenHandEntity.ENTITY_ID));
     helper.assertTrue(
         ritualAdvancement != null && companionAdvancement != null,
-        Component.literal("Ritual advancements are not loaded"));
+        "Ritual advancements are not loaded");
 
-    ServerPlayer serverPlayer = helper.makeMockServerPlayerInLevel();
+    ServerPlayer serverPlayer = makeServerPlayer(helper);
     startRottenHandRitual(helper, serverPlayer);
     helper.assertTrue(
         serverPlayer.getAdvancements().getOrStartProgress(ritualAdvancement).isDone(),
-        Component.literal("Starting the ritual did not grant the ritual advancement"));
+        "Starting the ritual did not grant the ritual advancement");
 
     helper.runAfterDelay(
         AFTER_RITUAL_TICKS,
         () -> {
           helper.assertTrue(
               serverPlayer.getAdvancements().getOrStartProgress(companionAdvancement).isDone(),
-              Component.literal("Reviving the hand did not grant the companion advancement"));
+              "Reviving the hand did not grant the companion advancement");
           helper.succeed();
         });
   }
 
   public void testDrownedHandRitualNeedsKelp(GameTestHelper helper) {
     placeLitCandles(helper);
-    Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player player = makeSurvivalPlayer(helper);
     LifelessDrownedHandEntity lifelessDrownedHand =
         placeLifelessHand(
             helper,
@@ -330,13 +330,13 @@ public class RevivalRitualGameTests extends HandGameTests {
     helper.assertTrue(
         lifelessDrownedHand.getRevivalState().ownerUUID().isEmpty()
             && player.getMainHandItem().is(Items.ROTTEN_FLESH),
-        Component.literal("Rotten flesh started the drowned hand ritual"));
+        "Rotten flesh started the drowned hand ritual");
 
     player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.KELP));
     lifelessDrownedHand.mobInteract(player, InteractionHand.MAIN_HAND);
     helper.assertTrue(
         lifelessDrownedHand.getRevivalState().ownerUUID().equals(Optional.of(player.getUUID())),
-        Component.literal("Kelp did not start the drowned hand ritual"));
+        "Kelp did not start the drowned hand ritual");
 
     helper.runAfterDelay(
         AFTER_RITUAL_TICKS,
@@ -346,22 +346,22 @@ public class RevivalRitualGameTests extends HandGameTests {
           helper.assertTrue(
               drownedHand.isNPCOwnedBy(player)
                   && drownedHand.getHandState().lifecycle() == HandLifecycle.COMPANION,
-              Component.literal("Drowned hand did not become a companion"));
+              "Drowned hand did not become a companion");
           helper.assertFalse(
               drownedHand.hasObjective(ObjectiveType.FLOAT),
-              Component.literal("Companion drowned hand floats instead of diving"));
+              "Companion drowned hand floats instead of diving");
           helper.succeed();
         });
   }
 
   public void testBoneHandRitualCreatesCompanion(GameTestHelper helper) {
-    AdvancementHolder companionAdvancement =
+    Advancement companionAdvancement =
         companionAdvancement(helper, BoneHandEntity.ENTITY_ID);
     helper.assertTrue(
         companionAdvancement != null,
-        Component.literal("Bone hand companion advancement is not loaded"));
+        "Bone hand companion advancement is not loaded");
 
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
     placeBesideRitual(helper, owner);
     startRevivalRitual(helper, owner, LifelessBoneHandEntity.ENTITY_ID, Items.BONE_MEAL);
 
@@ -375,13 +375,13 @@ public class RevivalRitualGameTests extends HandGameTests {
               helper.assertTrue(
                   boneHand.get().isNPCOwnedBy(owner)
                       && boneHand.get().getHandState().lifecycle() == HandLifecycle.COMPANION,
-                  Component.literal("Bone hand did not become a companion"));
+                  "Bone hand did not become a companion");
               helper.assertTrue(
                   boneHand.get().hasObjective(ObjectiveType.FLOAT),
-                  Component.literal("Companion bone hand cannot swim"));
+                  "Companion bone hand cannot swim");
               helper.assertTrue(
                   owner.getAdvancements().getOrStartProgress(companionAdvancement).isDone(),
-                  Component.literal("Reviving the bone hand did not grant its advancement"));
+                  "Reviving the bone hand did not grant its advancement");
               assertActiveGesture(
                   helper, boneHand.get(), HandGesture.REVIVE, "Awakened hand did not play revive");
             })
@@ -396,8 +396,8 @@ public class RevivalRitualGameTests extends HandGameTests {
   }
 
   public void testStrangerCannotReviveForeignRemains(GameTestHelper helper) {
-    Player owner = helper.makeMockPlayer(GameType.SURVIVAL);
-    Player stranger = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player owner = makeSurvivalPlayer(helper);
+    Player stranger = makeSurvivalPlayer(helper);
     ItemStack foreignRemains =
         LifelessHandItem.createCompanionRemains(
             LifelessRottenHandEntity.ENTITY_ID,
@@ -409,59 +409,59 @@ public class RevivalRitualGameTests extends HandGameTests {
     helper.assertTrue(
         lifelessHand.getRevivalState().ownerUUID().isEmpty()
             && stranger.getMainHandItem().is(Items.ROTTEN_FLESH),
-        Component.literal("A stranger started the ritual for foreign remains"));
+        "A stranger started the ritual for foreign remains");
 
     owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.ROTTEN_FLESH));
     lifelessHand.mobInteract(owner, InteractionHand.MAIN_HAND);
     helper.assertTrue(
         lifelessHand.getRevivalState().ownerUUID().equals(Optional.of(owner.getUUID())),
-        Component.literal("The owner could not start the ritual for their remains"));
+        "The owner could not start the ritual for their remains");
     helper.succeed();
   }
 
   public void testFallenCompanionWithoutOwnerLeavesProtectedRemains(GameTestHelper helper) {
     ServerLevel level = helper.getLevel();
-    Player owner = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player owner = makeSurvivalPlayer(helper);
     startRottenHandRitual(helper, owner);
 
     helper.runAfterDelay(
         AFTER_RITUAL_TICKS,
         () -> {
           RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
-          companion.hurtServer(level, level.damageSources().lava(), 100.0F);
+          companion.hurt(level.damageSources().lava(), 100.0F);
           List<ItemEntity> remains = findItemEntities(helper, lifelessRottenHandItem());
           helper.assertTrue(
               remains.size() == 1,
-              Component.literal("Expected only the companion remains, found " + remains.size()));
-          ItemEntity companionRemains = remains.getFirst();
+              "Expected only the companion remains, found " + remains.size());
+          ItemEntity companionRemains = remains.get(0);
           helper.assertTrue(
               companion
                   .getUUID()
-                  .equals(companionRemains.getItem().get(HandDataComponents.COMPANION_UUID)),
-              Component.literal("Remains are not linked to the fallen companion"));
+                  .equals(HandItemData.getCompanionUUID(companionRemains.getItem()).orElse(null)),
+              "Remains are not linked to the fallen companion");
           helper.assertTrue(
               companionRemains.isInvulnerable() && companionRemains.getAge() < 0,
-              Component.literal("Remains of an absent owner could burn or despawn"));
+              "Remains of an absent owner could burn or despawn");
 
           companionRemains.setNoPickUpDelay();
-          Player stranger = helper.makeMockPlayer(GameType.SURVIVAL);
+          Player stranger = makeSurvivalPlayer(helper);
           companionRemains.playerTouch(stranger);
           helper.assertTrue(
               !companionRemains.isRemoved()
                   && findInInventory(stranger, lifelessRottenHandItem()).isEmpty(),
-              Component.literal("A stranger picked up the protected remains"));
+              "A stranger picked up the protected remains");
           companionRemains.playerTouch(owner);
           helper.assertTrue(
               companionRemains.isRemoved()
                   && !findInInventory(owner, lifelessRottenHandItem()).isEmpty(),
-              Component.literal("The owner could not pick up the protected remains"));
+              "The owner could not pick up the protected remains");
           helper.succeed();
         });
   }
 
   public void testFallenCompanionWithFullInventoryLeavesProtectedRemains(GameTestHelper helper) {
     ServerLevel level = helper.getLevel();
-    ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    ServerPlayer owner = makeServerPlayer(helper);
     owner.setGameMode(GameType.SURVIVAL);
     placeBesideRitual(helper, owner);
     startRottenHandRitual(helper, owner);
@@ -472,10 +472,10 @@ public class RevivalRitualGameTests extends HandGameTests {
           for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
             owner
                 .getInventory()
-                .setItem(slot, new ItemStack(Items.STONE, Item.DEFAULT_MAX_STACK_SIZE));
+                .setItem(slot, new ItemStack(Items.STONE, Items.STONE.getMaxStackSize()));
           }
           RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
-          companion.hurtServer(level, level.damageSources().magic(), 100.0F);
+          companion.hurt(level.damageSources().magic(), 100.0F);
 
           List<ItemEntity> remains =
               level.getEntitiesOfClass(
@@ -484,27 +484,27 @@ public class RevivalRitualGameTests extends HandGameTests {
                   itemEntity -> itemEntity.getItem().is(lifelessRottenHandItem()));
           helper.assertTrue(
               remains.size() == 1,
-              Component.literal("Expected the remains beside the owner, found " + remains.size()));
-          ItemEntity droppedRemains = remains.getFirst();
+              "Expected the remains beside the owner, found " + remains.size());
+          ItemEntity droppedRemains = remains.get(0);
           helper.assertTrue(
               droppedRemains.isInvulnerable() && droppedRemains.getAge() < 0,
-              Component.literal("Remains beside a full inventory could burn or despawn"));
+              "Remains beside a full inventory could burn or despawn");
 
           droppedRemains.setNoPickUpDelay();
-          Player stranger = helper.makeMockPlayer(GameType.SURVIVAL);
+          Player stranger = makeSurvivalPlayer(helper);
           droppedRemains.playerTouch(stranger);
           helper.assertTrue(
               !droppedRemains.isRemoved()
                   && findInInventory(stranger, lifelessRottenHandItem()).isEmpty(),
-              Component.literal("A stranger picked up the remains beside the owner"));
+              "A stranger picked up the remains beside the owner");
           helper.succeed();
         });
   }
 
   public void testBoundRemainsResistAllButTheirOwner(GameTestHelper helper) {
     ServerLevel level = helper.getLevel();
-    Player owner = helper.makeMockPlayer(GameType.SURVIVAL);
-    Player stranger = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player owner = makeSurvivalPlayer(helper);
+    Player stranger = makeSurvivalPlayer(helper);
     ItemStack boundRemains =
         LifelessHandItem.createCompanionRemains(
             LifelessRottenHandEntity.ENTITY_ID,
@@ -516,34 +516,34 @@ public class RevivalRitualGameTests extends HandGameTests {
     Mob zombie = spawnMobWithoutAi(helper, EntityType.ZOMBIE, MONSTER_POSITION);
 
     helper.assertFalse(
-        lifelessHand.hurtServer(level, level.damageSources().lava(), 100.0F)
-            || lifelessHand.hurtServer(level, level.damageSources().mobAttack(zombie), 100.0F)
-            || lifelessHand.hurtServer(
-                level, level.damageSources().playerAttack(stranger), 100.0F),
-        Component.literal("Bound remains were hurt by lava, a monster or a stranger"));
+        lifelessHand.hurt(level.damageSources().lava(), 100.0F)
+            || lifelessHand.hurt(level.damageSources().mobAttack(zombie), 100.0F)
+            || lifelessHand.hurt(
+                level.damageSources().playerAttack(stranger), 100.0F),
+        "Bound remains were hurt by lava, a monster or a stranger");
     helper.assertTrue(
-        lifelessHand.hurtServer(level, level.damageSources().playerAttack(owner), 100.0F)
+        lifelessHand.hurt(level.damageSources().playerAttack(owner), 100.0F)
             && lifelessHand.isDeadOrDying(),
-        Component.literal("The owner could not break their placed remains"));
+        "The owner could not break their placed remains");
 
     List<ItemEntity> remains = findItemEntities(helper, lifelessRottenHandItem());
     helper.assertTrue(
         remains.size() == 1
-            && remains.getFirst().isInvulnerable()
-            && remains.getFirst().getAge() < 0,
-        Component.literal("Broken bound remains did not drop as protected remains"));
+            && remains.get(0).isInvulnerable()
+            && remains.get(0).getAge() < 0,
+        "Broken bound remains did not drop as protected remains");
     helper.succeed();
   }
 
   public void testRunningRitualProtectsLifelessHand(GameTestHelper helper) {
     ServerLevel level = helper.getLevel();
-    Player owner = helper.makeMockPlayer(GameType.SURVIVAL);
+    Player owner = makeSurvivalPlayer(helper);
     AbstractLifelessHandEntity lifelessHand = startRottenHandRitual(helper, owner);
 
     helper.assertFalse(
-        lifelessHand.hurtServer(level, level.damageSources().playerAttack(owner), 100.0F)
-            || lifelessHand.hurtServer(level, level.damageSources().lava(), 100.0F),
-        Component.literal("The lifeless hand was hurt during its ritual"));
+        lifelessHand.hurt(level.damageSources().playerAttack(owner), 100.0F)
+            || lifelessHand.hurt(level.damageSources().lava(), 100.0F),
+        "The lifeless hand was hurt during its ritual");
     helper.succeed();
   }
 

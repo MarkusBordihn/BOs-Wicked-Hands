@@ -24,44 +24,31 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.loot.LootPool;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.entries.NestedLootTable;
+import net.minecraft.world.level.storage.loot.entries.LootTableReference;
 
 public final class HandLootInjections {
 
-  private static final Map<ResourceKey<LootTable>, ResourceKey<LootTable>> INJECTIONS =
-      Stream.of(
-              "zombie",
-              "drowned",
-              "skeleton",
-              "husk",
-              "stray",
-              "wither_skeleton",
-              "bogged",
-              "witch")
+  private static final Map<ResourceLocation, ResourceLocation> INJECTIONS =
+      Stream.of("zombie", "drowned", "skeleton", "husk", "stray", "wither_skeleton", "witch")
           .collect(
               Collectors.toUnmodifiableMap(
                   HandLootInjections::vanillaEntityLootTable, HandLootInjections::injection));
 
   private HandLootInjections() {}
 
-  private static ResourceKey<LootTable> vanillaEntityLootTable(String entityName) {
-    return ResourceKey.create(
-        Registries.LOOT_TABLE, Identifier.withDefaultNamespace("entities/" + entityName));
+  private static ResourceLocation vanillaEntityLootTable(String entityName) {
+    return new ResourceLocation("entities/" + entityName);
   }
 
-  private static ResourceKey<LootTable> injection(String entityName) {
-    return ResourceKey.create(
-        Registries.LOOT_TABLE,
-        Identifier.fromNamespaceAndPath(Constants.MOD_ID, "injections/" + entityName));
+  private static ResourceLocation injection(String entityName) {
+    return new ResourceLocation(Constants.MOD_ID, "injections/" + entityName);
   }
 
-  public static Optional<LootPool.Builder> createDropPool(ResourceKey<LootTable> lootTable) {
+  public static Optional<LootPool.Builder> createDropPool(ResourceLocation lootTable) {
     return Optional.ofNullable(INJECTIONS.get(lootTable))
-        .map(injection -> LootPool.lootPool().add(NestedLootTable.lootTableReference(injection)));
+        .map(
+            injection -> LootPool.lootPool().add(LootTableReference.lootTableReference(injection)));
   }
 }

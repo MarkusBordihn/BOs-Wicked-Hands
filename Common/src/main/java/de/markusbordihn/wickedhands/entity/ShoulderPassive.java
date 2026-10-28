@@ -20,16 +20,16 @@
 package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageSource;
@@ -39,11 +39,12 @@ import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.projectile.arrow.Arrow;
-import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.item.alchemy.PotionUtils;
 
 public enum ShoulderPassive {
   FIRM_GRIP(
@@ -51,18 +52,12 @@ public enum ShoulderPassive {
       0x6B8E3A,
       Attributes.KNOCKBACK_RESISTANCE,
       0.5D,
-      Operation.ADD_VALUE),
-  SECOND_BREATH(
-      DrownedHandEntity.ENTITY_ID, 0x3E8C84, Attributes.OXYGEN_BONUS, 1.0D, Operation.ADD_VALUE),
-  BONE_GUARD(BoneHandEntity.ENTITY_ID, 0xD8D2C0, Attributes.ARMOR, 2.0D, Operation.ADD_VALUE),
+      Operation.ADDITION),
+  SECOND_BREATH(DrownedHandEntity.ENTITY_ID, 0x3E8C84),
+  BONE_GUARD(BoneHandEntity.ENTITY_ID, 0xD8D2C0, Attributes.ARMOR, 2.0D, Operation.ADDITION),
   DRY_STOMACH(HuskHandEntity.ENTITY_ID, 0xC2A36B, owner -> owner.removeEffect(MobEffects.HUNGER)),
   COLD_BLOOD(StrayHandEntity.ENTITY_ID, 0x9FB8C4, owner -> owner.setTicksFrozen(0)),
-  ASHEN_SKIN(
-      WitheredHandEntity.ENTITY_ID,
-      0x4FD6D6,
-      Attributes.BURNING_TIME,
-      -0.5D,
-      Operation.ADD_MULTIPLIED_TOTAL),
+  ASHEN_SKIN(WitheredHandEntity.ENTITY_ID, 0x4FD6D6),
   MOSSY_VEINS(BoggedHandEntity.ENTITY_ID, 0x5E7A34, owner -> owner.removeEffect(MobEffects.POISON)),
   WITCH_SIGHT(WitchHandEntity.ENTITY_ID, 0x7E3F98, ShoulderPassive::refreshNightVision);
 
@@ -70,26 +65,22 @@ public enum ShoulderPassive {
   // Vanilla flickers Night Vision during its last 200 ticks, see GameRenderer.getNightVisionScale.
   public static final int NIGHT_VISION_REFRESH_TICKS = 220;
 
-  private final Identifier effectId =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, this.name().toLowerCase(Locale.ROOT));
-  private final ResourceKey<MobEffect> effectKey =
-      ResourceKey.create(Registries.MOB_EFFECT, this.effectId);
-  private final Identifier modifierId = this.effectId.withPrefix("shoulder_passive/");
+  private final ResourceLocation effectId =
+      new ResourceLocation(Constants.MOD_ID, this.name().toLowerCase(Locale.ROOT));
+  private final UUID modifierUUID =
+      UUID.nameUUIDFromBytes(
+          this.effectId.withPrefix("shoulder_passive/").toString().getBytes(StandardCharsets.UTF_8));
   private final TagKey<DamageType> grippingDamage =
       TagKey.create(Registries.DAMAGE_TYPE, this.effectId.withPrefix("shoulder_grip/"));
-  private final Identifier handId;
+  private final ResourceLocation handId;
   private final int color;
-  private final Holder<Attribute> attribute;
+  private final Attribute attribute;
   private final double amount;
   private final Operation operation;
   private final Consumer<ServerPlayer> ownerAction;
 
   ShoulderPassive(
-      Identifier handId,
-      int color,
-      Holder<Attribute> attribute,
-      double amount,
-      Operation operation) {
+      ResourceLocation handId, int color, Attribute attribute, double amount, Operation operation) {
     this.handId = handId;
     this.color = color;
     this.attribute = attribute;
@@ -98,13 +89,17 @@ public enum ShoulderPassive {
     this.ownerAction = owner -> {};
   }
 
-  ShoulderPassive(Identifier handId, int color, Consumer<ServerPlayer> ownerAction) {
+  ShoulderPassive(ResourceLocation handId, int color, Consumer<ServerPlayer> ownerAction) {
     this.handId = handId;
     this.color = color;
     this.attribute = null;
     this.amount = 0.0D;
-    this.operation = Operation.ADD_VALUE;
+    this.operation = Operation.ADDITION;
     this.ownerAction = ownerAction;
+  }
+
+  ShoulderPassive(ResourceLocation handId, int color) {
+    this(handId, color, owner -> {});
   }
 
   private static void refreshNightVision(ServerPlayer owner) {
@@ -116,7 +111,7 @@ public enum ShoulderPassive {
     }
   }
 
-  public static Optional<ShoulderPassive> forHand(Identifier handId) {
+  public static Optional<ShoulderPassive> forHand(ResourceLocation handId) {
     return Arrays.stream(values())
         .filter(shoulderPassive -> shoulderPassive.handId.equals(handId))
         .findFirst();
@@ -127,42 +122,74 @@ public enum ShoulderPassive {
       return false;
     }
 
-    PotionContents potionContents =
-        arrow
-            .getPickupItemStackOrigin()
-            .getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
-    for (MobEffectInstance mobEffectInstance : potionContents.getAllEffects()) {
-      if (mobEffectInstance.is(MobEffects.POISON)) {
+    CompoundTag arrowTag = new CompoundTag();
+    arrow.addAdditionalSaveData(arrowTag);
+    for (MobEffectInstance mobEffectInstance : PotionUtils.getAllEffects(arrowTag)) {
+      if (mobEffectInstance.getEffect() == MobEffects.POISON) {
         return true;
       }
     }
     return false;
   }
 
-  public Identifier getEffectId() {
+  public ResourceLocation getEffectId() {
     return this.effectId;
   }
 
-  public Identifier getModifierId() {
-    return this.modifierId;
+  public UUID getModifierUUID() {
+    return this.modifierUUID;
   }
 
-  public Holder<MobEffect> getEffect() {
-    return BuiltInRegistries.MOB_EFFECT.getOrThrow(this.effectKey);
+  public Optional<Attribute> getAttribute() {
+    return Optional.ofNullable(this.attribute);
+  }
+
+  public MobEffect getEffect() {
+    return BuiltInRegistries.MOB_EFFECT.get(this.effectId);
   }
 
   public MobEffect createEffect() {
-    MobEffect mobEffect = new MobEffect(MobEffectCategory.BENEFICIAL, this.color) {};
+    MobEffect mobEffect =
+        new MobEffect(MobEffectCategory.BENEFICIAL, this.color) {
+          @Override
+          public void applyEffectTick(LivingEntity livingEntity, int amplifier) {
+            ShoulderPassive.this.slowDownDrowningAndBurning(livingEntity);
+          }
+
+          @Override
+          public boolean isDurationEffectTick(int duration, int amplifier) {
+            return true;
+          }
+        };
     if (this.attribute != null) {
-      mobEffect.addAttributeModifier(this.attribute, this.modifierId, this.amount, this.operation);
+      mobEffect.addAttributeModifier(
+          this.attribute, this.modifierUUID.toString(), this.amount, this.operation);
     }
     return mobEffect;
+  }
+
+  private void slowDownDrowningAndBurning(LivingEntity owner) {
+    switch (this) {
+      case SECOND_BREATH -> {
+        if (owner.isUnderWater()
+            && owner.tickCount % 2 == 0
+            && owner.getAirSupply() < owner.getMaxAirSupply()) {
+          owner.setAirSupply(owner.getAirSupply() + 1);
+        }
+      }
+      case ASHEN_SKIN -> {
+        if (owner.getRemainingFireTicks() > 0) {
+          owner.setRemainingFireTicks(owner.getRemainingFireTicks() - 1);
+        }
+      }
+      default -> {}
+    }
   }
 
   // Removing Hunger in a MobEffect tick would modify activeEffects while vanilla iterates it.
   void apply(ServerPlayer owner) {
     this.ownerAction.accept(owner);
-    Holder<MobEffect> effect = this.getEffect();
+    MobEffect effect = this.getEffect();
     if (!owner.hasEffect(effect)) {
       owner.addEffect(
           new MobEffectInstance(effect, MobEffectInstance.INFINITE_DURATION, 0, true, false, true));

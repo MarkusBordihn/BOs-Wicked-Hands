@@ -1,11 +1,15 @@
 import de.markusbordihn.wickedhands.gradle.GenerateLifelessTexturesTask
 
 plugins {
-  id 'net.neoforged.moddev' version '2.0.141'
+  id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT'
 }
 
 base {
   archivesName = "${mod_name}-common-${minecraft_version}"
+}
+
+minecraft {
+  version(project.minecraft_version)
 }
 
 sourceSets {
@@ -13,14 +17,6 @@ sourceSets {
     compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
   }
 }
-
-neoForge {
-  neoFormVersion = project.neo_form_version
-
-  // Add Minecraft classes to test configuration
-  addModdingDependenciesTo(sourceSets.test)
-}
-
 dependencies {
   compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.7'
 
@@ -64,7 +60,3 @@ processResources {
   }
 }
 
-tasks.register('prepareWorkspace') {
-  description = 'Prepares the workspace (compatibility task for moddev)'
-  group = 'neoforge'
-}

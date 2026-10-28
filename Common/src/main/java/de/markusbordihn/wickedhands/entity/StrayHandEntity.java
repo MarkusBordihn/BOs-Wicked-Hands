@@ -21,7 +21,7 @@ package de.markusbordihn.wickedhands.entity;
 
 import de.markusbordihn.wickedhands.Constants;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -36,7 +36,8 @@ import net.minecraft.world.level.Level;
 public class StrayHandEntity extends AbstractCompanionHandEntity {
 
   public static final String ID = "stray_hand";
-  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation ENTITY_ID =
+      new ResourceLocation(Constants.MOD_ID, ID);
   private static final double ATTACK_DAMAGE = 1.5D;
   private static final int CHILL_DURATION_TICKS = 60;
   private static final int HARMLESS_FROZEN_TICKS = 100;
@@ -55,7 +56,8 @@ public class StrayHandEntity extends AbstractCompanionHandEntity {
 
   @Override
   protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
-    target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, CHILL_DURATION_TICKS), this);
+    target.addEffect(
+        new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, CHILL_DURATION_TICKS), this);
     if (target.canFreeze()) {
       target.setTicksFrozen(Math.max(target.getTicksFrozen(), HARMLESS_FROZEN_TICKS));
     }

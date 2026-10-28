@@ -1,7 +1,0 @@
-{
-  "type": "minecraft:function",
-  "function": "wicked_hands:stranger_cannot_revive_foreign_remains",
-  "environment": "minecraft:default",
-  "structure": "wicked_hands:gametest.1x1x1",
-  "max_ticks": 100
-}

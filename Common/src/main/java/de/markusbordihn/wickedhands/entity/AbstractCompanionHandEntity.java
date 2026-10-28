@@ -40,8 +40,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -51,11 +52,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.EntitySelector;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
@@ -66,15 +66,13 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
 public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
 
   public static final TagKey<EntityType<?>> COMPANION_IGNORED_TARGETS =
       TagKey.create(
           Registries.ENTITY_TYPE,
-          Identifier.fromNamespaceAndPath(Constants.MOD_ID, "companion_ignored_targets"));
+          new ResourceLocation(Constants.MOD_ID, "companion_ignored_targets"));
   public static final float FEEDING_HEAL_AMOUNT = 2.0F;
   public static final int REGENERATION_INTERVAL_TICKS = 100;
   public static final int REGENERATION_COMBAT_COOLDOWN_TICKS = 200;
@@ -96,7 +94,7 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   private static final String REMAINS_DROPPED_MESSAGE_KEY = MESSAGE_KEY_PREFIX + "remains_dropped";
 
   private final AwakeningEffects awakeningEffects = new AwakeningEffects(this);
-  private final Identifier lifelessHandId;
+  private final ResourceLocation lifelessHandId;
   private final TagKey<Item> catalystItems;
   private HandState handState = HandState.EMPTY;
   private HandGesture activeGesture;
@@ -108,7 +106,9 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   private boolean retreating;
 
   protected AbstractCompanionHandEntity(
-      EntityType<? extends PathfinderMob> entityType, Level level, Identifier lifelessHandId) {
+      EntityType<? extends PathfinderMob> entityType,
+      Level level,
+      ResourceLocation lifelessHandId) {
     super(entityType, level);
     this.lifelessHandId = lifelessHandId;
     this.catalystItems = catalystItems(EntityType.getKey(entityType));
@@ -162,8 +162,10 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
     }
 
     this.heal(FEEDING_HEAL_AMOUNT);
-    itemStack.consume(1, player);
-    this.playSound(SoundEvents.GENERIC_EAT.value(), 0.8F, 1.2F);
+    if (!player.getAbilities().instabuild) {
+      itemStack.shrink(1);
+    }
+    this.playSound(SoundEvents.GENERIC_EAT, 0.8F, 1.2F);
     serverLevel.sendParticles(
         ParticleTypes.HEART,
         this.getX(),
@@ -211,9 +213,9 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   }
 
   @Override
-  protected void customServerAiStep(ServerLevel serverLevel) {
-    super.customServerAiStep(serverLevel);
-    if (!this.isCompanion()) {
+  protected void customServerAiStep() {
+    super.customServerAiStep();
+    if (!this.isCompanion() || !(this.level() instanceof ServerLevel serverLevel)) {
       return;
     }
 
@@ -303,8 +305,8 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
 
     HandGesture finishedGesture = this.activeGesture;
     this.clearGesture();
-    if (finishedGesture == HandGesture.REVIVE && this.getOwner() instanceof LivingEntity owner) {
-      this.playGesture(HandGesture.WAVE, owner);
+    if (finishedGesture == HandGesture.REVIVE && this.getOwner() != null) {
+      this.playGesture(HandGesture.WAVE, this.getOwner());
     }
   }
 
@@ -356,15 +358,16 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
         };
     this.handState = this.handState.withCompanionMode(companionMode);
     this.applyCompanionMode(companionMode);
-    player.sendOverlayMessage(
-        Component.translatable(MESSAGE_KEY_PREFIX + companionMode.getSerializedName()));
+    player.displayClientMessage(
+        Component.translatable(MESSAGE_KEY_PREFIX + companionMode.getSerializedName()), true);
   }
 
   @Override
-  public boolean doHurtTarget(ServerLevel serverLevel, Entity target) {
-    boolean hurtTarget = super.doHurtTarget(serverLevel, target);
+  public boolean doHurtTarget(Entity target) {
+    boolean hurtTarget = super.doHurtTarget(target);
     if (hurtTarget
         && this.isCompanion()
+        && this.level() instanceof ServerLevel serverLevel
         && target instanceof LivingEntity livingTarget
         && serverLevel.getGameTime() >= this.nextHitEffectGameTime) {
       this.nextHitEffectGameTime = serverLevel.getGameTime() + HIT_EFFECT_COOLDOWN_TICKS;
@@ -374,10 +377,10 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   }
 
   @Override
-  public boolean hurtServer(ServerLevel serverLevel, DamageSource damageSource, float damage) {
-    boolean hurt = super.hurtServer(serverLevel, damageSource, damage);
+  public boolean hurt(DamageSource damageSource, float damage) {
+    boolean hurt = super.hurt(damageSource, damage);
     if (hurt) {
-      this.lastHurtGameTime = serverLevel.getGameTime();
+      this.lastHurtGameTime = this.level().getGameTime();
     }
     return hurt;
   }
@@ -389,14 +392,13 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   }
 
   private boolean ignoresAsCompanion(LivingEntity target) {
-    if (target.is(COMPANION_IGNORED_TARGETS)) {
+    if (target.getType().is(COMPANION_IGNORED_TARGETS)) {
       return true;
     }
 
     return target instanceof OwnableEntity ownableEntity
-        && ownableEntity.getOwnerReference()
-            instanceof EntityReference<LivingEntity> ownerReference
-        && !ownerReference.getUUID().equals(this.getOwnerUUID());
+        && ownableEntity.getOwnerUUID() != null
+        && !ownableEntity.getOwnerUUID().equals(this.getOwnerUUID());
   }
 
   @Override
@@ -429,7 +431,7 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
       return;
     }
 
-    LifelessHandItem.protectRemains(this.spawnAtLocation(serverLevel, remains), ownerUUID);
+    LifelessHandItem.protectRemains(this.spawnAtLocation(remains), ownerUUID);
     if (owner != null) {
       BlockPos remainsPosition = this.blockPosition();
       owner.sendSystemMessage(
@@ -442,10 +444,9 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   }
 
   @Override
-  protected void dropFromLootTable(
-      ServerLevel serverLevel, DamageSource damageSource, boolean causedByPlayer) {
+  protected void dropFromLootTable(DamageSource damageSource, boolean causedByPlayer) {
     if (!this.isCompanion()) {
-      super.dropFromLootTable(serverLevel, damageSource, causedByPlayer);
+      super.dropFromLootTable(damageSource, causedByPlayer);
     }
   }
 
@@ -473,7 +474,7 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
         companionMode == CompanionMode.SHOULDER);
     if (companionMode == CompanionMode.STAY) {
       EasyNPCObjectiveHandler.removeObjective(this, ObjectiveType.FOLLOW_OWNER);
-      this.setNPCHomePosition(this.blockPosition());
+      this.setHomePosition(this.blockPosition());
       EasyNPCObjectiveHandler.addObjective(this, ObjectiveType.MOVE_BACK_TO_HOME);
     } else {
       EasyNPCObjectiveHandler.removeObjective(this, ObjectiveType.MOVE_BACK_TO_HOME);
@@ -488,10 +489,12 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   public SpawnGroupData finalizeSpawn(
       ServerLevelAccessor serverLevelAccessor,
       DifficultyInstance difficulty,
-      EntitySpawnReason entitySpawnReason,
-      SpawnGroupData spawnGroupData) {
+      MobSpawnType entitySpawnReason,
+      SpawnGroupData spawnGroupData,
+      CompoundTag entityTag) {
     SpawnGroupData result =
-        super.finalizeSpawn(serverLevelAccessor, difficulty, entitySpawnReason, spawnGroupData);
+        super.finalizeSpawn(
+            serverLevelAccessor, difficulty, entitySpawnReason, spawnGroupData, entityTag);
     this.applyMovementAndMeleeAttack();
     EasyNPCObjectiveHandler.addObjective(this, ObjectiveType.ATTACK_PLAYER);
     EasyNPCObjectiveHandler.addObjective(this, ObjectiveType.ATTACK_ANIMAL);
@@ -500,15 +503,15 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   }
 
   @Override
-  public void addAdditionalSaveData(ValueOutput valueOutput) {
-    super.addAdditionalSaveData(valueOutput);
-    valueOutput.store(HAND_STATE_TAG, HandState.CODEC, this.handState);
+  public void addAdditionalSaveData(CompoundTag compoundTag) {
+    super.addAdditionalSaveData(compoundTag);
+    compoundTag.put(HAND_STATE_TAG, this.handState.createTag());
   }
 
   @Override
-  public void readAdditionalSaveData(ValueInput valueInput) {
-    super.readAdditionalSaveData(valueInput);
-    this.handState = valueInput.read(HAND_STATE_TAG, HandState.CODEC).orElse(HandState.EMPTY);
+  public void readAdditionalSaveData(CompoundTag compoundTag) {
+    super.readAdditionalSaveData(compoundTag);
+    this.handState = HandState.fromTag(compoundTag.get(HAND_STATE_TAG));
   }
 
   @Override

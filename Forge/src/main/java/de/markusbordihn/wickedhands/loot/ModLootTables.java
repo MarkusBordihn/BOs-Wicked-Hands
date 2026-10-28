@@ -19,20 +19,22 @@
 
 package de.markusbordihn.wickedhands.loot;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
+import de.markusbordihn.wickedhands.Constants;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.LootTableLoadEvent;
 
 public final class ModLootTables {
 
+  private static final String DROP_POOL_NAME = Constants.MOD_ID + ":lifeless_hand";
+
   private ModLootTables() {}
 
   public static void registerEvents() {
-    LootTableLoadEvent.BUS.addListener(ModLootTables::onLootTableLoad);
+    MinecraftForge.EVENT_BUS.addListener(ModLootTables::onLootTableLoad);
   }
 
   private static void onLootTableLoad(LootTableLoadEvent event) {
-    HandLootInjections.createDropPool(ResourceKey.create(Registries.LOOT_TABLE, event.getName()))
-        .ifPresent(dropPool -> event.getTable().addPool(dropPool.build()));
+    HandLootInjections.createDropPool(event.getName())
+        .ifPresent(dropPool -> event.getTable().addPool(dropPool.name(DROP_POOL_NAME).build()));
   }
 }

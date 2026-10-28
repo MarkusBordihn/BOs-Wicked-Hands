@@ -23,21 +23,20 @@ import de.markusbordihn.wickedhands.Constants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.PathfinderMob;
-import net.minecraft.world.entity.SpawnPlacementType;
-import net.minecraft.world.entity.SpawnPlacementTypes;
+import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
@@ -49,10 +48,11 @@ import net.minecraft.world.phys.Vec3;
 public class RottenHandEntity extends AbstractCompanionHandEntity {
 
   public static final String ID = "rotten_hand";
-  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation ENTITY_ID =
+      new ResourceLocation(Constants.MOD_ID, ID);
   public static final int SPAWN_WEIGHT = 5;
   public static final int SPAWN_GROUP_SIZE = 1;
-  public static final SpawnPlacementType SPAWN_PLACEMENT_TYPE = SpawnPlacementTypes.ON_GROUND;
+  public static final SpawnPlacements.Type SPAWN_PLACEMENT_TYPE = SpawnPlacements.Type.ON_GROUND;
   public static final Heightmap.Types SPAWN_HEIGHTMAP = Heightmap.Types.MOTION_BLOCKING_NO_LEAVES;
   private static final double ATTACK_DAMAGE = 2.0D;
   private static final int GRAB_DURATION_TICKS = 30;
@@ -73,11 +73,11 @@ public class RottenHandEntity extends AbstractCompanionHandEntity {
   public static boolean checkRottenHandSpawnRules(
       EntityType<RottenHandEntity> entityType,
       ServerLevelAccessor level,
-      EntitySpawnReason spawnReason,
+      MobSpawnType spawnReason,
       BlockPos spawnPosition,
       RandomSource random) {
     return level.getDifficulty() != Difficulty.PEACEFUL
-        && level.getLevel().isDarkOutside()
+        && level.getLevel().isNight()
         && Monster.isDarkEnoughToSpawn(level, spawnPosition, random)
         && Mob.checkMobSpawnRules(entityType, level, spawnReason, spawnPosition, random);
   }
@@ -85,7 +85,8 @@ public class RottenHandEntity extends AbstractCompanionHandEntity {
   @Override
   protected void applyHitEffect(ServerLevel serverLevel, LivingEntity target) {
     target.addEffect(
-        new MobEffectInstance(MobEffects.SLOWNESS, GRAB_DURATION_TICKS, GRAB_SLOWNESS_AMPLIFIER),
+        new MobEffectInstance(
+            MobEffects.MOVEMENT_SLOWDOWN, GRAB_DURATION_TICKS, GRAB_SLOWNESS_AMPLIFIER),
         this);
     target.setDeltaMovement(Vec3.ZERO);
     target.hurtMarked = true;
