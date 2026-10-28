@@ -19,52 +19,108 @@
 
 package de.markusbordihn.wickedhands.mixin;
 
+import de.markusbordihn.easynpc.data.npc.ShoulderSide;
 import de.markusbordihn.wickedhands.access.ShoulderGripAccess;
 import de.markusbordihn.wickedhands.entity.ShoulderPassiveHandler;
-import net.minecraft.server.level.ServerLevel;
+import java.util.Optional;
+import java.util.Set;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Player.class)
-public abstract class PlayerShoulderGripMixin {
+public abstract class PlayerShoulderGripMixin implements ShoulderGripAccess {
+
+  @Unique private Optional<CompoundTag> keptShoulderEntityLeft = Optional.empty();
+  @Unique private Optional<CompoundTag> keptShoulderEntityRight = Optional.empty();
+
+  @Shadow
+  public abstract CompoundTag getShoulderEntityLeft();
+
+  @Shadow
+  protected abstract void setShoulderEntityLeft(CompoundTag entityTag);
+
+  @Shadow
+  public abstract CompoundTag getShoulderEntityRight();
+
+  @Shadow
+  protected abstract void setShoulderEntityRight(CompoundTag entityTag);
+
+  @Override
+  public void keepShoulderEntities(Set<ShoulderSide> shoulderSides) {
+    if (shoulderSides.contains(ShoulderSide.LEFT)) {
+      this.keptShoulderEntityLeft = Optional.of(this.getShoulderEntityLeft());
+      this.setShoulderEntityLeft(new CompoundTag());
+    }
+    if (shoulderSides.contains(ShoulderSide.RIGHT)) {
+      this.keptShoulderEntityRight = Optional.of(this.getShoulderEntityRight());
+      this.setShoulderEntityRight(new CompoundTag());
+    }
+  }
+
+  @Override
+  public void restoreKeptShoulderEntities() {
+    this.keptShoulderEntityLeft.ifPresent(this::setShoulderEntityLeft);
+    this.keptShoulderEntityRight.ifPresent(this::setShoulderEntityRight);
+    this.keptShoulderEntityLeft = Optional.empty();
+    this.keptShoulderEntityRight = Optional.empty();
+  }
 
   @Inject(
-      method = "hurtServer",
+      method = "aiStep",
+      at =
+          @At(
+              value = "INVOKE",
+              target = "Lnet/minecraft/world/entity/player/Player;removeEntitiesOnShoulder()V"))
+  private void beforeSurroundingsRemoveEntitiesOnShoulder(CallbackInfo callbackInfo) {
+    if ((Object) this instanceof ServerPlayer serverPlayer) {
+      this.keepShoulderEntities(
+          ShoulderPassiveHandler.getSidesHoldingOnInSurroundings(serverPlayer));
+    }
+  }
+
+  @Inject(
+      method = "aiStep",
+      at =
+          @At(
+              value = "INVOKE",
+              target = "Lnet/minecraft/world/entity/player/Player;removeEntitiesOnShoulder()V",
+              shift = At.Shift.AFTER))
+  private void afterSurroundingsRemoveEntitiesOnShoulder(CallbackInfo callbackInfo) {
+    this.restoreKeptShoulderEntities();
+  }
+
+  @Inject(
+      method = "hurt",
       at =
           @At(
               value = "INVOKE",
               target = "Lnet/minecraft/world/entity/player/Player;removeEntitiesOnShoulder()V"))
   private void beforeHurtRemovesEntitiesOnShoulder(
-      ServerLevel serverLevel,
-      DamageSource damageSource,
-      float damage,
-      CallbackInfoReturnable<Boolean> callbackInfo) {
+      DamageSource damageSource, float damage, CallbackInfoReturnable<Boolean> callbackInfo) {
     if ((Object) this instanceof ServerPlayer serverPlayer) {
-      ((ShoulderGripAccess) serverPlayer)
-          .keepShoulderEntities(
-              ShoulderPassiveHandler.getSidesHoldingOnThrough(serverPlayer, damageSource));
+      this.keepShoulderEntities(
+          ShoulderPassiveHandler.getSidesHoldingOnThrough(serverPlayer, damageSource));
     }
   }
 
   @Inject(
-      method = "hurtServer",
+      method = "hurt",
       at =
           @At(
               value = "INVOKE",
               target = "Lnet/minecraft/world/entity/player/Player;removeEntitiesOnShoulder()V",
               shift = At.Shift.AFTER))
   private void afterHurtRemovesEntitiesOnShoulder(
-      ServerLevel serverLevel,
-      DamageSource damageSource,
-      float damage,
-      CallbackInfoReturnable<Boolean> callbackInfo) {
-    if ((Object) this instanceof ShoulderGripAccess shoulderGripAccess) {
-      shoulderGripAccess.restoreKeptShoulderEntities();
-    }
+      DamageSource damageSource, float damage, CallbackInfoReturnable<Boolean> callbackInfo) {
+    this.restoreKeptShoulderEntities();
   }
 }

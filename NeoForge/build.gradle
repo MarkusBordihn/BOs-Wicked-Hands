@@ -1,7 +1,7 @@
 plugins {
   id 'maven-publish'
-  id 'net.neoforged.moddev' version '2.0.141'
-  id 'net.darkhax.curseforgegradle' version '1.2.30'
+  id 'net.neoforged.gradle.userdev' version '7.0.190'
+  id 'net.darkhax.curseforgegradle' version '1.1.28'
   id 'nu.studer.credentials' version '3.0'
   id "com.modrinth.minotaur" version "2.+"
 }
@@ -12,64 +12,47 @@ base {
 
 sourceSets {
   gameTest {
+    java.srcDir project(":Common").file('src/gameTest/java')
+    resources.srcDir project(":Common").file('src/gameTest/resources')
     compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
     runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
   }
 }
 
-neoForge {
-  version = project.neoforge_version
-
-  addModdingDependenciesTo(sourceSets.gameTest)
-
-  mods {
-    "${project.mod_id}" {
-      sourceSet sourceSets.main
-    }
-    "${project.mod_id}_gametest" {
-      sourceSet sourceSets.gameTest
-    }
+runs {
+  configureEach {
+    systemProperty 'forge.logging.markers', 'REGISTRIES'
+    systemProperty 'forge.logging.console.level', 'debug'
+    modSource project.sourceSets.main
   }
 
-  runs {
-    configureEach {
-      systemProperty 'forge.logging.markers', 'REGISTRIES'
-      logLevel = org.slf4j.event.Level.DEBUG
-    }
+  client {
+    workingDirectory project.file('run/client')
+  }
 
-    client {
-      client()
-      gameDirectory = project.file('run/client')
-      sourceSet = sourceSets.gameTest
-      systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
+  client2 {
+    runType('client')
+    workingDirectory project.file('run/client2')
+    arguments.addAll '--username', 'guest_player'
+  }
 
-    client2 {
-      client()
-      gameDirectory = project.file('run/client2')
-      loadedMods = [mods."${project.mod_id}"]
-      programArguments.addAll '--username', 'guest_player'
-    }
+  server {
+    workingDirectory project.file('run/server')
+    arguments.add '--nogui'
+  }
 
-    server {
-      server()
-      gameDirectory = project.file('run/server')
-      sourceSet = sourceSets.gameTest
-      systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-      programArgument '--nogui'
-    }
-
-    gameTestServer {
-      type = 'gameTestServer'
-      sourceSet = sourceSets.gameTest
-      systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
+  gameTestServer {
+    workingDirectory project.file('run/gametest')
+    systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    modSources.add('wicked_hands_gametest', project.sourceSets.gameTest)
   }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
+  implementation "net.neoforged:neoforge:${neoforge_version}"
+
   compileOnly project(":Common")
 
   def easyNpcApi = easyNpcApiArtifact()
@@ -89,27 +72,13 @@ dependencies {
     compileOnly(easyModelEntitiesNeoForge) { transitive = false }
     runtimeOnly(easyModelEntitiesNeoForge) { transitive = false }
   }
-
-  // Additional helpful Mods for development (runtime dependency)
-  if (project.hasProperty('neoforge_jei_mod') && project.neoforge_jei_mod) {
-    compileOnly "curse.maven:jei-238222:${project.neoforge_jei_mod}"
-    runtimeOnly "curse.maven:jei-238222:${project.neoforge_jei_mod}"
-  }
 }
 
-// NeoGradle compiles the game, but we don't want to add our common code to the game's code
+// NeoGradle compiles the game, but we don't want to add our common code to the game's code.
 Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") && !it.name.contains("Test") } as Spec<Task>
 
 tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
   source(project(":Common").sourceSets.main.allSource)
-}
-
-tasks.named('compileGameTestJava', JavaCompile) {
-  source(project(":Common").sourceSets.gameTest.allSource)
-}
-
-tasks.named('processGameTestResources', ProcessResources) {
-  from project(":Common").sourceSets.gameTest.resources
 }
 
 tasks.withType(Javadoc).matching(notNeoTask).configureEach {
@@ -200,11 +169,4 @@ jar {
 
 test {
   useJUnitPlatform()
-}
-
-// Merge resources and compiled classes so NeoForge dev runs see a valid mod root.
-sourceSets.each {
-  def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
-  it.output.resourcesDir = dir
-  it.java.destinationDirectory = dir
 }

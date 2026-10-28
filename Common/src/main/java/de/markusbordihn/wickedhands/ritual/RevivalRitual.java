@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.Level;
@@ -37,7 +37,7 @@ public final class RevivalRitual {
   public static final TagKey<Block> RITUAL_BASE_BLOCKS =
       TagKey.create(
           Registries.BLOCK,
-          Identifier.fromNamespaceAndPath(Constants.MOD_ID, "ritual_base_blocks"));
+          ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "ritual_base_blocks"));
   public static final int REQUIRED_LIT_CANDLES = 4;
   public static final int DURATION_TICKS = 140;
 
@@ -72,7 +72,7 @@ public final class RevivalRitual {
                 CANDLE_HORIZONTAL_RADIUS, CANDLE_VERTICAL_RADIUS, CANDLE_HORIZONTAL_RADIUS))) {
       BlockState blockState = level.getBlockState(position);
       if (blockState.is(BlockTags.CANDLES)
-          && blockState.getValueOrElse(AbstractCandleBlock.LIT, false)) {
+          && blockState.getOptionalValue(AbstractCandleBlock.LIT).orElse(false)) {
         litCandles.add(position.immutable());
       }
     }

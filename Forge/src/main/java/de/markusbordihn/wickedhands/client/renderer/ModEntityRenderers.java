@@ -19,42 +19,59 @@
 
 package de.markusbordihn.wickedhands.client.renderer;
 
+import de.markusbordihn.easynpc.client.model.ModModelLayers;
 import de.markusbordihn.easynpc.client.renderer.entity.easymodelentities.EasyModelNPCRenderer;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 
 public final class ModEntityRenderers {
 
   private ModEntityRenderers() {}
 
-  public static void register() {
-    EntityRenderersEvent.RegisterRenderers.BUS.addListener(ModEntityRenderers::onRegisterRenderers);
+  public static void register(IEventBus modEventBus) {
+    modEventBus.addListener(ModEntityRenderers::onRegisterRenderers);
+  }
+
+  private static <T extends PathfinderMob> EasyModelNPCRenderer<T> createHandRenderer(
+      EntityRendererProvider.Context context) {
+    return new EasyModelNPCRenderer<>(context, ModModelLayers.DOPPLER);
   }
 
   private static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
-    event.registerEntityRenderer(ModEntityTypes.ROTTEN_HAND.get(), EasyModelNPCRenderer::new);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_ROTTEN_HAND.get(), EasyModelNPCRenderer::new);
-    event.registerEntityRenderer(ModEntityTypes.DROWNED_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.ROTTEN_HAND.get(), ModEntityRenderers::createHandRenderer);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_DROWNED_HAND.get(), EasyModelNPCRenderer::new);
-    event.registerEntityRenderer(ModEntityTypes.BONE_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.LIFELESS_ROTTEN_HAND.get(), ModEntityRenderers::createHandRenderer);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_BONE_HAND.get(), EasyModelNPCRenderer::new);
-    event.registerEntityRenderer(ModEntityTypes.HUSK_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.DROWNED_HAND.get(), ModEntityRenderers::createHandRenderer);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_HUSK_HAND.get(), EasyModelNPCRenderer::new);
-    event.registerEntityRenderer(ModEntityTypes.STRAY_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.LIFELESS_DROWNED_HAND.get(), ModEntityRenderers::createHandRenderer);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_STRAY_HAND.get(), EasyModelNPCRenderer::new);
-    event.registerEntityRenderer(ModEntityTypes.WITHERED_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.BONE_HAND.get(), ModEntityRenderers::createHandRenderer);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_WITHERED_HAND.get(), EasyModelNPCRenderer::new);
-    event.registerEntityRenderer(ModEntityTypes.BOGGED_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.LIFELESS_BONE_HAND.get(), ModEntityRenderers::createHandRenderer);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_BOGGED_HAND.get(), EasyModelNPCRenderer::new);
-    event.registerEntityRenderer(ModEntityTypes.WITCH_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.HUSK_HAND.get(), ModEntityRenderers::createHandRenderer);
     event.registerEntityRenderer(
-        ModEntityTypes.LIFELESS_WITCH_HAND.get(), EasyModelNPCRenderer::new);
+        ModEntityTypes.LIFELESS_HUSK_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.STRAY_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_STRAY_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.WITHERED_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_WITHERED_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.BOGGED_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_BOGGED_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.WITCH_HAND.get(), ModEntityRenderers::createHandRenderer);
+    event.registerEntityRenderer(
+        ModEntityTypes.LIFELESS_WITCH_HAND.get(), ModEntityRenderers::createHandRenderer);
   }
 }

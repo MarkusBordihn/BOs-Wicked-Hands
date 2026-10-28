@@ -23,7 +23,7 @@ import de.markusbordihn.wickedhands.Constants;
 import de.markusbordihn.wickedhands.entity.ShoulderPassive;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 
 public final class ModMobEffects {
@@ -33,10 +33,10 @@ public final class ModMobEffects {
 
   private ModMobEffects() {}
 
-  public static void register(BusGroup modBusGroup) {
+  public static void register(IEventBus modEventBus) {
     for (ShoulderPassive shoulderPassive : ShoulderPassive.values()) {
       MOB_EFFECTS.register(shoulderPassive.getEffectId().getPath(), shoulderPassive::createEffect);
     }
-    MOB_EFFECTS.register(modBusGroup);
+    MOB_EFFECTS.register(modEventBus);
   }
 }

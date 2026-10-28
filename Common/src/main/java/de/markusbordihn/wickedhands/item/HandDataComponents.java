@@ -23,13 +23,13 @@ import de.markusbordihn.wickedhands.Constants;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class HandDataComponents {
 
   public static final String COMPANION_UUID_ID = "companion_uuid";
-  public static final Identifier COMPANION_UUID_COMPONENT_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, COMPANION_UUID_ID);
+  public static final ResourceLocation COMPANION_UUID_COMPONENT_ID =
+      ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, COMPANION_UUID_ID);
   public static final DataComponentType<UUID> COMPANION_UUID =
       DataComponentType.<UUID>builder()
           .persistent(UUIDUtil.CODEC)
@@ -37,8 +37,8 @@ public final class HandDataComponents {
           .build();
 
   public static final String OWNER_UUID_ID = "owner_uuid";
-  public static final Identifier OWNER_UUID_COMPONENT_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, OWNER_UUID_ID);
+  public static final ResourceLocation OWNER_UUID_COMPONENT_ID =
+      ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, OWNER_UUID_ID);
   public static final DataComponentType<UUID> OWNER_UUID =
       DataComponentType.<UUID>builder()
           .persistent(UUIDUtil.CODEC)

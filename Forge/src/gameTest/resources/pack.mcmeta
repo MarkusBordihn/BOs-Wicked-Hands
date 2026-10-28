@@ -1,7 +1,6 @@
 {
   "pack": {
     "description": "Wicked Hands: Game Tests",
-    "max_format": 101,
-    "min_format": 101
+    "pack_format": 48
   }
 }

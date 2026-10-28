@@ -13,7 +13,7 @@
   },
   "display": {
     "announce_to_chat": false,
-    "background": "minecraft:block/soul_soil",
+    "background": "minecraft:textures/block/soul_soil.png",
     "description": {
       "translate": "advancements.wicked_hands.root.description"
     },

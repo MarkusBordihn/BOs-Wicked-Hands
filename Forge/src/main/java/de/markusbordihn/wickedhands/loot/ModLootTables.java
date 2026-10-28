@@ -21,6 +21,7 @@ package de.markusbordihn.wickedhands.loot;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.LootTableLoadEvent;
 
 public final class ModLootTables {
@@ -28,7 +29,7 @@ public final class ModLootTables {
   private ModLootTables() {}
 
   public static void registerEvents() {
-    LootTableLoadEvent.BUS.addListener(ModLootTables::onLootTableLoad);
+    MinecraftForge.EVENT_BUS.addListener(ModLootTables::onLootTableLoad);
   }
 
   private static void onLootTableLoad(LootTableLoadEvent event) {

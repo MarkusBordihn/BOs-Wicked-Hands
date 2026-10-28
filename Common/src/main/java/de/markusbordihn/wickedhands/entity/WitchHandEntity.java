@@ -22,7 +22,7 @@ import de.markusbordihn.wickedhands.Constants;
 import java.util.List;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -39,7 +39,8 @@ import net.minecraft.world.level.Level;
 public class WitchHandEntity extends AbstractCompanionHandEntity {
 
   public static final String ID = "witch_hand";
-  public static final Identifier ENTITY_ID = Identifier.fromNamespaceAndPath(Constants.MOD_ID, ID);
+  public static final ResourceLocation ENTITY_ID =
+      ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, ID);
   public static final float MENDING_HEALTH_RATIO = 0.3F;
   public static final double MENDING_RANGE = 8.0D;
   public static final int MENDING_DURATION_TICKS = 100;
@@ -48,7 +49,7 @@ public class WitchHandEntity extends AbstractCompanionHandEntity {
   private static final double ATTACK_DAMAGE = 1.5D;
   private static final int HEX_DURATION_TICKS = 80;
   private static final List<Holder<MobEffect>> HEX_EFFECTS =
-      List.of(MobEffects.POISON, MobEffects.SLOWNESS, MobEffects.WEAKNESS);
+      List.of(MobEffects.POISON, MobEffects.MOVEMENT_SLOWDOWN, MobEffects.WEAKNESS);
 
   private long nextMendingGameTime;
 
@@ -102,7 +103,8 @@ public class WitchHandEntity extends AbstractCompanionHandEntity {
   }
 
   private static MobEffectInstance createMendingEffect() {
-    return new MobEffectInstance(MobEffects.REGENERATION, MENDING_DURATION_TICKS, MENDING_AMPLIFIER);
+    return new MobEffectInstance(
+        MobEffects.REGENERATION, MENDING_DURATION_TICKS, MENDING_AMPLIFIER);
   }
 
   @Override

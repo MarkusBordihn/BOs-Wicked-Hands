@@ -28,26 +28,23 @@ import de.markusbordihn.wickedhands.entity.HandGesture;
 import de.markusbordihn.wickedhands.entity.RottenHandEntity;
 import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.portal.TeleportTransition;
-import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 public class CompanionBehaviourGameTests extends HandGameTests {
@@ -87,7 +84,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () ->
                 helper.assertFalse(
                     companion.get().getActiveGesture() == HandGesture.WAVE,
-                    Component.literal("Companion waved again during its cooldown")))
+                    "Companion waved again during its cooldown"))
         .thenSucceed();
   }
 
@@ -111,19 +108,13 @@ public class CompanionBehaviourGameTests extends HandGameTests {
               companion.mobInteract(owner, InteractionHand.MAIN_HAND);
               owner.setShiftKeyDown(false);
 
-              TagValueOutput savedCompanion =
-                  TagValueOutput.createWithContext(
-                      ProblemReporter.DISCARDING, level.registryAccess());
+              CompoundTag savedCompanion = new CompoundTag();
               companion.saveWithoutId(savedCompanion);
               companion.discard();
 
               RottenHandEntity companionCopy =
-                  (RottenHandEntity) rottenHandType().create(level, EntitySpawnReason.LOAD);
-              companionCopy.load(
-                  TagValueInput.create(
-                      ProblemReporter.DISCARDING,
-                      level.registryAccess(),
-                      savedCompanion.buildResult()));
+                  (RottenHandEntity) rottenHandType().create(level);
+              companionCopy.load(savedCompanion);
               level.addFreshEntity(companionCopy);
               reloadedCompanion.set(companionCopy);
             })
@@ -135,20 +126,20 @@ public class CompanionBehaviourGameTests extends HandGameTests {
                   companion.getHandState().lifecycle() == HandLifecycle.COMPANION
                       && companion.isNPCOwnedBy(owner)
                       && companionName.equals(companion.getCustomName()),
-                  Component.literal("Reloaded hand is no longer the named companion of its owner"));
+                  "Reloaded hand is no longer the named companion of its owner");
               helper.assertTrue(
                   companion.getHandState().companionMode() == CompanionMode.STAY
                       && companion.hasObjective(ObjectiveType.MOVE_BACK_TO_HOME)
                       && companion.hasObjective(ObjectiveType.OWNER_HURT_BY_TARGET)
                       && companion.hasObjective(ObjectiveType.OWNER_HURT_TARGET),
-                  Component.literal("Reloaded companion lost its mode or its objectives"));
+                  "Reloaded companion lost its mode or its objectives");
               helper.assertFalse(
                   companion.hasObjective(ObjectiveType.ATTACK_PLAYER)
                       || companion.hasObjective(ObjectiveType.ATTACK_ANIMAL),
-                  Component.literal("Reloaded companion hunts players or animals"));
+                  "Reloaded companion hunts players or animals");
               helper.assertTrue(
                   companion.requiresCustomPersistence(),
-                  Component.literal("Reloaded companion can despawn"));
+                  "Reloaded companion can despawn");
             })
         .thenSucceed();
   }
@@ -174,18 +165,19 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () ->
                 helper.assertTrue(
                     companion.get().getTarget() == attacker.get(),
-                    Component.literal("Companion did not defend its owner")))
+                    "Companion did not defend its owner"))
         .thenExecute(
             () -> {
               attacker.get().discard();
-              victim.set(spawnMobWithoutAi(helper, EntityType.PIG, MONSTER_POSITION));
+              victim.set(
+                  spawnMobWithoutAi(helper, EntityType.PIG, BESIDE_RITUAL_POSITION.east()));
               owner.setLastHurtMob(victim.get());
             })
         .thenWaitUntil(
             () ->
                 helper.assertTrue(
                     companion.get().getTarget() == victim.get(),
-                    Component.literal("Companion did not join its owner's attack")))
+                    "Companion did not join its owner's attack"))
         .thenSucceed();
   }
 
@@ -209,25 +201,25 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () ->
                 helper.assertTrue(
                     companion.get().getTarget() == attacker.get(),
-                    Component.literal("Companion did not defend its owner")))
+                    "Companion did not defend its owner"))
         .thenExecute(() -> companion.get().setHealth(WOUNDED_COMPANION_HEALTH))
         .thenWaitUntil(
             () ->
                 helper.assertTrue(
                     companion.get().isRetreating() && companion.get().getTarget() == null,
-                    Component.literal("Wounded companion kept fighting")))
+                    "Wounded companion kept fighting"))
         .thenExecute(
             () ->
                 helper.assertFalse(
                     companion.get().canAttack(attacker.get()),
-                    Component.literal("Retreating companion may still attack")))
+                    "Retreating companion may still attack"))
         .thenExecute(() -> companion.get().setHealth(companion.get().getMaxHealth()))
         .thenWaitUntil(
             () ->
                 helper.assertTrue(
                     !companion.get().isRetreating()
                         && companion.get().canAttack(attacker.get()),
-                    Component.literal("Recovered companion did not return to combat")))
+                    "Recovered companion did not return to combat"))
         .thenSucceed();
   }
 
@@ -263,7 +255,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () -> {
               helper.assertTrue(
                   siblingCompanion.get().getTarget() != hitCompanion.get(),
-                  Component.literal("Companion attacked a companion of the same owner"));
+                  "Companion attacked a companion of the same owner");
               victim.set(helper.spawn(EntityType.PIG, BESIDE_RITUAL_POSITION.east()));
               victim.get().setNoAi(true);
               owner.setLastHurtMob(victim.get());
@@ -272,7 +264,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () ->
                 helper.assertTrue(
                     siblingCompanion.get().getTarget() == victim.get(),
-                    Component.literal("Companion did not join its owner's attack")))
+                    "Companion did not join its owner's attack"))
         .thenSucceed();
   }
 
@@ -297,19 +289,19 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () ->
                 helper.assertFalse(
                     companion.get().getTarget() == creeper.get(),
-                    Component.literal("Companion joined its owner's attack on a creeper")))
+                    "Companion joined its owner's attack on a creeper"))
         .thenExecute(
             () -> {
               TamableAnimal foreignWolf = helper.spawn(EntityType.WOLF, MONSTER_POSITION.east());
               foreignWolf.tame(helper.makeMockPlayer(GameType.SURVIVAL));
               helper.assertFalse(
                   companion.get().canAttack(foreignWolf),
-                  Component.literal("Companion may attack another player's pet"));
+                  "Companion may attack another player's pet");
               AbstractHandEntity wildHand =
                   spawnWildHand(helper, RottenHandEntity.ENTITY_ID, MONSTER_POSITION.west());
               helper.assertTrue(
                   wildHand.canAttack(creeper.get()) && wildHand.canAttack(foreignWolf),
-                  Component.literal("Wild hand lost its targets to the companion exclusions"));
+                  "Wild hand lost its targets to the companion exclusions");
             })
         .thenSucceed();
   }
@@ -329,7 +321,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
           helper.assertTrue(
               companion.getHealth() == WOUNDED_COMPANION_HEALTH
                   && stranger.getMainHandItem().getCount() == 1,
-              Component.literal("A stranger fed the companion"));
+              "A stranger fed the companion");
 
           owner.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.ROTTEN_FLESH, 2));
           companion.mobInteract(owner, InteractionHand.MAIN_HAND);
@@ -337,13 +329,13 @@ public class CompanionBehaviourGameTests extends HandGameTests {
               companion.getHealth()
                       == WOUNDED_COMPANION_HEALTH + AbstractCompanionHandEntity.FEEDING_HEAL_AMOUNT
                   && owner.getMainHandItem().getCount() == 1,
-              Component.literal("Feeding the offering did not heal the companion"));
+              "Feeding the offering did not heal the companion");
 
           companion.setHealth(companion.getMaxHealth());
           companion.mobInteract(owner, InteractionHand.MAIN_HAND);
           helper.assertTrue(
               owner.getMainHandItem().getCount() == 1,
-              Component.literal("Feeding a healthy companion took the offering"));
+              "Feeding a healthy companion took the offering");
           helper.succeed();
         });
   }
@@ -361,14 +353,13 @@ public class CompanionBehaviourGameTests extends HandGameTests {
               companion.set(findEntityNearTestPosition(helper, RottenHandEntity.class));
               companion
                   .get()
-                  .hurtServer(
-                      helper.getLevel(),
+                  .hurt(
                       helper.getLevel().damageSources().generic(),
                       COMBAT_DAMAGE);
               woundedHealth.set(companion.get().getHealth());
               helper.assertTrue(
                   woundedHealth.get() < companion.get().getMaxHealth(),
-                  Component.literal("Companion was not hurt"));
+                  "Companion was not hurt");
             })
         .thenExecuteFor(
             AbstractCompanionHandEntity.REGENERATION_COMBAT_COOLDOWN_TICKS
@@ -376,17 +367,18 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () ->
                 helper.assertTrue(
                     companion.get().getHealth() == woundedHealth.get(),
-                    Component.literal("Companion regenerated right after being hurt")))
+                    "Companion regenerated right after being hurt"))
         .thenWaitUntil(
             () ->
                 helper.assertTrue(
                     companion.get().getHealth() > woundedHealth.get(),
-                    Component.literal("Companion did not regenerate out of combat")))
+                    "Companion did not regenerate out of combat"))
         .thenSucceed();
   }
 
   public void testFollowingCompanionJoinsOwnerInOtherDimension(GameTestHelper helper) {
     ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+    placeBesideRitual(helper, owner);
     startRottenHandRitual(helper, owner);
 
     ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
@@ -401,25 +393,24 @@ public class CompanionBehaviourGameTests extends HandGameTests {
               owner.setShiftKeyDown(true);
               companion.get().mobInteract(owner, InteractionHand.MAIN_HAND);
               companion.get().mobInteract(owner, InteractionHand.MAIN_HAND);
-              owner.teleport(
-                  new TeleportTransition(
-                      nether,
-                      NETHER_OWNER_POSITION,
-                      Vec3.ZERO,
-                      0.0F,
-                      0.0F,
-                      TeleportTransition.DO_NOTHING));
+              owner.teleportTo(
+                  nether,
+                  NETHER_OWNER_POSITION.x,
+                  NETHER_OWNER_POSITION.y,
+                  NETHER_OWNER_POSITION.z,
+                  0.0F,
+                  0.0F);
             })
         .thenIdle(STAYING_COMPANION_CHECK_TICKS)
         .thenExecute(
             () -> {
               helper.assertTrue(
-                  owner.level() == nether, Component.literal("Owner did not enter the Nether"));
+                  owner.level() == nether, "Owner did not enter the Nether");
               helper.assertTrue(
                   companion.get().getHandState().companionMode() == CompanionMode.STAY
                       && companion.get().isAlive()
                       && companion.get().level() == helper.getLevel(),
-                  Component.literal("Staying companion followed its owner into the Nether"));
+                  "Staying companion followed its owner into the Nether");
               companion.get().mobInteract(owner, InteractionHand.MAIN_HAND);
               owner.setShiftKeyDown(false);
             })
@@ -427,7 +418,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
             () ->
                 helper.assertTrue(
                     companion.get().getRemovalReason() == Entity.RemovalReason.CHANGED_DIMENSION,
-                    Component.literal("Following companion did not join its owner in the Nether")))
+                    "Following companion did not join its owner in the Nether"))
         .thenSucceed();
   }
 }

@@ -20,6 +20,7 @@
 package de.markusbordihn.wickedhands.entity;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 
 public final class ModShoulderPassives {
@@ -27,11 +28,11 @@ public final class ModShoulderPassives {
   private ModShoulderPassives() {}
 
   public static void registerEvents() {
-    TickEvent.PlayerTickEvent.Post.BUS.addListener(ModShoulderPassives::onPlayerTick);
+    MinecraftForge.EVENT_BUS.addListener(ModShoulderPassives::onPlayerTick);
   }
 
-  private static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
-    if (event.player() instanceof ServerPlayer serverPlayer) {
+  private static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+    if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer serverPlayer) {
       ShoulderPassiveHandler.tick(serverPlayer);
     }
   }

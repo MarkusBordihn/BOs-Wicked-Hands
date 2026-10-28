@@ -41,15 +41,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
@@ -64,7 +63,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
   private static <T extends AbstractCompanionHandEntity>
       void assertRitualCreatesCompanionWithHitAbility(
           GameTestHelper helper,
-          Identifier lifelessHandId,
+          ResourceLocation lifelessHandId,
           Item catalyst,
           Class<T> companionClass,
           Predicate<Pig> hitAbilityApplied) {
@@ -79,18 +78,18 @@ public class CompanionAbilityGameTests extends HandGameTests {
           helper.assertTrue(
               companion.isNPCOwnedBy(owner)
                   && companion.getHandState().lifecycle() == HandLifecycle.COMPANION,
-              Component.literal("Ritual did not create a companion"));
+              "Ritual did not create a companion");
           AdvancementHolder companionAdvancement =
               companionAdvancement(helper, EntityType.getKey(companion.getType()));
           helper.assertTrue(
               companionAdvancement != null
                   && owner.getAdvancements().getOrStartProgress(companionAdvancement).isDone(),
-              Component.literal("Reviving the companion did not grant its advancement"));
+              "Reviving the companion did not grant its advancement");
 
           Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION.east(2));
           helper.assertTrue(
-              companion.doHurtTarget(helper.getLevel(), pig) && hitAbilityApplied.test(pig),
-              Component.literal("Companion hit did not apply its ability"));
+              companion.doHurtTarget(pig) && hitAbilityApplied.test(pig),
+              "Companion hit did not apply its ability");
           helper.succeed();
         });
   }
@@ -118,21 +117,21 @@ public class CompanionAbilityGameTests extends HandGameTests {
           RottenHandEntity companion = findEntityNearTestPosition(helper, RottenHandEntity.class);
           Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION.east(2));
           helper.assertTrue(
-              companion.doHurtTarget(level, pig) && pig.hasEffect(MobEffects.SLOWNESS),
-              Component.literal("Companion did not grab its target"));
+              companion.doHurtTarget(pig) && pig.hasEffect(MobEffects.MOVEMENT_SLOWDOWN),
+              "Companion did not grab its target");
 
-          pig.removeEffect(MobEffects.SLOWNESS);
+          pig.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
           pig.invulnerableTime = 0;
           helper.assertTrue(
-              companion.doHurtTarget(level, pig) && !pig.hasEffect(MobEffects.SLOWNESS),
-              Component.literal("Companion grabbed again during the cooldown"));
+              companion.doHurtTarget(pig) && !pig.hasEffect(MobEffects.MOVEMENT_SLOWDOWN),
+              "Companion grabbed again during the cooldown");
 
           AbstractHandEntity wildRottenHand =
               spawnWildHand(helper, RottenHandEntity.ENTITY_ID, TEST_POSITION.west(2));
           pig.invulnerableTime = 0;
           helper.assertTrue(
-              wildRottenHand.doHurtTarget(level, pig) && !pig.hasEffect(MobEffects.SLOWNESS),
-              Component.literal("Wild rotten hand grabbed its target"));
+              wildRottenHand.doHurtTarget(pig) && !pig.hasEffect(MobEffects.MOVEMENT_SLOWDOWN),
+              "Wild rotten hand grabbed its target");
           helper.succeed();
         });
   }
@@ -152,7 +151,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
         LifelessStrayHandEntity.ENTITY_ID,
         Items.SNOWBALL,
         StrayHandEntity.class,
-        pig -> pig.hasEffect(MobEffects.SLOWNESS) && pig.getTicksFrozen() > 0);
+        pig -> pig.hasEffect(MobEffects.MOVEMENT_SLOWDOWN) && pig.getTicksFrozen() > 0);
   }
 
   public void testWitheredHandRitualCreatesWitheringCompanion(GameTestHelper helper) {
@@ -181,7 +180,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
         WitchHandEntity.class,
         pig ->
             pig.hasEffect(MobEffects.POISON)
-                || pig.hasEffect(MobEffects.SLOWNESS)
+                || pig.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)
                 || pig.hasEffect(MobEffects.WEAKNESS));
   }
 
@@ -200,7 +199,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
             () ->
                 helper.assertFalse(
                     owner.hasEffect(MobEffects.REGENERATION),
-                    Component.literal("Witch hand mended a healthy owner")))
+                    "Witch hand mended a healthy owner"))
         .thenExecute(
             () -> owner.setHealth(owner.getMaxHealth() * WitchHandEntity.MENDING_HEALTH_RATIO / 2))
         .thenWaitUntil(
@@ -208,7 +207,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
                 helper.assertTrue(
                     owner.hasEffect(MobEffects.REGENERATION)
                         && companion.get().hasEffect(MobEffects.REGENERATION),
-                    Component.literal("Witch hand did not mend its wounded owner and itself")))
+                    "Witch hand did not mend its wounded owner and itself"))
         .thenSucceed();
   }
 
@@ -226,13 +225,13 @@ public class CompanionAbilityGameTests extends HandGameTests {
               owner.getAbilities().invulnerable = false;
               owner.igniteForSeconds(OWNER_BURN_SECONDS);
               helper.assertTrue(
-                  owner.getRemainingFireTicks() > 1, Component.literal("Owner does not burn"));
+                  owner.getRemainingFireTicks() > 1, "Owner does not burn");
             })
         .thenWaitUntil(
             () ->
                 helper.assertFalse(
                     owner.isOnFire(),
-                    Component.literal("Drowned hand did not extinguish its burning owner")))
+                    "Drowned hand did not extinguish its burning owner"))
         .thenSucceed();
   }
 
@@ -273,7 +272,7 @@ public class CompanionAbilityGameTests extends HandGameTests {
               keepApproaching(helper, zombie.get(), owner);
               helper.assertFalse(
                   boneHand.get().getActiveGesture() == HandGesture.POINT,
-                  Component.literal("Bone hand pointed again during its cooldown"));
+                  "Bone hand pointed again during its cooldown");
             })
         .thenSucceed();
   }

@@ -180,6 +180,6 @@ public final class RevivalRitualEffects {
     EffectHelper.playSound(
         level, handCenter, SoundEvents.BREEZE_WIND_CHARGE_BURST.value(), 1.0F, 0.6F);
     EffectHelper.playSound(level, handCenter, SoundEvents.GHAST_SCREAM, 0.6F, 0.5F);
-    EffectHelper.playSound(level, handCenter, SoundEvents.CREAKING_TWITCH, 1.0F, 1.0F);
+    EffectHelper.playSound(level, handCenter, SoundEvents.BONE_BLOCK_BREAK, 1.0F, 1.0F);
   }
 }

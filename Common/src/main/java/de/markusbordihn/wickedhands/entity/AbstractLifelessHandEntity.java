@@ -42,9 +42,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -56,7 +57,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.PathfinderMob;
@@ -68,8 +68,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -92,14 +90,14 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
 
   private final RevivalRitualEffects revivalEffects;
   private final Set<UUID> whisperedPlayers = new HashSet<>();
-  private final Identifier companionHandId;
+  private final ResourceLocation companionHandId;
   private final TagKey<Item> catalystItems;
   private RevivalState revivalState = RevivalState.EMPTY;
 
   protected AbstractLifelessHandEntity(
       EntityType<? extends PathfinderMob> entityType,
       Level level,
-      Identifier companionHandId,
+      ResourceLocation companionHandId,
       ParticleOptions ritualParticle) {
     super(entityType, level);
     this.companionHandId = companionHandId;
@@ -114,14 +112,14 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
 
   public static boolean place(
       ServerLevel serverLevel,
-      Identifier lifelessHandId,
+      ResourceLocation lifelessHandId,
       Vec3 position,
       float yaw,
       Player player,
       ItemStack itemStack) {
     if (!(BuiltInRegistries.ENTITY_TYPE
-            .getValue(lifelessHandId)
-            .create(serverLevel, EntitySpawnReason.SPAWN_ITEM_USE)
+            .get(lifelessHandId)
+            .create(serverLevel)
         instanceof AbstractLifelessHandEntity lifelessHand)) {
       return false;
     }
@@ -132,7 +130,7 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
                 Optional.ofNullable(itemStack.get(HandDataComponents.COMPANION_UUID)))
             .withBoundOwnerUUID(Optional.ofNullable(itemStack.get(HandDataComponents.OWNER_UUID)));
     lifelessHand.setCustomName(itemStack.get(DataComponents.CUSTOM_NAME));
-    lifelessHand.snapTo(position.x(), position.y(), position.z(), yaw, 0.0F);
+    lifelessHand.moveTo(position.x(), position.y(), position.z(), yaw, 0.0F);
     lifelessHand.setYHeadRot(yaw);
     lifelessHand.setYBodyRot(yaw);
     serverLevel.addFreshEntity(lifelessHand);
@@ -170,17 +168,18 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
     }
 
     if (this.revivalState.isBoundToOtherThan(player.getUUID())) {
-      player.sendOverlayMessage(Component.translatable(FOREIGN_REMAINS_MESSAGE_KEY));
+      player.displayClientMessage(Component.translatable(FOREIGN_REMAINS_MESSAGE_KEY), true);
       return;
     }
 
     BlockPos ritualBasePosition = this.getOnPos();
     if (!RevivalRitual.isRitualBase(serverLevel.getBlockState(ritualBasePosition))
         || !RevivalRitual.hasEnoughLitCandles(serverLevel, ritualBasePosition)) {
-      player.sendOverlayMessage(Component.translatable(RITUAL_INCOMPLETE_MESSAGE_KEY));
+      player.displayClientMessage(Component.translatable(RITUAL_INCOMPLETE_MESSAGE_KEY), true);
       if (this.whisperedPlayers.add(player.getUUID())) {
-        player.sendSystemMessage(
-            createWhisper(this.getName(), Component.translatable(RITUAL_WHISPER_MESSAGE_KEY)));
+        player.displayClientMessage(
+            createWhisper(this.getName(), Component.translatable(RITUAL_WHISPER_MESSAGE_KEY)),
+            false);
       }
       return;
     }
@@ -266,12 +265,12 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
 
   private void strikeVisualLightning(ServerLevel serverLevel) {
     LightningBolt lightningBolt =
-        EntityType.LIGHTNING_BOLT.create(serverLevel, EntitySpawnReason.TRIGGERED);
+        EntityType.LIGHTNING_BOLT.create(serverLevel);
     if (lightningBolt == null) {
       return;
     }
 
-    lightningBolt.snapTo(this.position());
+    lightningBolt.moveTo(this.position());
     lightningBolt.setVisualOnly(true);
     serverLevel.addFreshEntity(lightningBolt);
   }
@@ -309,8 +308,8 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
 
   private Optional<AbstractCompanionHandEntity> createCompanion(ServerLevel serverLevel) {
     if (!(BuiltInRegistries.ENTITY_TYPE
-            .getValue(this.companionHandId)
-            .create(serverLevel, EntitySpawnReason.CONVERSION)
+            .get(this.companionHandId)
+            .create(serverLevel)
         instanceof AbstractCompanionHandEntity companion)) {
       return Optional.empty();
     }
@@ -322,22 +321,20 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
   }
 
   private void moveToThisHand(AbstractCompanionHandEntity companion) {
-    companion.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
+    companion.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
     companion.setYHeadRot(this.getYHeadRot());
     companion.setYBodyRot(this.yBodyRot);
   }
 
   @Override
-  protected void dropFromLootTable(
-      ServerLevel serverLevel, DamageSource damageSource, boolean causedByPlayer) {
+  protected void dropFromLootTable(DamageSource damageSource, boolean causedByPlayer) {
     if (this.revivalState.companionUUID().isEmpty()) {
-      super.dropFromLootTable(serverLevel, damageSource, causedByPlayer);
+      super.dropFromLootTable(damageSource, causedByPlayer);
       return;
     }
 
     ItemEntity droppedRemains =
         this.spawnAtLocation(
-            serverLevel,
             LifelessHandItem.createCompanionRemains(
                 EntityType.getKey(this.getType()),
                 this.revivalState.companionUUID().get(),
@@ -349,8 +346,8 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
   }
 
   @Override
-  public boolean isInvulnerableTo(ServerLevel serverLevel, DamageSource damageSource) {
-    return super.isInvulnerableTo(serverLevel, damageSource)
+  public boolean isInvulnerableTo(DamageSource damageSource) {
+    return super.isInvulnerableTo(damageSource)
         || (!damageSource.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
             && this.isProtectedFrom(damageSource));
   }
@@ -369,16 +366,15 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
   }
 
   @Override
-  public void addAdditionalSaveData(ValueOutput valueOutput) {
-    super.addAdditionalSaveData(valueOutput);
-    valueOutput.store(REVIVAL_STATE_TAG, RevivalState.CODEC, this.revivalState);
+  public void addAdditionalSaveData(CompoundTag compoundTag) {
+    super.addAdditionalSaveData(compoundTag);
+    compoundTag.put(REVIVAL_STATE_TAG, this.revivalState.createTag());
   }
 
   @Override
-  public void readAdditionalSaveData(ValueInput valueInput) {
-    super.readAdditionalSaveData(valueInput);
-    this.revivalState =
-        valueInput.read(REVIVAL_STATE_TAG, RevivalState.CODEC).orElse(RevivalState.EMPTY);
+  public void readAdditionalSaveData(CompoundTag compoundTag) {
+    super.readAdditionalSaveData(compoundTag);
+    this.revivalState = RevivalState.fromTag(compoundTag.get(REVIVAL_STATE_TAG));
   }
 
   @Override

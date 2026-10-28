@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +40,7 @@ class ShoulderPassiveTest {
     TestBootstrap.bootstrap();
   }
 
-  private static List<Identifier> companionHandIds() {
+  private static List<ResourceLocation> companionHandIds() {
     return List.of(
         RottenHandEntity.ENTITY_ID,
         DrownedHandEntity.ENTITY_ID,
@@ -52,7 +52,7 @@ class ShoulderPassiveTest {
         WitchHandEntity.ENTITY_ID);
   }
 
-  private static List<Identifier> lifelessHandIds() {
+  private static List<ResourceLocation> lifelessHandIds() {
     return List.of(
         LifelessRottenHandEntity.ENTITY_ID,
         LifelessDrownedHandEntity.ENTITY_ID,
@@ -67,7 +67,7 @@ class ShoulderPassiveTest {
   @Test
   @DisplayName("Every companion hand has its own shoulder passive")
   void everyCompanionHandHasOwnPassive() {
-    List<Identifier> companionHandIds = companionHandIds();
+    List<ResourceLocation> companionHandIds = companionHandIds();
     List<ShoulderPassive> shoulderPassives =
         companionHandIds.stream()
             .map(ShoulderPassive::forHand)

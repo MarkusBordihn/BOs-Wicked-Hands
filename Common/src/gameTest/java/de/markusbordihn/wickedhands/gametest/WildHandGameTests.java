@@ -42,17 +42,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
-import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -67,11 +66,13 @@ import net.minecraft.world.phys.Vec3;
 
 public class WildHandGameTests extends HandGameTests {
 
-  private static final Identifier ROTTEN_HAND_PROFILE_ID =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, "entity/rotten_hand");
+  private static final ResourceLocation ROTTEN_HAND_PROFILE_ID =
+      ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "entity/rotten_hand");
   private static final long MIDNIGHT_DAY_TIME = 18000L;
   private static final int SPAWN_RULE_ATTEMPTS = 200;
-  private static final Map<EntityType<?>, Identifier> LIFELESS_HAND_BY_MONSTER =
+  // StructureGridSpawner.spawnStructure puts tests 6 blocks apart, a neighbour's lava lights them.
+  private static final BlockPos SPAWN_RULE_POSITION = TEST_POSITION.above(16);
+  private static final Map<EntityType<?>, ResourceLocation> LIFELESS_HAND_BY_MONSTER =
       Map.of(
           EntityType.ZOMBIE, LifelessRottenHandEntity.ENTITY_ID,
           EntityType.DROWNED, LifelessDrownedHandEntity.ENTITY_ID,
@@ -104,19 +105,19 @@ public class WildHandGameTests extends HandGameTests {
     return SpawnPlacements.checkSpawnRules(
         entityType,
         level,
-        EntitySpawnReason.NATURAL,
-        helper.absolutePos(TEST_POSITION),
+        MobSpawnType.NATURAL,
+        helper.absolutePos(SPAWN_RULE_POSITION),
         level.getRandom());
   }
 
   private static void assertMonsterDropsLifelessHand(
-      GameTestHelper helper, EntityType<?> monsterType, Identifier lifelessHandId) {
+      GameTestHelper helper, EntityType<?> monsterType, ResourceLocation lifelessHandId) {
     ServerLevel level = helper.getLevel();
     LootTable monsterLootTable =
         level
             .getServer()
             .reloadableRegistries()
-            .getLootTable(monsterType.getDefaultLootTable().orElseThrow());
+            .getLootTable(monsterType.getDefaultLootTable());
     Entity monster = helper.spawn(monsterType, TEST_POSITION);
     Player player = helper.makeMockPlayer(GameType.SURVIVAL);
     LootParams lootParams =
@@ -143,15 +144,14 @@ public class WildHandGameTests extends HandGameTests {
 
     helper.assertTrue(
         handDrops >= MINIMUM_EXPECTED_HAND_DROPS && handDrops <= MAXIMUM_EXPECTED_HAND_DROPS,
-        Component.literal(
-            "Expected 1-5% "
-                + lifelessHandId
-                + " from "
-                + LOOT_ROLLS_PER_MONSTER
-                + " "
-                + EntityType.getKey(monsterType)
-                + " kills, got "
-                + handDrops));
+        "Expected 1-5% "
+            + lifelessHandId
+            + " from "
+            + LOOT_ROLLS_PER_MONSTER
+            + " "
+            + EntityType.getKey(monsterType)
+            + " kills, got "
+            + handDrops);
   }
 
   public void testRottenHandSpawnsNaturallyAtNight(GameTestHelper helper) {
@@ -161,20 +161,21 @@ public class WildHandGameTests extends HandGameTests {
             .getLevel()
             .registryAccess()
             .lookupOrThrow(Registries.BIOME)
-            .getValueOrThrow(Biomes.PLAINS)
+            .getOrThrow(Biomes.PLAINS)
+            .value()
             .getMobSettings()
             .getMobs(MobCategory.MONSTER)
             .unwrap()
             .stream()
-            .anyMatch(spawner -> spawner.value().type() == rottenHandType),
-        Component.literal("Rotten hand is missing from the plains monster spawns"));
+            .anyMatch(spawner -> spawner.type == rottenHandType),
+        "Rotten hand is missing from the plains monster spawns");
     helper.assertTrue(
         SpawnPlacements.getPlacementType(rottenHandType) == RottenHandEntity.SPAWN_PLACEMENT_TYPE,
-        Component.literal("Rotten hand has no registered spawn placement"));
+        "Rotten hand has no registered spawn placement");
 
     ServerLevel level = helper.getLevel();
-    helper.setBlock(TEST_POSITION.below(), Blocks.STONE);
-    helper.setTime(MIDNIGHT_DAY_TIME);
+    helper.setBlock(SPAWN_RULE_POSITION.below(), Blocks.STONE);
+    level.setDayTime(MIDNIGHT_DAY_TIME);
     level.updateSkyBrightness();
     boolean spawnsAtMidnight = false;
     for (int i = 0; i < SPAWN_RULE_ATTEMPTS && !spawnsAtMidnight; i++) {
@@ -182,7 +183,7 @@ public class WildHandGameTests extends HandGameTests {
     }
     helper.assertTrue(
         spawnsAtMidnight,
-        Component.literal("Rotten hand never passed its spawn rules at midnight"));
+        "Rotten hand never passed its spawn rules at midnight");
     helper.succeed();
   }
 
@@ -190,10 +191,11 @@ public class WildHandGameTests extends HandGameTests {
     assertActiveModelProfile(
         helper,
         (RottenHandEntity)
-            helper.spawn(
-                rottenHandType(),
-                Vec3.atBottomCenterOf(TEST_POSITION),
-                EntitySpawnReason.SPAWN_ITEM_USE),
+            rottenHandType()
+                .spawn(
+                    helper.getLevel(),
+                    helper.absolutePos(TEST_POSITION),
+                    MobSpawnType.SPAWN_EGG),
         ROTTEN_HAND_PROFILE_ID);
     helper.succeed();
   }
@@ -202,7 +204,7 @@ public class WildHandGameTests extends HandGameTests {
     helper.assertTrue(
         spawnWildHand(helper, RottenHandEntity.ENTITY_ID, TEST_POSITION)
             .removeWhenFarAway(DESPAWN_DISTANCE),
-        Component.literal("Rotten hand would never despawn"));
+        "Rotten hand would never despawn");
     helper.succeed();
   }
 
@@ -221,19 +223,18 @@ public class WildHandGameTests extends HandGameTests {
                   .withLevel(level)
                   .withPosition(helper.absoluteVec(Vec3.atBottomCenterOf(TEST_POSITION))));
     } catch (CommandSyntaxException e) {
-      helper.fail(Component.literal("Summon command failed: " + e.getMessage()));
+      helper.fail("Summon command failed: " + e.getMessage());
     }
     List<RottenHandEntity> summonedRottenHands =
         level.getEntitiesOfClass(RottenHandEntity.class, aroundTestPosition(helper, 2.0D));
     helper.assertFalse(
-        summonedRottenHands.isEmpty(), Component.literal("Summon command spawned no rotten hand"));
+        summonedRottenHands.isEmpty(), "Summon command spawned no rotten hand");
 
     Entity rottenHand = summonedRottenHands.getFirst();
     helper.assertFalse(
-        rottenHand.isInvulnerable(), Component.literal("Summoned rotten hand is invulnerable"));
+        rottenHand.isInvulnerable(), "Summoned rotten hand is invulnerable");
 
-    rottenHand.hurtServer(
-        level,
+    rottenHand.hurt(
         level.damageSources().playerAttack(helper.makeMockPlayer(GameType.SURVIVAL)),
         100.0F);
     helper.assertItemEntityPresent(lifelessRottenHandItem(), TEST_POSITION, 2.0D);
@@ -247,7 +248,7 @@ public class WildHandGameTests extends HandGameTests {
         () ->
             helper.assertTrue(
                 pig.getHealth() < pig.getMaxHealth(),
-                Component.literal("Rotten hand did not attack the pig")));
+                "Rotten hand did not attack the pig"));
   }
 
   public void testRottenHandSwimsToSurface(GameTestHelper helper) {
@@ -256,13 +257,13 @@ public class WildHandGameTests extends HandGameTests {
         spawnWildHand(helper, RottenHandEntity.ENTITY_ID, TEST_POSITION);
     helper.assertTrue(
         rottenHand.hasObjective(ObjectiveType.FLOAT),
-        Component.literal("Rotten hand has no float objective"));
+        "Rotten hand has no float objective");
     double waterSurfaceY = helper.absolutePos(TEST_POSITION.above(WATER_DEPTH - 1)).getY();
     helper.succeedWhen(
         () ->
             helper.assertTrue(
                 rottenHand.getY() > waterSurfaceY,
-                Component.literal("Rotten hand did not swim to the water surface")));
+                "Rotten hand did not swim to the water surface"));
   }
 
   public void testMonstersDropTheirLifelessHand(GameTestHelper helper) {
@@ -279,15 +280,15 @@ public class WildHandGameTests extends HandGameTests {
     AbstractHandEntity witheredHand =
         spawnWildHand(helper, WitheredHandEntity.ENTITY_ID, TEST_POSITION.west(2));
     helper.assertTrue(
-        boneHand.hurtServer(level, level.damageSources().inFire(), FIRE_DAMAGE),
-        Component.literal("Bone hand was not hurt by fire"));
+        boneHand.hurt(level.damageSources().inFire(), FIRE_DAMAGE),
+        "Bone hand was not hurt by fire");
     helper.assertFalse(
-        witheredHand.hurtServer(level, level.damageSources().inFire(), FIRE_DAMAGE)
-            || witheredHand.hurtServer(level, level.damageSources().lava(), FIRE_DAMAGE),
-        Component.literal("Withered hand was hurt by fire"));
+        witheredHand.hurt(level.damageSources().inFire(), FIRE_DAMAGE)
+            || witheredHand.hurt(level.damageSources().lava(), FIRE_DAMAGE),
+        "Withered hand was hurt by fire");
     helper.assertTrue(
         witheredHand.getHealth() == witheredHand.getMaxHealth(),
-        Component.literal("Withered hand lost health to fire"));
+        "Withered hand lost health to fire");
     helper.succeed();
   }
 
@@ -298,10 +299,10 @@ public class WildHandGameTests extends HandGameTests {
         spawnWildHand(helper, BoggedHandEntity.ENTITY_ID, TEST_POSITION.west(2));
     helper.assertTrue(
         rottenHand.addEffect(new MobEffectInstance(MobEffects.POISON, OWNER_POISON_TICKS)),
-        Component.literal("Rotten hand could not be poisoned"));
+        "Rotten hand could not be poisoned");
     helper.assertFalse(
         boggedHand.addEffect(new MobEffectInstance(MobEffects.POISON, OWNER_POISON_TICKS)),
-        Component.literal("Bogged hand was poisoned"));
+        "Bogged hand was poisoned");
     helper.succeed();
   }
 
@@ -312,17 +313,17 @@ public class WildHandGameTests extends HandGameTests {
         spawnWildHand(helper, DrownedHandEntity.ENTITY_ID, TEST_POSITION);
     helper.assertFalse(
         drownedHand.hasObjective(ObjectiveType.FLOAT),
-        Component.literal("Drowned hand floats instead of diving"));
+        "Drowned hand floats instead of diving");
 
     helper.runAfterDelay(
         PAST_AIR_SUPPLY_TICKS,
         () -> {
           helper.assertTrue(
-              drownedHand.isUnderWater(), Component.literal("Drowned hand left the water"));
+              drownedHand.isUnderWater(), "Drowned hand left the water");
           helper.assertTrue(
               drownedHand.getAirSupply() > 0
                   && drownedHand.getHealth() == drownedHand.getMaxHealth(),
-              Component.literal("Drowned hand drowns underwater"));
+              "Drowned hand drowns underwater");
           helper.succeed();
         });
   }

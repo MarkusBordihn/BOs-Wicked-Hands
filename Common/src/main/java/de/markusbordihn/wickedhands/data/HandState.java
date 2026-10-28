@@ -21,6 +21,8 @@ package de.markusbordihn.wickedhands.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 
 public record HandState(HandLifecycle lifecycle, CompanionMode companionMode) {
 
@@ -38,6 +40,18 @@ public record HandState(HandLifecycle lifecycle, CompanionMode companionMode) {
                           .optionalFieldOf("companion_mode", EMPTY.companionMode())
                           .forGetter(HandState::companionMode))
                   .apply(instance, HandState::new));
+
+  public static HandState fromTag(Tag tag) {
+    if (tag == null) {
+      return EMPTY;
+    }
+
+    return CODEC.parse(NbtOps.INSTANCE, tag).result().orElse(EMPTY);
+  }
+
+  public Tag createTag() {
+    return CODEC.encodeStart(NbtOps.INSTANCE, this).getOrThrow();
+  }
 
   public HandState withLifecycle(HandLifecycle lifecycle) {
     return new HandState(lifecycle, this.companionMode);

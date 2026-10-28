@@ -62,16 +62,16 @@ public final class ModItems {
   public static final RegistryObject<Item> ROTTEN_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(RottenHandEntity.ENTITY_ID).getPath(),
-          () -> HandSpawnEgg.create(RottenHandEntity.ENTITY_ID, ModEntityTypes.ROTTEN_HAND.get()));
+          () -> HandSpawnEgg.create(ModEntityTypes.ROTTEN_HAND));
   public static final RegistryObject<Item> DROWNED_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(DrownedHandEntity.ENTITY_ID).getPath(),
           () ->
-              HandSpawnEgg.create(DrownedHandEntity.ENTITY_ID, ModEntityTypes.DROWNED_HAND.get()));
+              HandSpawnEgg.create(ModEntityTypes.DROWNED_HAND));
   public static final RegistryObject<Item> BONE_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(BoneHandEntity.ENTITY_ID).getPath(),
-          () -> HandSpawnEgg.create(BoneHandEntity.ENTITY_ID, ModEntityTypes.BONE_HAND.get()));
+          () -> HandSpawnEgg.create(ModEntityTypes.BONE_HAND));
   public static final RegistryObject<Item> LIFELESS_HUSK_HAND =
       ITEMS.register(
           LifelessHuskHandEntity.ID,
@@ -87,17 +87,16 @@ public final class ModItems {
   public static final RegistryObject<Item> HUSK_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(HuskHandEntity.ENTITY_ID).getPath(),
-          () -> HandSpawnEgg.create(HuskHandEntity.ENTITY_ID, ModEntityTypes.HUSK_HAND.get()));
+          () -> HandSpawnEgg.create(ModEntityTypes.HUSK_HAND));
   public static final RegistryObject<Item> STRAY_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(StrayHandEntity.ENTITY_ID).getPath(),
-          () -> HandSpawnEgg.create(StrayHandEntity.ENTITY_ID, ModEntityTypes.STRAY_HAND.get()));
+          () -> HandSpawnEgg.create(ModEntityTypes.STRAY_HAND));
   public static final RegistryObject<Item> WITHERED_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(WitheredHandEntity.ENTITY_ID).getPath(),
           () ->
-              HandSpawnEgg.create(
-                  WitheredHandEntity.ENTITY_ID, ModEntityTypes.WITHERED_HAND.get()));
+              HandSpawnEgg.create(ModEntityTypes.WITHERED_HAND));
   public static final RegistryObject<Item> LIFELESS_BOGGED_HAND =
       ITEMS.register(
           LifelessBoggedHandEntity.ID,
@@ -109,11 +108,11 @@ public final class ModItems {
   public static final RegistryObject<Item> BOGGED_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(BoggedHandEntity.ENTITY_ID).getPath(),
-          () -> HandSpawnEgg.create(BoggedHandEntity.ENTITY_ID, ModEntityTypes.BOGGED_HAND.get()));
+          () -> HandSpawnEgg.create(ModEntityTypes.BOGGED_HAND));
   public static final RegistryObject<Item> WITCH_HAND_SPAWN_EGG =
       ITEMS.register(
           HandSpawnEgg.itemId(WitchHandEntity.ENTITY_ID).getPath(),
-          () -> HandSpawnEgg.create(WitchHandEntity.ENTITY_ID, ModEntityTypes.WITCH_HAND.get()));
+          () -> HandSpawnEgg.create(ModEntityTypes.WITCH_HAND));
 
   private ModItems() {}
 }

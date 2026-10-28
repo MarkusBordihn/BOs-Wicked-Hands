@@ -28,7 +28,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
@@ -42,7 +42,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.alchemy.PotionContents;
 
 public enum ShoulderPassive {
@@ -70,14 +70,14 @@ public enum ShoulderPassive {
   // Vanilla flickers Night Vision during its last 200 ticks, see GameRenderer.getNightVisionScale.
   public static final int NIGHT_VISION_REFRESH_TICKS = 220;
 
-  private final Identifier effectId =
-      Identifier.fromNamespaceAndPath(Constants.MOD_ID, this.name().toLowerCase(Locale.ROOT));
+  private final ResourceLocation effectId =
+      ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, this.name().toLowerCase(Locale.ROOT));
   private final ResourceKey<MobEffect> effectKey =
       ResourceKey.create(Registries.MOB_EFFECT, this.effectId);
-  private final Identifier modifierId = this.effectId.withPrefix("shoulder_passive/");
+  private final ResourceLocation modifierId = this.effectId.withPrefix("shoulder_passive/");
   private final TagKey<DamageType> grippingDamage =
       TagKey.create(Registries.DAMAGE_TYPE, this.effectId.withPrefix("shoulder_grip/"));
-  private final Identifier handId;
+  private final ResourceLocation handId;
   private final int color;
   private final Holder<Attribute> attribute;
   private final double amount;
@@ -85,7 +85,7 @@ public enum ShoulderPassive {
   private final Consumer<ServerPlayer> ownerAction;
 
   ShoulderPassive(
-      Identifier handId,
+      ResourceLocation handId,
       int color,
       Holder<Attribute> attribute,
       double amount,
@@ -98,7 +98,7 @@ public enum ShoulderPassive {
     this.ownerAction = owner -> {};
   }
 
-  ShoulderPassive(Identifier handId, int color, Consumer<ServerPlayer> ownerAction) {
+  ShoulderPassive(ResourceLocation handId, int color, Consumer<ServerPlayer> ownerAction) {
     this.handId = handId;
     this.color = color;
     this.attribute = null;
@@ -116,7 +116,7 @@ public enum ShoulderPassive {
     }
   }
 
-  public static Optional<ShoulderPassive> forHand(Identifier handId) {
+  public static Optional<ShoulderPassive> forHand(ResourceLocation handId) {
     return Arrays.stream(values())
         .filter(shoulderPassive -> shoulderPassive.handId.equals(handId))
         .findFirst();
@@ -139,16 +139,16 @@ public enum ShoulderPassive {
     return false;
   }
 
-  public Identifier getEffectId() {
+  public ResourceLocation getEffectId() {
     return this.effectId;
   }
 
-  public Identifier getModifierId() {
+  public ResourceLocation getModifierId() {
     return this.modifierId;
   }
 
   public Holder<MobEffect> getEffect() {
-    return BuiltInRegistries.MOB_EFFECT.getOrThrow(this.effectKey);
+    return BuiltInRegistries.MOB_EFFECT.getHolderOrThrow(this.effectKey);
   }
 
   public MobEffect createEffect() {

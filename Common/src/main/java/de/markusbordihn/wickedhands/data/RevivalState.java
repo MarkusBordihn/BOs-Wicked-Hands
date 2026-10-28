@@ -24,6 +24,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 
 public record RevivalState(
     Optional<UUID> ownerUUID,
@@ -50,6 +52,18 @@ public record RevivalState(
                           .optionalFieldOf("elapsed_ticks", EMPTY.elapsedTicks())
                           .forGetter(RevivalState::elapsedTicks))
                   .apply(instance, RevivalState::new));
+
+  public static RevivalState fromTag(Tag tag) {
+    if (tag == null) {
+      return EMPTY;
+    }
+
+    return CODEC.parse(NbtOps.INSTANCE, tag).result().orElse(EMPTY);
+  }
+
+  public Tag createTag() {
+    return CODEC.encodeStart(NbtOps.INSTANCE, this).getOrThrow();
+  }
 
   public RevivalState withOwnerUUID(Optional<UUID> ownerUUID) {
     return new RevivalState(ownerUUID, this.companionUUID, this.boundOwnerUUID, this.elapsedTicks);

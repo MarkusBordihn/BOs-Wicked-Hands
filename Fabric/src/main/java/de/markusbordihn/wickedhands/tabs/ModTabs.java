@@ -20,8 +20,8 @@
 package de.markusbordihn.wickedhands.tabs;
 
 import de.markusbordihn.wickedhands.item.ModItems;
-import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -34,14 +34,14 @@ public final class ModTabs {
     Registry.register(
         BuiltInRegistries.CREATIVE_MODE_TAB,
         WickedHandsTab.TAB_ID,
-        FabricCreativeModeTab.builder()
+        FabricItemGroup.builder()
             .icon(ModItems.LIFELESS_ROTTEN_HAND::getDefaultInstance)
             .title(WickedHandsTab.TITLE)
             .displayItems(
                 (itemDisplayParameters, output) ->
                     WickedHandsTab.displayItems().forEach(output::accept))
             .build());
-    CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS)
-        .register(output -> WickedHandsTab.spawnEggs().forEach(output::accept));
+    ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.SPAWN_EGGS)
+        .register(entries -> WickedHandsTab.spawnEggs().forEach(entries::accept));
   }
 }

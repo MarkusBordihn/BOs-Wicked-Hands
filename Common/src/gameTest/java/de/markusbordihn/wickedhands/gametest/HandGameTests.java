@@ -36,11 +36,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
@@ -83,23 +82,22 @@ public abstract class HandGameTests {
   }
 
   protected static void assertActiveModelProfile(
-      GameTestHelper helper, AbstractHandEntity hand, Identifier expectedProfileId) {
-    Identifier profileId = hand.getEasyModelProfileId();
+      GameTestHelper helper, AbstractHandEntity hand, ResourceLocation expectedProfileId) {
+    ResourceLocation profileId = hand.getEasyModelProfileId();
     helper.assertTrue(
         expectedProfileId.equals(profileId),
-        Component.literal(hand.getType() + " uses the model profile " + profileId));
+        hand.getType() + " uses the model profile " + profileId);
     Optional<EasyModelEntityProfile> profile =
         EasyModelProfileManager.load(helper.getLevel().getServer().getResourceManager())
             .getProfile(profileId);
     helper.assertTrue(
-        profile.isPresent(), Component.literal("Model profile " + profileId + " is missing"));
+        profile.isPresent(), "Model profile " + profileId + " is missing");
     helper.assertTrue(
         profile.get().isActive(),
-        Component.literal(
-            "Easy Model Entities rejected the model profile "
-                + profileId
-                + ": "
-                + profile.get().validationIssues()));
+        "Easy Model Entities rejected the model profile "
+            + profileId
+            + ": "
+            + profile.get().validationIssues());
   }
 
   protected static <T extends AbstractLifelessHandEntity> T placeLifelessHand(
@@ -124,7 +122,7 @@ public abstract class HandGameTests {
                         ritualBasePosition,
                         false)))
             .consumesAction(),
-        Component.literal(lifelessHandStack.getItem() + " could not be placed on soul sand"));
+        lifelessHandStack.getItem() + " could not be placed on soul sand");
 
     return findEntityNearTestPosition(helper, lifelessHandClass);
   }
@@ -136,7 +134,7 @@ public abstract class HandGameTests {
   }
 
   protected static AbstractLifelessHandEntity startRevivalRitual(
-      GameTestHelper helper, Player player, Identifier lifelessHandId, Item catalyst) {
+      GameTestHelper helper, Player player, ResourceLocation lifelessHandId, Item catalyst) {
     return startRevivalRitual(helper, player, new ItemStack(item(lifelessHandId)), catalyst);
   }
 
@@ -155,11 +153,11 @@ public abstract class HandGameTests {
   private static void forceLoadRitualArea(GameTestHelper helper) {
     BlockPos ritualPosition = helper.absolutePos(TEST_POSITION);
     ChunkPos northWestChunk =
-        ChunkPos.containing(ritualPosition.offset(-RITUAL_AREA_RADIUS, 0, -RITUAL_AREA_RADIUS));
+        new ChunkPos(ritualPosition.offset(-RITUAL_AREA_RADIUS, 0, -RITUAL_AREA_RADIUS));
     ChunkPos southEastChunk =
-        ChunkPos.containing(ritualPosition.offset(RITUAL_AREA_RADIUS, 0, RITUAL_AREA_RADIUS));
-    for (int chunkX = northWestChunk.x(); chunkX <= southEastChunk.x(); chunkX++) {
-      for (int chunkZ = northWestChunk.z(); chunkZ <= southEastChunk.z(); chunkZ++) {
+        new ChunkPos(ritualPosition.offset(RITUAL_AREA_RADIUS, 0, RITUAL_AREA_RADIUS));
+    for (int chunkX = northWestChunk.x; chunkX <= southEastChunk.x; chunkX++) {
+      for (int chunkZ = northWestChunk.z; chunkZ <= southEastChunk.z; chunkZ++) {
         helper.getLevel().setChunkForced(chunkX, chunkZ, true);
       }
     }
@@ -172,7 +170,7 @@ public abstract class HandGameTests {
   }
 
   protected static AdvancementHolder companionAdvancement(
-      GameTestHelper helper, Identifier companionId) {
+      GameTestHelper helper, ResourceLocation companionId) {
     return helper
         .getLevel()
         .getServer()
@@ -186,7 +184,7 @@ public abstract class HandGameTests {
       HandGesture expectedGesture,
       String failureMessage) {
     helper.assertTrue(
-        hand.getActiveGesture() == expectedGesture, Component.literal(failureMessage));
+        hand.getActiveGesture() == expectedGesture, failureMessage);
   }
 
   protected static AABB aroundTestPosition(GameTestHelper helper, double radius) {
@@ -198,7 +196,7 @@ public abstract class HandGameTests {
     List<T> entities =
         helper.getLevel().getEntitiesOfClass(entityClass, aroundTestPosition(helper, 1.0D));
     helper.assertFalse(
-        entities.isEmpty(), Component.literal("No " + entityClass.getSimpleName() + " was found"));
+        entities.isEmpty(), "No " + entityClass.getSimpleName() + " was found");
     return entities.getFirst();
   }
 
@@ -206,23 +204,23 @@ public abstract class HandGameTests {
     return entityType(RottenHandEntity.ENTITY_ID);
   }
 
-  protected static EntityType<?> entityType(Identifier entityId) {
-    return BuiltInRegistries.ENTITY_TYPE.getValue(entityId);
+  protected static EntityType<?> entityType(ResourceLocation entityId) {
+    return BuiltInRegistries.ENTITY_TYPE.get(entityId);
   }
 
   protected static Item lifelessRottenHandItem() {
     return item(LifelessRottenHandEntity.ENTITY_ID);
   }
 
-  protected static Item item(Identifier itemId) {
-    return BuiltInRegistries.ITEM.getValue(itemId);
+  protected static Item item(ResourceLocation itemId) {
+    return BuiltInRegistries.ITEM.get(itemId);
   }
 
   protected static AbstractHandEntity spawnWildHand(
-      GameTestHelper helper, Identifier handId, BlockPos position) {
+      GameTestHelper helper, ResourceLocation handId, BlockPos position) {
     return (AbstractHandEntity)
-        helper.spawn(
-            entityType(handId), Vec3.atBottomCenterOf(position), EntitySpawnReason.NATURAL);
+        entityType(handId)
+            .spawn(helper.getLevel(), helper.absolutePos(position), MobSpawnType.NATURAL);
   }
 
   protected static <T extends Mob> T spawnMobWithoutAi(

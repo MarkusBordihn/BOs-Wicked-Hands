@@ -19,10 +19,13 @@
 
 package de.markusbordihn.wickedhands;
 
+import de.markusbordihn.easynpc.client.model.ModModelLayers;
 import de.markusbordihn.easynpc.client.renderer.entity.easymodelentities.EasyModelNPCRenderer;
 import de.markusbordihn.wickedhands.entity.ModEntityTypes;
 import net.fabricmc.api.ClientModInitializer;
-import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.world.entity.PathfinderMob;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,24 +33,45 @@ public class WickedHandsClient implements ClientModInitializer {
 
   private static final Logger log = LogManager.getLogger(Constants.LOG_NAME);
 
+  private static <T extends PathfinderMob> EasyModelNPCRenderer<T> createHandRenderer(
+      EntityRendererProvider.Context context) {
+    return new EasyModelNPCRenderer<>(context, ModModelLayers.DOPPLER);
+  }
+
   @Override
   public void onInitializeClient() {
     log.info("Initializing {} (Fabric-Client) ...", Constants.MOD_NAME);
-    EntityRenderers.register(ModEntityTypes.ROTTEN_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_ROTTEN_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.DROWNED_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_DROWNED_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.BONE_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_BONE_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.HUSK_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_HUSK_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.STRAY_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_STRAY_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.WITHERED_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_WITHERED_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.BOGGED_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_BOGGED_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.WITCH_HAND, EasyModelNPCRenderer::new);
-    EntityRenderers.register(ModEntityTypes.LIFELESS_WITCH_HAND, EasyModelNPCRenderer::new);
+    EntityRendererRegistry.register(
+        ModEntityTypes.ROTTEN_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_ROTTEN_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.DROWNED_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_DROWNED_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.BONE_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_BONE_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.HUSK_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_HUSK_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.STRAY_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_STRAY_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.WITHERED_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_WITHERED_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.BOGGED_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_BOGGED_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.WITCH_HAND, WickedHandsClient::createHandRenderer);
+    EntityRendererRegistry.register(
+        ModEntityTypes.LIFELESS_WITCH_HAND, WickedHandsClient::createHandRenderer);
   }
 }

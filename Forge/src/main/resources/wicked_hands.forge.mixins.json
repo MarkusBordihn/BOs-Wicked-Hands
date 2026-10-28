@@ -4,8 +4,7 @@
   "package": "de.markusbordihn.wickedhands.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "PlayerShoulderGripMixin",
-    "ServerPlayerShoulderGripMixin"
+    "PlayerShoulderGripMixin"
   ],
   "injectors": {
     "defaultRequire": 1

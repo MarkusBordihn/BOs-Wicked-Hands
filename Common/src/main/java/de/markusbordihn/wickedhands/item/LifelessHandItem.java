@@ -31,13 +31,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -56,27 +55,25 @@ public class LifelessHandItem extends Item {
       "item." + Constants.MOD_ID + ".lifeless_hand.feeding";
   private static final int WHISPER_COOLDOWN_TICKS = 60;
 
-  private final Identifier lifelessHandId;
+  private final ResourceLocation lifelessHandId;
 
-  private LifelessHandItem(Item.Properties properties, Identifier lifelessHandId) {
+  private LifelessHandItem(Item.Properties properties, ResourceLocation lifelessHandId) {
     super(properties);
     this.lifelessHandId = lifelessHandId;
   }
 
-  public static Item create(Identifier lifelessHandId) {
+  public static Item create(ResourceLocation lifelessHandId) {
     return new LifelessHandItem(
-        new Item.Properties()
-            .setId(ResourceKey.create(Registries.ITEM, lifelessHandId))
-            .component(DataComponents.LORE, createTooltip(lifelessHandId)),
+        new Item.Properties().component(DataComponents.LORE, createTooltip(lifelessHandId)),
         lifelessHandId);
   }
 
   public static ItemStack createCompanionRemains(
-      Identifier lifelessHandId,
+      ResourceLocation lifelessHandId,
       UUID companionUUID,
       Optional<UUID> ownerUUID,
       Component customName) {
-    ItemStack remains = new ItemStack(BuiltInRegistries.ITEM.getValue(lifelessHandId));
+    ItemStack remains = new ItemStack(BuiltInRegistries.ITEM.get(lifelessHandId));
     remains.set(HandDataComponents.COMPANION_UUID, companionUUID);
     ownerUUID.ifPresent(uuid -> remains.set(HandDataComponents.OWNER_UUID, uuid));
     if (customName != null) {
@@ -95,7 +92,7 @@ public class LifelessHandItem extends Item {
     remains.setTarget(ownerUUID);
   }
 
-  private static ItemLore createTooltip(Identifier lifelessHandId) {
+  private static ItemLore createTooltip(ResourceLocation lifelessHandId) {
     return new ItemLore(
         Stream.of(
                 Component.translatable(lifelessHandId.toLanguageKey("item", "tooltip")),
@@ -140,15 +137,16 @@ public class LifelessHandItem extends Item {
   }
 
   @Override
-  public InteractionResult use(Level level, Player player, InteractionHand hand) {
+  public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
     if (!level.isClientSide()) {
       ItemStack itemStack = player.getItemInHand(hand);
-      player.sendSystemMessage(
+      player.displayClientMessage(
           AbstractHandEntity.createWhisper(
               itemStack.getHoverName(),
-              Component.translatable(this.getDescriptionId() + ".revival_hint")));
-      player.getCooldowns().addCooldown(itemStack, WHISPER_COOLDOWN_TICKS);
+              Component.translatable(this.getDescriptionId() + ".revival_hint")),
+          false);
+      player.getCooldowns().addCooldown(this, WHISPER_COOLDOWN_TICKS);
     }
-    return InteractionResult.SUCCESS;
+    return InteractionResultHolder.success(player.getItemInHand(hand));
   }
 }

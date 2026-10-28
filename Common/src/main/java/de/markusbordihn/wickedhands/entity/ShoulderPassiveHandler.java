@@ -25,7 +25,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 
@@ -84,8 +84,8 @@ public final class ShoulderPassiveHandler {
   private static Optional<ShoulderPassive> getShoulderPassive(
       ServerPlayer player, ShoulderSide shoulderSide) {
     return EasyNPCShoulderHandler.getShoulderNPCData(player, shoulderSide)
-        .flatMap(entityTag -> entityTag.getString(ENTITY_ID_TAG))
-        .map(Identifier::tryParse)
+        .map(entityTag -> entityTag.getString(ENTITY_ID_TAG))
+        .map(ResourceLocation::tryParse)
         .flatMap(ShoulderPassive::forHand);
   }
 }

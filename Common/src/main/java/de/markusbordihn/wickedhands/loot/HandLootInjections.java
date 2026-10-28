@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -51,13 +51,13 @@ public final class HandLootInjections {
 
   private static ResourceKey<LootTable> vanillaEntityLootTable(String entityName) {
     return ResourceKey.create(
-        Registries.LOOT_TABLE, Identifier.withDefaultNamespace("entities/" + entityName));
+        Registries.LOOT_TABLE, ResourceLocation.withDefaultNamespace("entities/" + entityName));
   }
 
   private static ResourceKey<LootTable> injection(String entityName) {
     return ResourceKey.create(
         Registries.LOOT_TABLE,
-        Identifier.fromNamespaceAndPath(Constants.MOD_ID, "injections/" + entityName));
+        ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "injections/" + entityName));
   }
 
   public static Optional<LootPool.Builder> createDropPool(ResourceKey<LootTable> lootTable) {
