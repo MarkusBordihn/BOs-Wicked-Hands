@@ -8,7 +8,7 @@
             "condition": "minecraft:entity_properties",
             "entity": "this",
             "predicate": {
-              "type": "#wicked_hands:lifeless_hands"
+              "minecraft:entity_type": "#wicked_hands:lifeless_hands"
             }
           }
         ]

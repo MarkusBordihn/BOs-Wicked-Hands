@@ -36,6 +36,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.pig.Pig;
@@ -167,7 +168,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
         .thenExecute(
             () -> {
               companion.set(findEntityNearTestPosition(helper, RottenHandEntity.class));
-              attacker.set(spawnMobWithoutAi(helper, EntityType.ZOMBIE, MONSTER_POSITION));
+              attacker.set(spawnMobWithoutAi(helper, EntityTypes.ZOMBIE, MONSTER_POSITION));
               owner.setLastHurtByMob(attacker.get());
             })
         .thenWaitUntil(
@@ -178,7 +179,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
         .thenExecute(
             () -> {
               attacker.get().discard();
-              victim.set(spawnMobWithoutAi(helper, EntityType.PIG, MONSTER_POSITION));
+              victim.set(spawnMobWithoutAi(helper, EntityTypes.PIG, MONSTER_POSITION));
               owner.setLastHurtMob(victim.get());
             })
         .thenWaitUntil(
@@ -202,7 +203,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
         .thenExecute(
             () -> {
               companion.set(findEntityNearTestPosition(helper, RottenHandEntity.class));
-              attacker.set(spawnMobWithoutAi(helper, EntityType.ZOMBIE, MONSTER_POSITION));
+              attacker.set(spawnMobWithoutAi(helper, EntityTypes.ZOMBIE, MONSTER_POSITION));
               owner.setLastHurtByMob(attacker.get());
             })
         .thenWaitUntil(
@@ -264,7 +265,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
               helper.assertTrue(
                   siblingCompanion.get().getTarget() != hitCompanion.get(),
                   Component.literal("Companion attacked a companion of the same owner"));
-              victim.set(helper.spawn(EntityType.PIG, BESIDE_RITUAL_POSITION.east()));
+              victim.set(helper.spawn(EntityTypes.PIG, BESIDE_RITUAL_POSITION.east()));
               victim.get().setNoAi(true);
               owner.setLastHurtMob(victim.get());
             })
@@ -289,7 +290,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
         .thenExecute(
             () -> {
               companion.set(findEntityNearTestPosition(helper, RottenHandEntity.class));
-              creeper.set(spawnMobWithoutAi(helper, EntityType.CREEPER, MONSTER_POSITION));
+              creeper.set(spawnMobWithoutAi(helper, EntityTypes.CREEPER, MONSTER_POSITION));
               owner.setLastHurtMob(creeper.get());
             })
         .thenExecuteFor(
@@ -300,7 +301,7 @@ public class CompanionBehaviourGameTests extends HandGameTests {
                     Component.literal("Companion joined its owner's attack on a creeper")))
         .thenExecute(
             () -> {
-              TamableAnimal foreignWolf = helper.spawn(EntityType.WOLF, MONSTER_POSITION.east());
+              TamableAnimal foreignWolf = helper.spawn(EntityTypes.WOLF, MONSTER_POSITION.east());
               foreignWolf.tame(helper.makeMockPlayer(GameType.SURVIVAL));
               helper.assertFalse(
                   companion.get().canAttack(foreignWolf),

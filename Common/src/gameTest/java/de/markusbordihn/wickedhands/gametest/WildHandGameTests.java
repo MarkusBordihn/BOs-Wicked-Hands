@@ -50,6 +50,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.animal.pig.Pig;
@@ -73,14 +74,14 @@ public class WildHandGameTests extends HandGameTests {
   private static final int SPAWN_RULE_ATTEMPTS = 200;
   private static final Map<EntityType<?>, Identifier> LIFELESS_HAND_BY_MONSTER =
       Map.of(
-          EntityType.ZOMBIE, LifelessRottenHandEntity.ENTITY_ID,
-          EntityType.DROWNED, LifelessDrownedHandEntity.ENTITY_ID,
-          EntityType.SKELETON, LifelessBoneHandEntity.ENTITY_ID,
-          EntityType.HUSK, LifelessHuskHandEntity.ENTITY_ID,
-          EntityType.STRAY, LifelessStrayHandEntity.ENTITY_ID,
-          EntityType.WITHER_SKELETON, LifelessWitheredHandEntity.ENTITY_ID,
-          EntityType.BOGGED, LifelessBoggedHandEntity.ENTITY_ID,
-          EntityType.WITCH, LifelessWitchHandEntity.ENTITY_ID);
+          EntityTypes.ZOMBIE, LifelessRottenHandEntity.ENTITY_ID,
+          EntityTypes.DROWNED, LifelessDrownedHandEntity.ENTITY_ID,
+          EntityTypes.SKELETON, LifelessBoneHandEntity.ENTITY_ID,
+          EntityTypes.HUSK, LifelessHuskHandEntity.ENTITY_ID,
+          EntityTypes.STRAY, LifelessStrayHandEntity.ENTITY_ID,
+          EntityTypes.WITHER_SKELETON, LifelessWitheredHandEntity.ENTITY_ID,
+          EntityTypes.BOGGED, LifelessBoggedHandEntity.ENTITY_ID,
+          EntityTypes.WITCH, LifelessWitchHandEntity.ENTITY_ID);
   private static final int LOOT_ROLLS_PER_MONSTER = 2000;
   private static final float FIRE_DAMAGE = 4.0F;
   private static final int MINIMUM_EXPECTED_HAND_DROPS = 20;
@@ -241,7 +242,7 @@ public class WildHandGameTests extends HandGameTests {
   }
 
   public void testRottenHandAttacksAnimals(GameTestHelper helper) {
-    Pig pig = helper.spawn(EntityType.PIG, TEST_POSITION);
+    Pig pig = helper.spawn(EntityTypes.PIG, TEST_POSITION);
     spawnWildHand(helper, RottenHandEntity.ENTITY_ID, TEST_POSITION);
     helper.succeedWhen(
         () ->
