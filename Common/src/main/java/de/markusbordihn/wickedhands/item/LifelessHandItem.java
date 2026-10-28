@@ -143,10 +143,11 @@ public class LifelessHandItem extends Item {
   public InteractionResult use(Level level, Player player, InteractionHand hand) {
     if (!level.isClientSide()) {
       ItemStack itemStack = player.getItemInHand(hand);
-      player.sendSystemMessage(
+      player.displayClientMessage(
           AbstractHandEntity.createWhisper(
               itemStack.getHoverName(),
-              Component.translatable(this.getDescriptionId() + ".revival_hint")));
+              Component.translatable(this.getDescriptionId() + ".revival_hint")),
+          false);
       player.getCooldowns().addCooldown(itemStack, WHISPER_COOLDOWN_TICKS);
     }
     return InteractionResult.SUCCESS;

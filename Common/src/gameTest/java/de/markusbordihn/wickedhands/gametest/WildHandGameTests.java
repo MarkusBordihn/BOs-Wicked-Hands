@@ -174,7 +174,7 @@ public class WildHandGameTests extends HandGameTests {
 
     ServerLevel level = helper.getLevel();
     helper.setBlock(TEST_POSITION.below(), Blocks.STONE);
-    helper.setTime(MIDNIGHT_DAY_TIME);
+    level.setDayTime(MIDNIGHT_DAY_TIME);
     level.updateSkyBrightness();
     boolean spawnsAtMidnight = false;
     for (int i = 0; i < SPAWN_RULE_ATTEMPTS && !spawnsAtMidnight; i++) {

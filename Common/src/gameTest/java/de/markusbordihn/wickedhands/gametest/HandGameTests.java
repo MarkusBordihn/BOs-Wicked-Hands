@@ -155,11 +155,11 @@ public abstract class HandGameTests {
   private static void forceLoadRitualArea(GameTestHelper helper) {
     BlockPos ritualPosition = helper.absolutePos(TEST_POSITION);
     ChunkPos northWestChunk =
-        ChunkPos.containing(ritualPosition.offset(-RITUAL_AREA_RADIUS, 0, -RITUAL_AREA_RADIUS));
+        new ChunkPos(ritualPosition.offset(-RITUAL_AREA_RADIUS, 0, -RITUAL_AREA_RADIUS));
     ChunkPos southEastChunk =
-        ChunkPos.containing(ritualPosition.offset(RITUAL_AREA_RADIUS, 0, RITUAL_AREA_RADIUS));
-    for (int chunkX = northWestChunk.x(); chunkX <= southEastChunk.x(); chunkX++) {
-      for (int chunkZ = northWestChunk.z(); chunkZ <= southEastChunk.z(); chunkZ++) {
+        new ChunkPos(ritualPosition.offset(RITUAL_AREA_RADIUS, 0, RITUAL_AREA_RADIUS));
+    for (int chunkX = northWestChunk.x; chunkX <= southEastChunk.x; chunkX++) {
+      for (int chunkZ = northWestChunk.z; chunkZ <= southEastChunk.z; chunkZ++) {
         helper.getLevel().setChunkForced(chunkX, chunkZ, true);
       }
     }

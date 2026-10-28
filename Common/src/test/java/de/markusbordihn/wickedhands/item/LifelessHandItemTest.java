@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -148,7 +149,9 @@ class LifelessHandItemTest {
     assertEquals(
         InteractionResult.SUCCESS,
         createItem(lifelessHandId).use(level, player, InteractionHand.MAIN_HAND));
-    verify(player).sendSystemMessage(argThat(message -> isRevivalWhisper(message, lifelessHandId)));
+    verify(player)
+        .displayClientMessage(
+            argThat(message -> isRevivalWhisper(message, lifelessHandId)), eq(false));
     verify(cooldowns).addCooldown(eq(itemStack), anyInt());
   }
 
@@ -162,7 +165,7 @@ class LifelessHandItemTest {
     assertEquals(
         InteractionResult.SUCCESS,
         createItem(LifelessRottenHandEntity.ID).use(level, player, InteractionHand.OFF_HAND));
-    verify(player, never()).sendSystemMessage(any());
+    verify(player, never()).displayClientMessage(any(), anyBoolean());
   }
 
   @Test

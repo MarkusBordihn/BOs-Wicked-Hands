@@ -170,17 +170,17 @@ public abstract class AbstractLifelessHandEntity extends AbstractHandEntity {
     }
 
     if (this.revivalState.isBoundToOtherThan(player.getUUID())) {
-      player.sendOverlayMessage(Component.translatable(FOREIGN_REMAINS_MESSAGE_KEY));
+      player.displayClientMessage(Component.translatable(FOREIGN_REMAINS_MESSAGE_KEY), true);
       return;
     }
 
     BlockPos ritualBasePosition = this.getOnPos();
     if (!RevivalRitual.isRitualBase(serverLevel.getBlockState(ritualBasePosition))
         || !RevivalRitual.hasEnoughLitCandles(serverLevel, ritualBasePosition)) {
-      player.sendOverlayMessage(Component.translatable(RITUAL_INCOMPLETE_MESSAGE_KEY));
+      player.displayClientMessage(Component.translatable(RITUAL_INCOMPLETE_MESSAGE_KEY), true);
       if (this.whisperedPlayers.add(player.getUUID())) {
-        player.sendSystemMessage(
-            createWhisper(this.getName(), Component.translatable(RITUAL_WHISPER_MESSAGE_KEY)));
+        player.displayClientMessage(
+            createWhisper(this.getName(), Component.translatable(RITUAL_WHISPER_MESSAGE_KEY)), false);
       }
       return;
     }

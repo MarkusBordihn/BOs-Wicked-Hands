@@ -356,8 +356,8 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
         };
     this.handState = this.handState.withCompanionMode(companionMode);
     this.applyCompanionMode(companionMode);
-    player.sendOverlayMessage(
-        Component.translatable(MESSAGE_KEY_PREFIX + companionMode.getSerializedName()));
+    player.displayClientMessage(
+        Component.translatable(MESSAGE_KEY_PREFIX + companionMode.getSerializedName()), true);
   }
 
   @Override
@@ -389,7 +389,7 @@ public abstract class AbstractCompanionHandEntity extends AbstractHandEntity {
   }
 
   private boolean ignoresAsCompanion(LivingEntity target) {
-    if (target.is(COMPANION_IGNORED_TARGETS)) {
+    if (target.getType().is(COMPANION_IGNORED_TARGETS)) {
       return true;
     }
 

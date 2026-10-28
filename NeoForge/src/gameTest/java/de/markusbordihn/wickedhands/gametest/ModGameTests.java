@@ -258,7 +258,7 @@ public final class ModGameTests {
 
   @SubscribeEvent
   public static void registerGameTests(RegisterGameTestsEvent event) {
-    Holder<TestEnvironmentDefinition<?>> environment =
+    Holder<TestEnvironmentDefinition> environment =
         event.registerEnvironment(
             DEFAULT_ENVIRONMENT, new TestEnvironmentDefinition.AllOf(List.of()));
     for (TestEntry testEntry : TEST_ENTRIES) {
